@@ -1,137 +1,203 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { Mail, Phone, MapPin, Send, CheckCircle2, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { useLocations } from '../hooks/useContent';
+import { submitContactMessage } from '../lib/api';
+import { ROUTES } from '../routes';
 
-export default function Contact({ lang }) {
+const empty = { name: '', email: '', phone: '', branch: 'any', message: '', website: '' };
+
+export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
   const isAr = lang === 'ar';
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const pick = (en, ar) => (isAr ? ar : en);
+  const locations = useLocations();
 
-  const handleSubmit = (e) => {
+  const [status, setStatus] = useState('idle'); // idle | sending | sent | error
+  const [formData, setFormData] = useState(empty);
+
+  const main = locations.find((l) => l.type === 'company') ?? locations[0];
+  const others = locations.filter((l) => l.id !== main.id);
+  const set = (key) => (e) => setFormData({ ...formData, [key]: e.target.value });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Construct Direct mailto link to open default email app with populated fields
-    const mailtoUrl = `mailto:ahmedreda1242000@gmail.com?subject=Inquiry from ${encodeURIComponent(formData.name)}&body=Name: ${encodeURIComponent(formData.name)}%0D%0APhone: ${encodeURIComponent(formData.phone)}%0D%0AEmail: ${encodeURIComponent(formData.email)}%0D%0AMessage:%0D%0A${encodeURIComponent(formData.message)}`;
-    
-    window.location.href = mailtoUrl;
-    setSubmitted(true);
+    // حقل مخفي للبوتات: لو اتملى نتجاهل الطلب بهدوء
+    if (formData.website) {
+      setStatus('sent');
+      return;
+    }
+    setStatus('sending');
+    try {
+      await submitContactMessage({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        locationId: formData.branch,
+        message: formData.message,
+        lang,
+      });
+      setFormData(empty);
+      setStatus('sent');
+    } catch (err) {
+      console.error('[contact]', err);
+      setStatus('error');
+    }
   };
 
+  const input =
+    'w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white focus:border-(--accent) focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+  const label = 'text-xs font-bold text-slate-300';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12 text-start" style={{ '--accent': themeColor }}>
       <div className="text-center space-y-3">
-        <h2 className="text-3xl sm:text-5xl font-black">
-          {isAr ? 'تواصل مع' : 'Get in Touch with'} <span className="text-[#C9252C]">KIANKO</span>
-        </h2>
+        <h1 className="text-3xl sm:text-5xl font-black">
+          {pick('Get in Touch with', 'تواصل مع')} <span style={{ color: themeColor }}>KIANKO</span>
+        </h1>
         <p className="text-slate-400 max-w-xl mx-auto font-medium">
-          {isAr ? 'يسعد فريقنا الهندسي والتجاري بالرد على استفساراتكم وتقديم عروض الأسعار.' : 'Our sales and engineering support teams are ready to assist with your project quotes.'}
+          {pick(
+            'Our sales and engineering support teams are ready to assist with your project quotes.',
+            'يسعد فريقنا الهندسي والتجاري بالرد على استفساراتكم وتقديم عروض الأسعار.'
+          )}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8 items-start">
-        {/* Contact Info Box */}
-        <div className="bg-[#0A1832] text-white rounded-3xl p-8 space-y-8 shadow-2xl border border-blue-900/40">
-          <h3 className="text-2xl font-bold border-b border-blue-900 pb-4">
-            {isAr ? 'معلومات التواصل' : 'Contact Information'}
-          </h3>
-          
+        <aside className="bg-[#0A1832] text-white rounded-3xl p-8 space-y-8 shadow-2xl border border-blue-900/40">
+          <h2 className="text-2xl font-bold border-b border-blue-900 pb-4">{pick('Contact Information', 'معلومات التواصل')}</h2>
+
           <div className="space-y-6 text-sm">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-[#C9252C]/20 rounded-xl text-red-400">
-                <MapPin className="w-6 h-6" />
+            {[
+              { icon: MapPin, t: pick('Factory & Address', 'المصنع والإدارة'), v: pick(main.address, main.addressAr) },
+              { icon: Phone, t: pick('Phone Numbers', 'الهاتف'), v: main.phone, href: `tel:${main.phone.replace(/\s/g, '')}`, ltr: true },
+              { icon: Mail, t: pick('Email Address', 'البريد الإلكتروني'), v: main.email, href: `mailto:${main.email}` },
+            ].map(({ icon: Icon, t, v, href, ltr }) => (
+              <div key={t} className="flex items-start gap-4">
+                <div className="p-3 rounded-xl text-white" style={{ backgroundColor: `${themeColor}40` }}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-300">{t}</h3>
+                  {href ? (
+                    <a href={href} dir={ltr ? 'ltr' : undefined} className="block text-slate-400 mt-1 hover:text-white">{v}</a>
+                  ) : (
+                    <p className="text-slate-400 mt-1">{v}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-slate-300">{isAr ? 'المصنع والإدارة' : 'Factory & Address'}</h4>
-                <p className="text-slate-400 mt-1">Suez Canal / Ismailia / Cairo Industrial Area, Egypt</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-[#C9252C]/20 rounded-xl text-red-400">
-                <Phone className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-300">{isAr ? 'الهاتف' : 'Phone Numbers'}</h4>
-                <p className="text-slate-400 mt-1">+20 123 456 7890</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-[#C9252C]/20 rounded-xl text-red-400">
-                <Mail className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-300">{isAr ? 'البريد الإلكتروني' : 'Email Address'}</h4>
-                <p className="text-slate-400 mt-1">info@kianko-steel.com</p>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
 
-        {/* Form Box */}
+          <div className="border-t border-blue-900 pt-6 space-y-4">
+            <h3 className="font-bold text-slate-300 text-sm">{pick('Branches & Office', 'الفروع والمكتب')}</h3>
+            <ul className="space-y-3 text-sm">
+              {others.map((l) => (
+                <li key={l.id} className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: themeColor }} />
+                  <div>
+                    <p className="font-semibold text-white">{pick(l.name, l.nameAr)}</p>
+                    <a href={`tel:${l.phone.replace(/\s/g, '')}`} dir="ltr" className="text-slate-400 hover:text-white">{l.phone}</a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link to={ROUTES.locations} className="inline-flex items-center gap-2 text-sm font-bold text-white hover:underline">
+              {pick('All locations & maps', 'كل الفروع والخرائط')}
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+            </Link>
+          </div>
+        </aside>
+
         <div className="lg:col-span-2 bg-slate-900/50 p-8 rounded-3xl border border-slate-800 shadow-2xl">
-          {submitted ? (
-            <div className="p-8 text-center space-y-4 bg-green-950/40 rounded-2xl border border-green-800">
+          {status === 'sent' ? (
+            <div role="status" className="p-8 text-center space-y-4 bg-green-950/40 rounded-2xl border border-green-800">
               <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
-              <h3 className="text-2xl font-bold text-white">{isAr ? 'تم فتح تطبيق البريد لإرسال رسالتك!' : 'Email Client Opened!'}</h3>
-              <p className="text-slate-300">{isAr ? 'شكراً لتواصلك مع كيانكو للصناعات الحديدية.' : 'Thank you for reaching out to Kianko Steel Industries.'}</p>
+              <h2 className="text-2xl font-bold text-white">{pick('Message sent!', 'تم إرسال رسالتك!')}</h2>
+              <p className="text-slate-300">
+                {pick('Thank you for reaching out to Kianko. Our team will get back to you soon.', 'شكراً لتواصلك مع كيانكو. هيرد عليك فريقنا في أقرب وقت.')}
+              </p>
+              <button
+                type="button"
+                onClick={() => setStatus('idle')}
+                className="text-sm font-bold text-white underline underline-offset-4 hover:opacity-80"
+              >
+                {pick('Send another message', 'إرسال رسالة تانية')}
+              </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 text-left">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Honeypot */}
+              <div className="hidden" aria-hidden="true">
+                <label>
+                  Website
+                  <input type="text" tabIndex={-1} autoComplete="off" value={formData.website} onChange={set('website')} />
+                </label>
+              </div>
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300">{isAr ? 'الاسم بالكامل' : 'Full Name'}</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ahmed Gouda"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white focus:border-[#C9252C] outline-none"
-                  />
+                  <label htmlFor="c-name" className={label}>{pick('Full Name', 'الاسم بالكامل')}</label>
+                  <input id="c-name" type="text" required minLength={2} maxLength={120} autoComplete="name" value={formData.name} onChange={set('name')} className={input} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300">{isAr ? 'رقم الهاتف' : 'Phone Number'}</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+20 10xxxxxxxx"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white focus:border-[#C9252C] outline-none"
-                  />
+                  <label htmlFor="c-phone" className={label}>{pick('Phone Number', 'رقم الهاتف')}</label>
+                  <input id="c-phone" type="tel" required minLength={5} maxLength={40} autoComplete="tel" dir="ltr" placeholder="+966 5x xxx xxxx" value={formData.phone} onChange={set('phone')} className={input} />
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="c-email" className={label}>{pick('Email Address', 'البريد الإلكتروني')}</label>
+                  <input id="c-email" type="email" required maxLength={200} autoComplete="email" dir="ltr" value={formData.email} onChange={set('email')} className={input} />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="c-branch" className={label}>{pick('Preferred location', 'الفرع المفضل للتواصل')}</label>
+                  <select id="c-branch" value={formData.branch} onChange={set('branch')} className={input}>
+                    <option value="any">{pick('Any', 'أي فرع')}</option>
+                    {locations.map((l) => (
+                      <option key={l.id} value={l.id}>{pick(l.name, l.nameAr)}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300">{isAr ? 'البريد الإلكتروني' : 'Email Address'}</label>
-                <input
-                  type="email"
+                <label htmlFor="c-msg" className={label}>{pick('Inquiry Message', 'تفاصيل الطلب أو الرسالة')}</label>
+                <textarea
+                  id="c-msg"
+                  rows={4}
                   required
-                  placeholder="example@kianko.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white focus:border-[#C9252C] outline-none"
+                  minLength={5}
+                  maxLength={4000}
+                  placeholder={pick('Specify your structural steel specifications...', 'اكتب تفاصيل الكميات المطلوبة أو المواصفات...')}
+                  value={formData.message}
+                  onChange={set('message')}
+                  className={input}
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300">{isAr ? 'تفاصيل الطلب أو الرسالة' : 'Inquiry Message'}</label>
-                <textarea
-                  rows="4"
-                  required
-                  placeholder={isAr ? 'اكتب تفاصيل الكميات المطلوبة أو المواصفات...' : 'Specify your structural steel specifications...'}
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white focus:border-[#C9252C] outline-none"
-                ></textarea>
-              </div>
+              {status === 'error' && (
+                <p role="alert" className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900 rounded-xl p-3">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <span>
+                    {pick(
+                      'We could not send your message. Please try again, or call us on the number shown.',
+                      'مقدرناش نبعت رسالتك. جرّب تاني، أو كلمنا على الرقم الموضح.'
+                    )}
+                  </span>
+                </p>
+              )}
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#C9252C] hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-xl transition-all"
+                disabled={status === 'sending'}
+                className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl shadow-xl transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-wait focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                style={{ backgroundColor: themeColor }}
               >
-                <Send className="w-5 h-5" />
-                <span>{isAr ? 'إرسال الرسالة الآن' : 'Send Inquiry Mail'}</span>
+                {status === 'sending' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 rtl:-scale-x-100" />}
+                <span>
+                  {status === 'sending' ? pick('Sending…', 'جاري الإرسال…') : pick('Send Message', 'إرسال الرسالة الآن')}
+                </span>
               </button>
             </form>
           )}

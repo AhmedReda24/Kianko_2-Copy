@@ -1,181 +1,187 @@
-import React, { useState } from 'react';
-import { Download, Check, PackageOpen } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
+import { AnimatePresence, motion } from 'motion/react';
+import { Check, Download, PackageOpen, Search, X } from 'lucide-react';
+import { useProducts } from '../hooks/useContent';
+import { ROUTES } from '../routes';
+import SpotlightCard from '../components/ui/SpotlightCard';
 
-export default function Products() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
+  const isAr = lang === 'ar';
+  const pick = (en, ar) => (isAr ? ar : en);
+  const products = useProducts();
+  const [category, setCategory] = useState('all');
+  const [query, setQuery] = useState('');
 
-  const products = [
-    {
-      id: 1,
-      category: 'management',
-      name: 'Perforated Cable Trays',
-      desc: 'Manufactured from high-grade galvanized steel, engineered for efficient cable routing and proper ventilation.',
-      specs: ['Thickness: 1.0mm - 2.0mm', 'Hot-Dip Galvanized & Powder Coated', 'High load capacity'],
-      badge: 'Best Seller',
-    },
-    {
-      id: 2,
-      category: 'management',
-      name: 'Heavy Duty Cable Ladders',
-      desc: 'Robust structural side-rail design built for heavy power cabling in industrial plants and infrastructure.',
-      specs: ['Optimal strength for massive loads', 'NEMA & IEC compliant', 'Corrosion resistant'],
-      badge: 'Industrial',
-    },
-    {
-      id: 3,
-      category: 'management',
-      name: 'Wire Mesh Cable Trays',
-      desc: 'Lightweight and flexible wire mesh system designed specifically for telecommunications and data centers.',
-      specs: ['Easy on-site fabrication', 'Maximum airflow & ventilation', 'Zinc plated finish'],
-      badge: 'Telecom',
-    },
-    {
-      id: 4,
-      category: 'management',
-      name: 'Cable Tray Covers',
-      desc: 'Secure protective covers designed to shield cables from external environmental hazards and debris.',
-      specs: ['Peak, Flanged, and Solid types', 'Secure snap-on installation', 'Weatherproof protection'],
-      badge: 'Accessory',
-    },
-    {
-      id: 5,
-      category: 'management',
-      name: 'Cable Trunking Systems',
-      desc: 'Enclosed sheet metal trunking systems for commercial wiring and indoor office cable routing.',
-      specs: ['Removable lid for easy access', 'Clean aesthetic appearance', 'Pre-punched knockouts'],
-      badge: 'Commercial',
-    },
-    {
-      id: 6,
-      category: 'building',
-      name: 'Expanded Plaster Mesh',
-      desc: 'Expanded metal mesh engineered to reinforce plasterwork and prevent structural wall cracks.',
-      specs: ['Treated corrosion-resistant steel', 'Superior cement adhesion', 'Standard gauge sizes'],
-      badge: 'Building',
-    },
-    {
-      id: 7,
-      category: 'building',
-      name: 'Corner Bead Profiles',
-      desc: 'Galvanized steel corner beads providing straight, impact-resistant external corners for wall plaster.',
-      specs: ['Precision straightness', 'Perforated wings for keying', 'Impact resistant'],
-      badge: 'Building',
-    },
-    {
-      id: 8,
-      category: 'building',
-      name: 'Drywall Studs & Tracks',
-      desc: 'Light gauge galvanized steel framing components used for partitions and suspended ceilings.',
-      specs: ['High tensile strength steel', 'Pre-punched service holes', 'Quick screw-fix installation'],
-      badge: 'Framing',
-    },
-    {
-      id: 9,
-      category: 'management',
-      name: 'Unistrut Channels (C-Channels)',
-      desc: 'Versatile slotted or solid metal framing channels used for structural support and mechanical brackets.',
-      specs: ['Available in Single & Double', 'Standard depth: 41mm', 'Heavy gauge carbon steel'],
-      badge: 'Support',
-    },
-    {
-      id: 10,
-      category: 'management',
-      name: 'Cable Management Brackets',
-      desc: 'Heavy-duty wall and ceiling brackets designed to securely support cable tray and ladder runs.',
-      specs: ['Cantilever & Trapeze brackets', 'High load rating support', 'Hot-dip galvanized coating'],
-      badge: 'Hardware',
-    },
+  const filters = [
+    { id: 'all', label: pick(`All Products (${products.length})`, `كل المنتجات (${products.length})`) },
+    { id: 'management', label: pick('Cable Management Systems', 'أنظمة إدارة الكابلات') },
+    { id: 'building', label: pick('Building & Plaster Profiles', 'مقاطع المباني والمحارة') },
   ];
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(p => p.category === selectedCategory);
+  const list = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return products.filter((p) => {
+      if (category !== 'all' && p.category !== category) return false;
+      if (!q) return true;
+      return [p.name, p.nameAr, p.desc, p.descAr, ...(p.specs ?? []), ...(p.specsAr ?? [])]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [products, category, query]);
+
+  const btnCls =
+    'relative inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 text-left">
-      
-      {/* Header Title */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10 text-start">
       <div className="text-center space-y-4">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-          KIANKO <span className="text-kiankoRed">Product Catalog</span>
-        </h2>
-        <p className="text-slate-600 max-w-xl mx-auto font-medium">
-          Explore our complete portfolio of 10 professional steel lines, cable management systems, and building profiles.
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-white">
+          KIANKO <span style={{ color: themeColor }}>{pick('Product Catalog', 'كتالوج المنتجات')}</span>
+        </h1>
+        <p className="text-slate-300 max-w-xl mx-auto font-medium">
+          {pick(
+            `Explore our portfolio of ${products.length} steel lines, cable management systems, and building profiles.`,
+            `تعرّف على ${products.length} خطوط إنتاج من حوامل الكابلات والمقاطع المعدنية.`
+          )}
         </p>
       </div>
 
-      {/* Category Filter Buttons */}
-      <div className="flex justify-center gap-3 flex-wrap">
-        {[
-          { id: 'all', label: 'All Products (10)' },
-          { id: 'management', label: 'Cable Management Systems' },
-          { id: 'building', label: 'Building & Plaster Profiles' },
-        ].map((btn) => (
-          <button
-            key={btn.id}
-            onClick={() => setSelectedCategory(btn.id)}
-            className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 transform active:scale-95 ${
-              selectedCategory === btn.id
-                ? 'bg-kiankoRed text-white shadow-lg shadow-red-900/30'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            {btn.label}
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-col items-center gap-6">
+        <div className="relative w-full max-w-md">
+          <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 start-4 w-4 h-4 text-slate-400" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label={pick('Search products', 'ابحث في المنتجات')}
+            placeholder={pick('Search products…', 'ابحث في المنتجات…')}
+            className="w-full ps-11 pe-10 py-3 rounded-xl bg-[#0A1832] border border-blue-900/60 text-white text-sm placeholder:text-slate-500 focus:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label={pick('Clear search', 'مسح البحث')}
+              className="absolute top-1/2 -translate-y-1/2 end-3 p-1 text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
-      {/* Products Grid (10 Cards) */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-md hover:shadow-2xl transition-all duration-500 flex flex-col justify-between"
-          >
-            <div>
-              {/* Product Visual Box */}
-              <div className="relative overflow-hidden h-44 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 flex flex-col items-center justify-center text-center">
-                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C9252C_1px,transparent_1px)] [background-size:12px_12px]"></div>
-                <div className="p-3 bg-kiankoRed/20 rounded-xl text-red-400 mb-2 group-hover:scale-110 transition-transform">
-                  <PackageOpen className="w-8 h-8" />
-                </div>
-                <h4 className="text-white font-bold text-sm tracking-wide relative z-10">{product.name}</h4>
-                <div className="absolute top-4 left-4 bg-kiankoRed text-white text-xs px-3 py-1 rounded-full font-semibold shadow-md">
-                  {product.badge}
-                </div>
-              </div>
-
-              {/* Product Details */}
-              <div className="p-6 space-y-4">
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-kiankoRed transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{product.desc}</p>
-                
-                {/* Specifications */}
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Technical Specs:</h4>
-                  {product.specs.map((spec, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                      <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span>{spec}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="p-6 pt-0">
-              <button className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-kiankoRed text-white font-bold py-3 rounded-xl transition-colors duration-300 shadow-md">
-                <Download className="w-4 h-4" />
-                <span>Download Datasheet</span>
+        <div className="flex justify-center gap-3 flex-wrap" role="tablist">
+          {filters.map((f) => {
+            const on = category === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setCategory(f.id)}
+                className={`relative px-6 py-3 rounded-xl font-bold transition-colors duration-300 border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                  on ? 'text-white border-transparent' : 'bg-[#0A1832] text-slate-300 hover:bg-[#10244A] border-blue-900/60'
+                }`}
+              >
+                {on && (
+                  <motion.span
+                    layoutId="filter-pill"
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-xl shadow-lg"
+                    style={{ backgroundColor: themeColor }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative">{f.label}</span>
               </button>
-            </div>
-          </div>
-        ))}
+            );
+          })}
+        </div>
+
+        <p className="text-xs text-slate-400" role="status" aria-live="polite">
+          {pick(`${list.length} product(s)`, `${list.length} منتج`)}
+        </p>
       </div>
 
+      {list.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-blue-900/70 p-12 text-center space-y-4">
+          <p className="text-slate-300">{pick('No products match your search.', 'مفيش منتجات مطابقة للبحث.')}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('');
+              setCategory('all');
+            }}
+            className="text-sm font-bold text-white underline underline-offset-4 hover:opacity-80"
+          >
+            {pick('Reset filters', 'إعادة ضبط الفلاتر')}
+          </button>
+        </div>
+      ) : (
+        <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {list.map((p) => (
+              <motion.div
+                layout
+                key={p.id}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.25 }}
+                className="h-full"
+              >
+                <SpotlightCard
+                  as="article"
+                  className="group h-full bg-[#0A1832] rounded-2xl border border-blue-900/60 shadow-xl hover:border-slate-500 hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="relative overflow-hidden h-44 bg-gradient-to-br from-slate-900 via-[#0B1E3D] to-slate-900 p-6 flex flex-col items-center justify-center text-center">
+                      <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(#C9252C_1px,transparent_1px)] [background-size:12px_12px] transition-transform duration-700 group-hover:scale-110" />
+                      <div className="relative p-3 rounded-xl mb-2 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" style={{ backgroundColor: `${themeColor}33` }}>
+                        <PackageOpen className="w-8 h-8" style={{ color: themeColor }} />
+                      </div>
+                      <span className="relative text-white font-bold text-sm tracking-wide">{pick(p.name, p.nameAr)}</span>
+                      <span className="absolute top-4 start-4 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-md" style={{ backgroundColor: themeColor }}>
+                        {pick(p.badge, p.badgeAr)}
+                      </span>
+                    </div>
+
+                    <div className="relative p-6 space-y-4">
+                      <h2 className="text-xl font-bold text-white">{pick(p.name, p.nameAr)}</h2>
+                      <p className="text-slate-300 text-sm leading-relaxed">{pick(p.desc, p.descAr)}</p>
+
+                      <div className="space-y-2 pt-2">
+                        <h3 className="text-xs font-bold text-slate-400">{pick('Technical Specs', 'المواصفات الفنية')}</h3>
+                        {(isAr ? p.specsAr : p.specs).map((spec) => (
+                          <div key={spec} className="flex items-center gap-2 text-xs font-medium text-slate-200">
+                            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>{spec}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative p-6 pt-0">
+                    {p.datasheet ? (
+                      <a href={p.datasheet} download className={`${btnCls} bg-slate-800 hover:bg-slate-700`}>
+                        <Download className="w-4 h-4" />
+                        <span>{pick('Download Datasheet', 'تحميل الداتا شيت')}</span>
+                      </a>
+                    ) : (
+                      <Link to={ROUTES.contact} className={`${btnCls} hover:opacity-90`} style={{ backgroundColor: themeColor }}>
+                        <span>{pick('Request Datasheet', 'اطلب الداتا شيت')}</span>
+                      </Link>
+                    )}
+                  </div>
+                </SpotlightCard>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   );
 }

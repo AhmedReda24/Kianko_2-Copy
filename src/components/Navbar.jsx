@@ -1,174 +1,236 @@
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router';
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react';
 import { Menu, X, Globe, ChevronDown, Sun, Moon, Palette } from 'lucide-react';
-import logoImg from '../assets/logo.png';
+import logoImg from '../../assets/logo.png';
+import { ROUTES } from '../routes';
 
-export default function Navbar({ 
-  activePage, 
-  setActivePage, 
-  lang, 
-  setLang, 
-  darkMode, 
-  setDarkMode,
-  themeColor,
-  setThemeColor 
-}) {
+const colorThemes = [
+  { id: 'red', name: 'Kianko Red', hex: '#C9252C' },
+  { id: 'blue', name: 'Industrial Blue', hex: '#1D4ED8' },
+  { id: 'cyan', name: 'Steel Cyan', hex: '#0284C7' },
+];
+
+const pages = {
+  home: { en: 'Home', ar: 'الرئيسية' },
+  story: { en: 'Our Story', ar: 'قصتنا' },
+  overview: { en: 'Overview', ar: 'نظرة عامة' },
+  values: { en: 'Our Values', ar: 'قيمنا' },
+  quality: { en: 'Governance & Quality', ar: 'الحوكمة والجودة' },
+  iso: { en: 'ISO Certifications', ar: 'شهادات الأيزو' },
+  locations: { en: 'Branches & Office', ar: 'الفروع والمكتب' },
+  careers: { en: 'Careers', ar: 'الوظائف' },
+  projects: { en: 'Regional Projects', ar: 'المشاريع الإقليمية' },
+  products: { en: 'Products', ar: 'المنتجات' },
+  contact: { en: 'Contact Us', ar: 'تواصل معنا' },
+};
+
+const before = ['home', 'story', 'overview', 'values'];
+const group = ['quality', 'iso', 'locations', 'careers', 'projects'];
+const after = ['products', 'contact'];
+const allIds = [...before, ...group, ...after];
+
+const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current';
+const popIn = {
+  initial: { opacity: 0, y: -8, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -8, scale: 0.97 },
+  transition: { duration: 0.18 },
+};
+
+export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColor, setThemeColor }) {
+  const isAr = lang === 'ar';
+  const t = (id) => (isAr ? pages[id].ar : pages[id].en);
+  const { pathname } = useLocation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const menuRef = useRef(null);
+  const paletteRef = useRef(null);
 
-  const isAr = lang === 'ar';
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, 'change', (y) => setScrolled(y > 24));
 
-  const colorThemes = [
-    { id: 'red', name: 'Kianko Red', hex: '#C9252C' },
-    { id: 'blue', name: 'Industrial Blue', hex: '#1D4ED8' },
-    { id: 'cyan', name: 'Steel Cyan', hex: '#0284C7' },
-  ];
+  const groupActive = group.some((id) => ROUTES[id] === pathname);
 
-  const pagesList = [
-    { id: 'home', en: 'Home', ar: 'الرئيسية' },
-    { id: 'story', en: 'Our Story', ar: 'قصتنا' },
-    { id: 'overview', en: 'Overview', ar: 'نظرة عامة' },
-    { id: 'values', en: 'Our Values', ar: 'قيمنا' },
-    { id: 'quality', en: 'Governance & Quality', ar: 'الحوكمة والجودة' },
-    { id: 'iso', en: 'ISO Certifications', ar: 'شهادات الأيزو' },
-    { id: 'careers', en: 'Careers', ar: 'الوظائف' },
-    { id: 'projects', en: 'Regional Projects', ar: 'المشاريع الإقليمية' },
-    { id: 'products', en: 'Products', ar: 'المنتجات' },
-    { id: 'contact', en: 'Contact Us', ar: 'تواصل معنا' },
-  ];
+  useEffect(() => {
+    if (!dropdownOpen && !paletteOpen) return;
+    const onDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) setDropdownOpen(false);
+      if (!paletteRef.current?.contains(e.target)) setPaletteOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+        setPaletteOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [dropdownOpen, paletteOpen]);
+
+  const panel = darkMode ? 'bg-[#061024] border-blue-900 text-white' : 'bg-white border-slate-200 text-slate-800';
+  const iconBtn = darkMode ? 'bg-slate-800 text-amber-400' : 'bg-slate-100 text-slate-700';
+
+  const Underline = () => (
+    <motion.span
+      layoutId="nav-underline"
+      aria-hidden="true"
+      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full"
+      style={{ backgroundColor: themeColor }}
+      transition={{ type: 'spring', stiffness: 500, damping: 36 }}
+    />
+  );
+
+  const desktopLink = (id) => (
+    <NavLink
+      key={id}
+      to={ROUTES[id]}
+      end={id === 'home'}
+      style={({ isActive }) => ({ color: isActive ? themeColor : undefined })}
+      className={({ isActive }) =>
+        `relative py-2 transition-colors ${focusRing} ${
+          isActive
+            ? ''
+            : 'hover:opacity-90 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left rtl:after:origin-right after:scale-x-0 after:bg-current after:opacity-50 after:transition-transform after:duration-300 hover:after:scale-x-100'
+        }`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          {t(id)}
+          {isActive && <Underline />}
+        </>
+      )}
+    </NavLink>
+  );
 
   return (
-    <nav className={`sticky top-0 z-50 shadow-2xl transition-colors duration-300 border-b ${
-      darkMode ? 'bg-[#0A1832] border-blue-900/40 text-white' : 'bg-white border-slate-200 text-slate-800'
-    }`}>
+    <nav
+      aria-label={isAr ? 'التنقل الرئيسي' : 'Main navigation'}
+      className={`sticky top-0 z-50 border-b transition-[background-color,box-shadow] duration-300 ${
+        scrolled ? 'shadow-2xl backdrop-blur-md' : 'shadow-lg'
+      } ${darkMode ? `${scrolled ? 'bg-[#0A1832]/90' : 'bg-[#0A1832]'} border-blue-900/40 text-white` : `${scrolled ? 'bg-white/90' : 'bg-white'} border-slate-200 text-slate-800`}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Logo Brand Image + Kianko Text */}
-          <div 
-            onClick={() => setActivePage('home')}
-            className="flex items-center gap-3 cursor-pointer group py-2"
-          >
-            <div className="bg-white p-1.5 rounded-xl shadow-md border border-slate-200 hover:scale-105 transition-transform duration-300">
-              <img 
-                src={logoImg} 
-                alt="KIANKO COMPANY" 
-                className="h-10 sm:h-12 w-auto object-contain"
-              />
+        <div className={`flex items-center justify-between transition-[height] duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
+          <Link to={ROUTES.home} className={`flex items-center gap-3 group py-2 ${focusRing}`} aria-label="KIANKO COMPANY">
+            <div className="bg-white p-1.5 rounded-xl shadow-md border border-slate-200 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300">
+              <img src={logoImg} alt="" className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-8 sm:h-9' : 'h-10 sm:h-12'}`} />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-wider" style={{ color: themeColor }}>
+            <div className="text-start">
+              <span className={`block font-black tracking-wider transition-[font-size] duration-300 ${scrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`} style={{ color: themeColor }}>
                 KIANKO <span className={darkMode ? 'text-white' : 'text-slate-900'}>COMPANY</span>
-              </h1>
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
+              </span>
+              <span className={`block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0' : 'h-4 opacity-100'}`}>
                 {isAr ? 'شركة كيان لمنتجات الحديد' : 'KIAN IRON PRODUCTS COMPANY'}
-              </p>
+              </span>
             </div>
-          </div>
+          </Link>
 
-          {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center gap-4 text-xs font-bold">
-            {pagesList.slice(0, 4).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActivePage(item.id)}
-                className={`transition-colors py-2 border-b-2 ${
-                  activePage === item.id 
-                    ? 'text-white' 
-                    : 'border-transparent hover:opacity-80'
-                }`}
-                style={{ borderColor: activePage === item.id ? themeColor : 'transparent', color: activePage === item.id ? themeColor : undefined }}
-              >
-                {isAr ? item.ar : item.en}
-              </button>
-            ))}
+            {before.map(desktopLink)}
 
-            {/* Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-1 py-2 hover:opacity-80"
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((v) => !v)}
+                aria-expanded={dropdownOpen}
+                aria-haspopup="true"
+                className={`relative flex items-center gap-1 py-2 hover:opacity-90 ${focusRing}`}
+                style={{ color: groupActive ? themeColor : undefined }}
               >
                 <span>{isAr ? 'الشركة والجودة' : 'Company & Quality'}</span>
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                {groupActive && <Underline />}
               </button>
 
-              {dropdownOpen && (
-                <div className={`absolute top-full left-0 mt-2 w-48 border rounded-xl shadow-2xl py-2 z-50 ${
-                  darkMode ? 'bg-[#061024] border-blue-900' : 'bg-white border-slate-200'
-                }`}>
-                  {pagesList.slice(4, 8).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setActivePage(item.id);
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-700 hover:text-white"
-                    >
-                      {isAr ? item.ar : item.en}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div {...popIn} className={`absolute top-full start-0 mt-3 w-56 border rounded-xl shadow-2xl py-2 z-50 origin-top ${panel}`}>
+                    {group.map((id) => (
+                      <NavLink
+                        key={id}
+                        to={ROUTES[id]}
+                        onClick={() => setDropdownOpen(false)}
+                        style={({ isActive }) => ({ color: isActive ? themeColor : undefined })}
+                        className={`block text-start px-4 py-2 text-xs font-semibold transition-all hover:ps-5 ${darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${focusRing}`}
+                      >
+                        {t(id)}
+                      </NavLink>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {pagesList.slice(8).map((item) => (
+            {after.map(desktopLink)}
+
+            <div className="h-6 w-px bg-slate-400/40 mx-1" aria-hidden="true" />
+
+            <div className="relative" ref={paletteRef}>
               <button
-                key={item.id}
-                onClick={() => setActivePage(item.id)}
-                className="transition-colors py-2 border-b-2"
-                style={{ borderColor: activePage === item.id ? themeColor : 'transparent', color: activePage === item.id ? themeColor : undefined }}
-              >
-                {isAr ? item.ar : item.en}
-              </button>
-            ))}
-
-            <div className="h-6 w-[1px] bg-slate-400/40 mx-1"></div>
-
-            {/* Color Switcher Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setPaletteOpen(!paletteOpen)}
-                className="p-2 rounded-xl bg-slate-800 text-white hover:scale-105 transition-transform flex items-center gap-1"
-                title="Change Theme Color"
+                type="button"
+                onClick={() => setPaletteOpen((v) => !v)}
+                aria-expanded={paletteOpen}
+                aria-label={isAr ? 'تغيير لون الموقع' : 'Change theme color'}
+                className={`p-2 rounded-xl bg-slate-800 hover:scale-110 hover:rotate-12 transition-transform ${focusRing}`}
               >
                 <Palette className="w-4 h-4" style={{ color: themeColor }} />
               </button>
 
-              {paletteOpen && (
-                <div className={`absolute top-full right-0 mt-2 p-3 rounded-2xl shadow-2xl border flex gap-2 z-50 ${
-                  darkMode ? 'bg-[#061024] border-blue-900' : 'bg-white border-slate-200'
-                }`}>
-                  {colorThemes.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        setThemeColor(c.hex);
-                        setPaletteOpen(false);
-                      }}
-                      className="w-7 h-7 rounded-full shadow-md border-2 border-white transform hover:scale-110 transition-transform"
-                      style={{ backgroundColor: c.hex }}
-                      title={c.name}
-                    />
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {paletteOpen && (
+                  <motion.div {...popIn} className={`absolute top-full end-0 mt-3 p-3 rounded-2xl shadow-2xl border flex gap-2 z-50 origin-top ${panel}`}>
+                    {colorThemes.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setThemeColor(c.hex);
+                          setPaletteOpen(false);
+                        }}
+                        aria-label={c.name}
+                        aria-pressed={themeColor === c.hex}
+                        className={`w-7 h-7 rounded-full shadow-md border-2 hover:scale-125 transition-transform ${themeColor === c.hex ? 'border-white' : 'border-transparent'}`}
+                        style={{ backgroundColor: c.hex }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Dark/Light Mode Toggle */}
-            <button 
+            <button
+              type="button"
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 hover:scale-105 transition-transform"
-              title="Toggle Dark/Light Mode"
+              aria-label={isAr ? 'تبديل الوضع الداكن/الفاتح' : 'Toggle dark/light mode'}
+              className={`p-2 rounded-xl hover:scale-110 transition-transform ${iconBtn} ${focusRing}`}
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={darkMode ? 'sun' : 'moon'}
+                  className="block"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </motion.span>
+              </AnimatePresence>
             </button>
 
-            {/* Language Switcher */}
-            <button 
+            <button
+              type="button"
               onClick={() => setLang(isAr ? 'en' : 'ar')}
-              className="flex items-center gap-1.5 text-xs font-bold text-white px-3.5 py-1.5 rounded-xl shadow-md transition-all hover:opacity-90"
+              className={`flex items-center gap-1.5 text-xs font-bold text-white px-3.5 py-1.5 rounded-xl shadow-md hover:opacity-90 hover:-translate-y-0.5 transition-all ${focusRing}`}
               style={{ backgroundColor: themeColor }}
             >
               <Globe className="w-3.5 h-3.5" />
@@ -176,12 +238,14 @@ export default function Navbar({
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-2">
-            <button 
-              onClick={() => setIsOpen(!isOpen)} 
-              className="p-2 rounded-lg focus:outline-none"
-              aria-label="Toggle Mobile Menu"
+            <button
+              type="button"
+              onClick={() => setIsOpen((v) => !v)}
+              className={`p-2 rounded-lg ${focusRing}`}
+              aria-label={isAr ? 'فتح/إغلاق القائمة' : 'Toggle menu'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               {isOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
             </button>
@@ -189,62 +253,85 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* قائمة الهواتف المحمولة (Mobile Dropdown Menu) - معدلة باللون الصحيح */}
-      {isOpen && (
-        <div className={`lg:hidden border-t px-4 py-6 space-y-4 shadow-2xl transition-colors ${
-          darkMode ? 'bg-[#061024] border-blue-900/50 text-white' : 'bg-white border-slate-200 text-slate-800'
-        }`}>
-          <div className="flex flex-col space-y-2">
-            {pagesList.map((item) => {
-              const isActive = activePage === item.id;
-              return (
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            id="mobile-menu"
+            className="lg:hidden overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div
+              className={`border-t px-4 py-6 space-y-4 shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto ${
+                darkMode ? 'bg-[#061024] border-blue-900/50 text-white' : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            >
+              <div className="flex flex-col space-y-2">
+                {allIds.map((id) => (
+                  <NavLink
+                    key={id}
+                    to={ROUTES[id]}
+                    end={id === 'home'}
+                    onClick={() => setIsOpen(false)}
+                    style={({ isActive }) => ({ backgroundColor: isActive ? themeColor : undefined })}
+                    className={({ isActive }) =>
+                      `text-start px-4 py-3 rounded-xl text-sm font-bold transition-colors flex items-center justify-between ${focusRing} ${
+                        isActive ? 'text-white shadow-md' : darkMode ? 'text-gray-300 hover:bg-slate-800/80 hover:text-white' : 'text-slate-700 hover:bg-slate-100'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span>{t(id)}</span>
+                        {isActive && <span className="w-2 h-2 rounded-full bg-white" />}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-center gap-3 pt-2" role="group" aria-label={isAr ? 'لون الموقع' : 'Theme color'}>
+                {colorThemes.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setThemeColor(c.hex)}
+                    aria-label={c.name}
+                    aria-pressed={themeColor === c.hex}
+                    className={`w-8 h-8 rounded-full border-2 ${themeColor === c.hex ? 'border-white' : 'border-transparent'}`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
+
+              <div className={`pt-4 border-t flex items-center justify-between gap-3 ${darkMode ? 'border-blue-900/50' : 'border-slate-200'}`}>
                 <button
-                  key={item.id}
+                  type="button"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold ${darkMode ? 'bg-slate-800' : 'bg-slate-100'} ${focusRing}`}
+                >
+                  {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+                  <span>{darkMode ? (isAr ? 'الوضع الفاتح' : 'Light Mode') : isAr ? 'الوضع الداكن' : 'Dark Mode'}</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
-                    setActivePage(item.id);
+                    setLang(isAr ? 'en' : 'ar');
                     setIsOpen(false);
                   }}
-                  className={`text-right px-4 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-between ${
-                    isActive 
-                      ? 'text-white shadow-md' 
-                      : darkMode ? 'text-gray-300 hover:bg-slate-800/80 hover:text-white' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                  style={{
-                    backgroundColor: isActive ? themeColor : undefined
-                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-xs font-bold shadow ${focusRing}`}
+                  style={{ backgroundColor: themeColor }}
                 >
-                  <span>{isAr ? item.ar : item.en}</span>
-                  {isActive && <span className="w-2 h-2 rounded-full bg-white"></span>}
+                  <Globe className="w-4 h-4" />
+                  <span>{isAr ? 'English' : 'العربية'}</span>
                 </button>
-              );
-            })}
-          </div>
-
-          <div className="pt-4 border-t border-slate-200 dark:border-blue-900/50 flex items-center justify-between gap-3">
-            {/* Dark/Light Mode */}
-            <button 
-              onClick={() => setDarkMode(!darkMode)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold"
-            >
-              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
-              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-
-            {/* Language Switcher */}
-            <button 
-              onClick={() => {
-                setLang(isAr ? 'en' : 'ar');
-                setIsOpen(false);
-              }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-xs font-bold shadow"
-              style={{ backgroundColor: themeColor }}
-            >
-              <Globe className="w-4 h-4" />
-              <span>{isAr ? 'English' : 'العربية'}</span>
-            </button>
-          </div>
-        </div>
-      )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
