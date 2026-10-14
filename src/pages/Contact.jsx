@@ -2,8 +2,49 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { Mail, Phone, MapPin, Send, CheckCircle2, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useLocations } from '../hooks/useContent';
-import { submitContactMessage } from '../lib/api';
 import { ROUTES } from '../routes';
+import { createClient } from '@supabase/supabase-js';
+
+// =====================================================================
+// إعدادات الاتصال المباشر بـ Supabase
+// =====================================================================
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// دالة الـ CRUD (إرسال رسالة الاتصال إلى جدول contact_messages)
+// دالة الـ CRUD وإرسال البيانات لـ Make.com
+export async function submitContactMessage({ name, email, phone, locationId, message, lang }) {
+  const messageData = {
+    name,
+    email,
+    phone,
+    location_id: locationId === 'any' ? null : locationId,
+    message,
+    lang,
+    status: 'new',
+  };
+
+  // 1. الحفظ في Supabase
+  const { data, error } = await supabase.from('contact_messages').insert([messageData]);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+ // 2. إرسال البيانات مباشرة إلى Webhook الخاص بـ Make.com
+try {
+  await fetch(import.meta.env.VITE_MAKE_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(messageData),
+  });
+} catch (err) {
+  console.error('Failed to notify Make.com:', err);
+}
+
+  return data;
+}
 
 const empty = { name: '', email: '', phone: '', branch: 'any', message: '', website: '' };
 
@@ -16,7 +57,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
   const [formData, setFormData] = useState(empty);
 
   const main = locations.find((l) => l.type === 'company') ?? locations[0];
-  const others = locations.filter((l) => l.id !== main.id);
+  const others = locations.filter((l) => l.id !== main?.id);
   const set = (key) => (e) => setFormData({ ...formData, [key]: e.target.value });
 
   const handleSubmit = async (e) => {
@@ -67,7 +108,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
           <h2 className="text-2xl font-bold border-b border-blue-900 pb-4">{pick('Contact Information', 'معلومات التواصل')}</h2>
 
           <div className="space-y-6 text-sm">
-            {[
+            {main && [
               { icon: MapPin, t: pick('Factory & Address', 'المصنع والإدارة'), v: pick(main.address, main.addressAr) },
               { icon: Phone, t: pick('Phone Numbers', 'الهاتف'), v: main.phone, href: `tel:${main.phone.replace(/\s/g, '')}`, ltr: true },
               { icon: Mail, t: pick('Email Address', 'البريد الإلكتروني'), v: main.email, href: `mailto:${main.email}` },
