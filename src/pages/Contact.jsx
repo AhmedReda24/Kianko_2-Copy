@@ -3,16 +3,8 @@ import { Link } from 'react-router';
 import { Mail, Phone, MapPin, Send, CheckCircle2, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useLocations } from '../hooks/useContent';
 import { ROUTES } from '../routes';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
-// =====================================================================
-// إعدادات الاتصال المباشر بـ Supabase
-// =====================================================================
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// دالة الـ CRUD (إرسال رسالة الاتصال إلى جدول contact_messages)
 // دالة الـ CRUD وإرسال البيانات لـ Make.com
 export async function submitContactMessage({ name, email, phone, locationId, message, lang }) {
   const messageData = {
@@ -32,16 +24,16 @@ export async function submitContactMessage({ name, email, phone, locationId, mes
     throw new Error(error.message);
   }
 
- // 2. إرسال البيانات مباشرة إلى Webhook الخاص بـ Make.com
-try {
-  await fetch(import.meta.env.VITE_MAKE_WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(messageData),
-  });
-} catch (err) {
-  console.error('Failed to notify Make.com:', err);
-}
+  // 2. إرسال البيانات مباشرة إلى Webhook الخاص بـ Make.com
+  try {
+    await fetch(import.meta.env.VITE_MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messageData),
+    });
+  } catch (err) {
+    console.error('Failed to notify Make.com:', err);
+  }
 
   return data;
 }
@@ -57,12 +49,19 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
   const [formData, setFormData] = useState(empty);
 
   const main = locations.find((l) => l.type === 'company') ?? locations[0];
-  const others = locations.filter((l) => l.id !== main?.id);
+  
+  // تصفية الفروع لاستبعاد المكاتب الملغية (Office)
+  const branchLocations = locations.filter(
+    (l) => l.type !== 'company' && !l.id?.toLowerCase().includes('office')
+  );
+
+  // دمج المقر الرئيسي مع باقي الفروع لإظهارهم في القائمة الجانبية
+  const allLocationsList = main ? [main, ...branchLocations] : branchLocations;
+
   const set = (key) => (e) => setFormData({ ...formData, [key]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // حقل مخفي للبوتات: لو اتملى نتجاهل الطلب بهدوء
     if (formData.website) {
       setStatus('sent');
       return;
@@ -104,6 +103,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8 items-start">
+        {/* الشريط الجانبي */}
         <aside className="bg-[#0A1832] text-white rounded-3xl p-8 space-y-8 shadow-2xl border border-blue-900/40">
           <h2 className="text-2xl font-bold border-b border-blue-900 pb-4">{pick('Contact Information', 'معلومات التواصل')}</h2>
 
@@ -132,7 +132,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
           <div className="border-t border-blue-900 pt-6 space-y-4">
             <h3 className="font-bold text-slate-300 text-sm">{pick('Branches & Office', 'الفروع والمكتب')}</h3>
             <ul className="space-y-3 text-sm">
-              {others.map((l) => (
+              {allLocationsList.map((l) => (
                 <li key={l.id} className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: themeColor }} />
                   <div>
@@ -149,6 +149,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
           </div>
         </aside>
 
+        {/* نموذج التواصل */}
         <div className="lg:col-span-2 bg-slate-900/50 p-8 rounded-3xl border border-slate-800 shadow-2xl">
           {status === 'sent' ? (
             <div role="status" className="p-8 text-center space-y-4 bg-green-950/40 rounded-2xl border border-green-800">
@@ -194,8 +195,13 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
                 <div className="space-y-2">
                   <label htmlFor="c-branch" className={label}>{pick('Preferred location', 'الفرع المفضل للتواصل')}</label>
                   <select id="c-branch" value={formData.branch} onChange={set('branch')} className={input}>
-                    <option value="any">{pick('Any', 'أي فرع')}</option>
-                    {locations.map((l) => (
+                    <option value="any">{pick('Any Location', 'أي فرع')}</option>
+                    {main && (
+                      <option value={main.id}>
+                        {pick(main.name, main.nameAr)}
+                      </option>
+                    )}
+                    {branchLocations.map((l) => (
                       <option key={l.id} value={l.id}>{pick(l.name, l.nameAr)}</option>
                     ))}
                   </select>
