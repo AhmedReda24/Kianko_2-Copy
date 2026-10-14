@@ -9,7 +9,7 @@ const areas = [
     title: 'Cable Management', titleAr: 'أنظمة إدارة الكابلات',
     text: 'Heavy-duty cable trays, ladders and accessories, fabricated to project specifications.',
     textAr: 'حوامل وسلالم كابلات ثقيلة وملحقاتها، مصنّعة حسب مواصفات كل مشروع.',
-    img: 'https://images.pexels.com/photos/159358/construction-site-build-construction-work-159358.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    img: 'https://images.pexels.com/photos/159358/construction-site-build-construction-work-159358.jpeg?auto=compress&cs=tinysrgb&fit=crop&fm=webp&q=75&w=1000',
   },
   {
     title: 'Rebar Rolling', titleAr: 'تدلفين حديد التسليح',
@@ -31,7 +31,7 @@ const areas = [
   },
 ];
 
-export default function ExpertiseSection({ isAr, themeColor }) {
+export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
   const [active, setActive] = useState(0);
 
   return (
@@ -57,12 +57,13 @@ export default function ExpertiseSection({ isAr, themeColor }) {
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               style={{ flexGrow: isActive ? 4 : 1 }}
-              className="group relative h-64 lg:h-auto lg:basis-0 min-w-0 overflow-hidden rounded-2xl border border-blue-900/60 shadow-xl transition-[flex-grow] duration-500 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="group relative h-64 lg:h-auto lg:basis-0 min-w-0 overflow-hidden rounded-2xl border border-blue-900/60 shadow-xl transition-[flex-grow] duration-500 ease-out cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <img
                 src={a.img}
                 alt=""
                 loading="lazy"
+                decoding="async"
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
                   isActive ? 'brightness-[0.6] scale-100' : 'brightness-[0.4] scale-110'
                 } max-lg:brightness-[0.55]`}

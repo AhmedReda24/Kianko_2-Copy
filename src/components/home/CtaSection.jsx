@@ -3,7 +3,7 @@ import { ROUTES } from '../../routes';
 import CtaLink from '../ui/CtaLink';
 import { useLocations } from '../../hooks/useContent';
 
-export default function CtaSection({ isAr, themeColor }) {
+export default function CtaSection({ isAr, themeColor = '#C9252C' }) {
   const locations = useLocations();
   const phone = (locations.find((l) => l.type === 'company') ?? locations[0])?.phone ?? '+201234567890';
 
@@ -22,7 +22,7 @@ export default function CtaSection({ isAr, themeColor }) {
           </p>
           <a
             href={`tel:${phone.replace(/\s/g, '')}`}
-            className="pt-2 inline-flex items-center gap-2.5 font-extrabold text-white hover:underline underline-offset-4 text-sm sm:text-base"
+            className="pt-2 inline-flex items-center gap-2.5 font-extrabold text-white hover:underline underline-offset-4 text-sm sm:text-base cursor-pointer"
           >
             <Phone className="w-5 h-5 shrink-0" />
             <span>{isAr ? 'أو اتصل بنا:' : 'Or call us:'}</span>

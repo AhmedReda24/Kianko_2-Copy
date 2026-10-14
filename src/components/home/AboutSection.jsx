@@ -27,7 +27,7 @@ const pillars = [
   },
 ];
 
-export default function AboutSection({ isAr, themeColor }) {
+export default function AboutSection({ isAr, themeColor = '#C9252C' }) {
   const reduce = useReducedMotion();
 
   return (
@@ -43,9 +43,10 @@ export default function AboutSection({ isAr, themeColor }) {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <img
-            src="https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            src="https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&fit=crop&fm=webp&q=75&w=1200"
             alt="Kianko Factory"
             loading="lazy"
+            decoding="async"
             className="w-full h-[280px] sm:h-[400px] lg:h-[450px] object-cover brightness-90 group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#07132B] via-transparent to-transparent opacity-80" />

@@ -6,7 +6,7 @@ import { Award, ChevronLeft, ChevronRight, FileText, X } from 'lucide-react';
 import { useCertificates } from '../../hooks/useContent';
 import SectionHeading from '../ui/SectionHeading';
 
-export default function CertificatesSlider({ isAr, themeColor }) {
+export default function CertificatesSlider({ isAr, themeColor = '#C9252C' }) {
   const reduce = useReducedMotion();
   const certificates = useCertificates();
   const [autoplay] = useState(() => Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true }));
@@ -34,7 +34,7 @@ export default function CertificatesSlider({ isAr, themeColor }) {
 
   const Prev = isAr ? ChevronRight : ChevronLeft;
   const Next = isAr ? ChevronLeft : ChevronRight;
-  const arrowCls = "grid place-items-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-white/25 text-white transition-colors hover:bg-white/10";
+  const arrowCls = "grid place-items-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-white/25 text-white transition-colors hover:bg-white/10 cursor-pointer";
 
   return (
     <section className="bg-[#061024] border-y border-blue-900/40 py-16 sm:py-20">
@@ -74,10 +74,10 @@ export default function CertificatesSlider({ isAr, themeColor }) {
                     <button
                       type="button"
                       onClick={() => setZoom(c)}
-                      className="block w-full aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-lg border border-blue-900/60 hover:-translate-y-1 transition-transform duration-300"
+                      className="block w-full aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-lg border border-blue-900/60 hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
                       aria-label={`${title} — ${isAr ? 'تكبير' : 'enlarge'}`}
                     >
-                      <img src={c.img} alt={title} loading="lazy" className="w-full h-full object-contain p-2" />
+                      <img src={c.img} alt={title} loading="lazy" decoding="async" className="w-full h-full object-contain p-2" />
                     </button>
                   ) : (
                     <div className="aspect-[3/4] rounded-2xl border border-blue-900/70 bg-[#0B1B3A] p-3 shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
@@ -102,7 +102,7 @@ export default function CertificatesSlider({ isAr, themeColor }) {
               role="tab"
               aria-selected={i === selected}
               onClick={() => emblaApi?.scrollTo(i)}
-              className="h-2 rounded-full transition-all duration-300"
+              className="h-2 rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 width: i === selected ? 28 : 8,
                 backgroundColor: i === selected ? themeColor : 'rgba(255,255,255,0.25)',
@@ -133,7 +133,7 @@ export default function CertificatesSlider({ isAr, themeColor }) {
             <button
               type="button"
               onClick={() => setZoom(null)}
-              className="absolute top-5 end-5 grid place-items-center h-11 w-11 rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="absolute top-5 end-5 grid place-items-center h-11 w-11 rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
