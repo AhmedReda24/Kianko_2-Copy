@@ -7,6 +7,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ScrollProgress from './components/ui/ScrollProgress';
 import BackToTop from './components/ui/BackToTop';
 import { ROUTES, PAGE_TITLES, pageKeyFromPath } from './routes';
+import ChatWidget from './components/ChatWidget';
 
 // كل صفحة في ملف لوحدها وبتتحمّل عند الحاجة فقط (Code Splitting)
 const Home = lazy(() => import('./pages/Home'));
@@ -100,6 +101,7 @@ export default function App() {
 
       <Footer lang={lang} themeColor={themeColor} />
       <BackToTop themeColor={themeColor} isAr={lang === 'ar'} />
+      <ChatWidget />
     </div>
     </MotionConfig>
   );
