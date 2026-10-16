@@ -3,7 +3,6 @@ import { Routes, Route, useLocation } from 'react-router';
 import { MotionConfig, motion } from 'motion/react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop';
 import ScrollProgress from './components/ui/ScrollProgress';
 import BackToTop from './components/ui/BackToTop';
 import { ROUTES, PAGE_TITLES, pageKeyFromPath } from './routes';
@@ -23,6 +22,17 @@ const Contact = lazy(() => import('./pages/Contact'));
 const LocationsPage = lazy(() => import('./pages/LocationsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
+// مكون إرجاع الصفحة للأعلى عند تغيير الـ Path أو الـ Refresh
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  return null;
+}
+
 function PageLoader({ themeColor }) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-label="Loading">
@@ -35,12 +45,22 @@ function PageLoader({ themeColor }) {
 }
 
 export default function App() {
-  const [lang, setLang] = useState('en');
+  // قراءة اللغة المخزنة من الlocalStorage مسبقاً، أو الافتراضي 'en' لو أول مرة يفتح
+  const [lang, setLangState] = useState(() => {
+    return localStorage.getItem('kian_lang') || 'en';
+  });
+  
   const [darkMode, setDarkMode] = useState(true);
   const [themeColor, setThemeColor] = useState('#C9252C'); // Kianko Red
 
   const { pathname } = useLocation();
   const pageKey = pageKeyFromPath(pathname);
+
+  // دالة مخصصة لتحديث الحفظ في الlocalStorage مع الState لتجنب أي مشاكل
+  const setLang = (newLang) => {
+    setLangState(newLang);
+    localStorage.setItem('kian_lang', newLang);
+  };
 
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -53,6 +73,7 @@ export default function App() {
   }, [pageKey, lang]);
 
   const pageProps = { lang, themeColor };
+  const isAr = lang === 'ar';
 
   return (
     <MotionConfig reducedMotion="user">
@@ -63,7 +84,6 @@ export default function App() {
     >
       <ScrollToTop />
       <ScrollProgress themeColor={themeColor} />
-
       <Navbar
         lang={lang}
         setLang={setLang}
@@ -82,25 +102,25 @@ export default function App() {
         >
         <Suspense fallback={<PageLoader themeColor={themeColor} />}>
           <Routes>
-            <Route path={ROUTES.home} element={<Home {...pageProps} />} />
-            <Route path={ROUTES.story} element={<OurStoryPage {...pageProps} />} />
-            <Route path={ROUTES.overview} element={<OverviewPage {...pageProps} />} />
-            <Route path={ROUTES.values} element={<ValuesPage {...pageProps} />} />
-            <Route path={ROUTES.quality} element={<GovernanceQualityPage {...pageProps} />} />
-            <Route path={ROUTES.iso} element={<IsoCertificationsPage {...pageProps} />} />
-            <Route path={ROUTES.careers} element={<CareersPage {...pageProps} />} />
-            <Route path={ROUTES.projects} element={<ProjectsPage {...pageProps} />} />
-            <Route path={ROUTES.products} element={<Products {...pageProps} />} />
-            <Route path={ROUTES.contact} element={<Contact {...pageProps} />} />
-            <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} />} />
-            <Route path="*" element={<NotFoundPage {...pageProps} />} />
+            <Route path={ROUTES.home} element={<Home {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.story} element={<OurStoryPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.overview} element={<OverviewPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.values} element={<ValuesPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.quality} element={<GovernanceQualityPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.iso} element={<IsoCertificationsPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.careers} element={<CareersPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.projects} element={<ProjectsPage {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.products} element={<Products {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
+            <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
+            <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
           </Routes>
         </Suspense>
         </motion.div>
       </main>
 
       <Footer lang={lang} themeColor={themeColor} />
-      <BackToTop themeColor={themeColor} isAr={lang === 'ar'} />
+      <BackToTop themeColor={themeColor} isAr={isAr} />
       <ChatWidget />
     </div>
     </MotionConfig>

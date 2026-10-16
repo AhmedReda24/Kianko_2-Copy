@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -8,7 +8,28 @@ import SectionHeading from '../ui/SectionHeading';
 
 export default function CertificatesSlider({ isAr, themeColor = '#C9252C' }) {
   const reduce = useReducedMotion();
-  const certificates = useCertificates();
+  const rawCertificates = useCertificates();
+
+  // دمج صور الـ ISO الثلاث الحقيقية في أول ثلاثة كروت مع الحفاظ على باقي الكروت
+  const certificates = useMemo(() => {
+    const isoImages = [
+      '/Image/ISO-9001-2015.jpg',
+      '/Image/ISO-14001-2015.jpg',
+      '/Image/ISO-45001-2018.jpg',
+    ];
+
+    return rawCertificates.map((cert, index) => {
+      if (index < 3 && isoImages[index]) {
+        return {
+          ...cert,
+          img: isoImages[index],
+        };
+      }
+      return cert;
+    });
+  }, [rawCertificates]);
+
+  // إعداد التشغيل التلقائي (Autoplay) ليعمل بسلاسة
   const [autoplay] = useState(() => Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -74,10 +95,10 @@ export default function CertificatesSlider({ isAr, themeColor = '#C9252C' }) {
                     <button
                       type="button"
                       onClick={() => setZoom(c)}
-                      className="block w-full aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-lg border border-blue-900/60 hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
+                      className="block w-full aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-lg border border-blue-900/60 hover:-translate-y-1 transition-transform duration-300 cursor-pointer p-2"
                       aria-label={`${title} — ${isAr ? 'تكبير' : 'enlarge'}`}
                     >
-                      <img src={c.img} alt={title} loading="lazy" decoding="async" className="w-full h-full object-contain p-2" />
+                      <img src={c.img} alt={title} loading="lazy" decoding="async" className="w-full h-full object-contain" />
                     </button>
                   ) : (
                     <div className="aspect-[3/4] rounded-2xl border border-blue-900/70 bg-[#0B1B3A] p-3 shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">

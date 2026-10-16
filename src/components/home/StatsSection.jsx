@@ -3,28 +3,28 @@ import TiltCard from '../ui/TiltCard';
 
 const stats = [
   {
-    value: 50, prefix: '+',
-    title: 'Locations', titleAr: 'موقعاً',
+    value: 3, prefix: '+',
+    title: 'Locations', titleAr: 'مواقع ومجمعات',
     subtitle: 'Across the Region', subtitleAr: 'في جميع أنحاء المنطقة',
-    img: 'https://images.pexels.com/photos/224924/pexels-photo-224924.jpeg?auto=compress&cs=tinysrgb&w=800',
+    img: '/Image/stats-locations.jpg',
   },
   {
     value: 100, prefix: '+',
     title: 'Building Solutions', titleAr: 'حل إجمالي',
     subtitle: 'Engineered Steel Products', subtitleAr: 'منتجات حديدية هندسية',
-    img: 'https://images.pexels.com/photos/159358/construction-site-build-construction-work-159358.jpeg?auto=compress&cs=tinysrgb&w=800',
+    img: '/Image/stats-solutions.jpg',
   },
   {
     value: 3, prefix: '',
     title: 'Main Activities', titleAr: 'أنشطة رئيسية',
     subtitle: 'Design, Manufacture, & Supply', subtitleAr: 'التصميم، التصنيع، والتوريد',
-    img: 'https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&w=800',
+    img: '/Image/stats-activities.jpg',
   },
   {
-    value: 10000, prefix: '+',
+    value: 7000, prefix: '+',
     title: 'Projects', titleAr: 'مشروع',
     subtitle: 'Across the MENA Region', subtitleAr: 'في الشرق الأوسط وشمال إفريقيا',
-    img: 'https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=800',
+    img: '/Image/stats-projects.jpg',
   },
 ];
 

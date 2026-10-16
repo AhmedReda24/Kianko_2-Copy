@@ -7,7 +7,6 @@ import { ROUTES } from '../../routes';
 import CtaLink from '../ui/CtaLink';
 import Sparks from './Sparks';
 
-const LETTERS = 'KIANKO'.split('');
 const EASE = [0.22, 1, 0.36, 1];
 
 export default function HeroSection({ isAr, themeColor }) {
@@ -24,6 +23,8 @@ export default function HeroSection({ isAr, themeColor }) {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.7, delay, ease: EASE },
   });
+
+  const LETTERS = 'KIANKO'.split('');
 
   const quickLinks = [
     { to: ROUTES.products, icon: Layers, t: 'Our Solutions', tAr: 'منتجاتنا', s: 'Cable trays, rebar, profiles', sAr: 'حوامل كابلات، حديد تسليح، مقاطع' },
@@ -72,20 +73,32 @@ export default function HeroSection({ isAr, themeColor }) {
 
         {/* العنوان الرئيسي */}
         <h1 className="mt-2 sm:mt-4 font-display font-black text-white leading-[0.95] tracking-tight text-[3.8rem] sm:text-[6.5rem] lg:text-[9rem] drop-shadow-2xl">
-          <span dir="ltr" className="inline-flex justify-center sm:justify-start" aria-label="KIANKO">
-            {LETTERS.map((l, i) => (
-              <span key={i} aria-hidden="true" className="inline-block overflow-hidden pb-[0.08em]">
-                <motion.span
-                  className="inline-block"
-                  initial={reduce ? false : { y: '110%' }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 0.85, delay: 0.25 + i * 0.07, ease: EASE }}
-                >
-                  {l}
-                </motion.span>
-              </span>
-            ))}
-          </span>
+          {isAr ? (
+            /* إظهار الكلمة العربية متصلة بالكامل مع حركية كشف ناعمة (Clip Path Reveal) من اليمين لليسار */
+            <motion.span
+              className="inline-block"
+              initial={reduce ? false : { clipPath: 'inset(0 0 0 100%)', opacity: 0, y: 15 }}
+              animate={{ clipPath: 'inset(0 0 0 0%)', opacity: 1, y: 0 }}
+              transition={{ duration: 1.1, delay: 0.25, ease: EASE }}
+            >
+              كيانكو
+            </motion.span>
+          ) : (
+            <span dir="ltr" className="inline-flex justify-center sm:justify-start" aria-label="KIANKO">
+              {LETTERS.map((l, i) => (
+                <span key={i} aria-hidden="true" className="inline-block overflow-hidden pb-[0.08em]">
+                  <motion.span
+                    className="inline-block"
+                    initial={reduce ? false : { y: '110%' }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.85, delay: 0.25 + i * 0.07, ease: EASE }}
+                  >
+                    {l}
+                  </motion.span>
+                </span>
+              ))}
+            </span>
+          )}
         </h1>
 
         <motion.div
@@ -102,7 +115,7 @@ export default function HeroSection({ isAr, themeColor }) {
         >
           {isAr
             ? 'تصنيع وتدلفين حديد التسليح، وحوامل وسلالم الكابلات والمقاطع المعدنية بأعلى جودة.'
-            : 'Precision Steel Fabrication, Rebar Rolling, and Heavy Duty Cable Management Manufacturing.'}
+            : 'Precision Steel Fabrication, Plastering and Block Accessories, and Heavy Duty Cable Management Manufacturing.'}
         </motion.p>
 
         {/* الأزرار */}
@@ -116,7 +129,7 @@ export default function HeroSection({ isAr, themeColor }) {
         </motion.div>
       </motion.div>
 
-      {/* مؤشر النزول السلس الفاخر (SCROLL DOWN) المتحرك بنعومة */}
+      {/*مؤشر النزول(SCROLL DOWN) */}
       <motion.div
         {...fade(1.4)}
         className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-2.5 pointer-events-none"

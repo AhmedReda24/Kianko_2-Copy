@@ -9,25 +9,25 @@ const areas = [
     title: 'Cable Management', titleAr: 'أنظمة إدارة الكابلات',
     text: 'Heavy-duty cable trays, ladders and accessories, fabricated to project specifications.',
     textAr: 'حوامل وسلالم كابلات ثقيلة وملحقاتها، مصنّعة حسب مواصفات كل مشروع.',
-    img: 'https://images.pexels.com/photos/159358/construction-site-build-construction-work-159358.jpeg?auto=compress&cs=tinysrgb&fit=crop&fm=webp&q=75&w=1000',
+    img: '/Image/expertise-cable-management.jpg',
   },
   {
-    title: 'Rebar Rolling', titleAr: 'تدلفين حديد التسليح',
-    text: 'Rolling and processing of reinforcement steel for structural and infrastructure works.',
-    textAr: 'تدلفين ومعالجة حديد التسليح للأعمال الإنشائية ومشاريع البنية التحتية.',
-    img: 'https://images.pexels.com/photos/224924/pexels-photo-224924.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    title: 'Plastering & Blockworks Accessories', titleAr: 'إكسسوارات المحارة وبناء الطوب',
+    text: 'Essential metal accessories and mesh profiles for solid plastering and blockwork finishing.',
+    textAr: 'إكسسوارات معدنية وشبكات أساسية لتشطيبات المحارة وأعمال بناء الطوب بدقة.',
+    img: '/Image/expertise-plastering-accessories.jpg',
   },
   {
     title: 'Plaster Profiles', titleAr: 'مقاطع المحارة',
     text: 'Plaster beads and metal profile systems for clean, durable wall and corner finishing.',
     textAr: 'زوايا ومقاطع معدنية للمحارة لتشطيبات نظيفة وطويلة العمر للحوائط والأركان.',
-    img: 'https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    img: '/Image/expertise-plaster-profiles.jpg',
   },
   {
     title: 'Hot-Dip Galvanizing', titleAr: 'الجلفنة على الساخن',
     text: 'Zinc coating that protects steel against corrosion in demanding environments.',
     textAr: 'طبقة زنك تحمي الصلب من الصدأ في أصعب بيئات التشغيل.',
-    img: 'https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    img: '/Image/expertise-galvanizing-plant.jpg',
   },
 ];
 
@@ -42,8 +42,8 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
         </SectionHeading>
         <p className="mt-3 sm:mt-4 leading-relaxed text-sm sm:text-base text-slate-300">
           {isAr
-            ? 'من حوامل الكابلات إلى حديد التسليح والجلفنة، نغطي ما يحتاجه المشروع من الصلب بجودة ثابتة.'
-            : 'From cable trays to rebar and galvanizing, we cover the steel a project needs with consistent quality.'}
+            ? 'من حوامل الكابلات وإكسسوارات المحارة إلى الجلفنة، نغطي ما يحتاجه المشروع من الصلب بجودة ثابتة.'
+            : 'From cable trays to plastering accessories and galvanizing, we cover the steel a project needs with consistent quality.'}
         </p>
       </div>
 

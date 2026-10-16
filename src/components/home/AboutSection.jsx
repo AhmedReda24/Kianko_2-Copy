@@ -36,17 +36,18 @@ export default function AboutSection({ isAr, themeColor = '#C9252C' }) {
 
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         <motion.div
-          className="relative rounded-3xl overflow-hidden shadow-2xl border border-blue-900/60 bg-slate-900 group"
+          className="relative rounded-3xl overflow-hidden shadow-2xl border border-blue-900/60 bg-[#07132B] group"
           initial={reduce ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <img
-            src="https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&fit=crop&fm=webp&q=75&w=1200"
+            src="/Image/factory-main.jpg"
             alt="Kianko Factory"
-            loading="lazy"
-            decoding="async"
+            // loading="eager"
+            // fetchPriority="high"
+            // decoding="async"
             className="w-full h-[280px] sm:h-[400px] lg:h-[450px] object-cover brightness-90 group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#07132B] via-transparent to-transparent opacity-80" />
