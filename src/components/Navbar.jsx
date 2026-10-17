@@ -109,30 +109,33 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
           : `${scrolled ? 'bg-white/90' : 'bg-white'} border-slate-200 text-slate-800`
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-[height] duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
-          <Link to={ROUTES.home} className={`flex items-center gap-3 group py-2 cursor-pointer ${focusRing}`} aria-label="KIANKO COMPANY">
-            {/* اللوجو مع تأثير الظل الأحمر/الضياء المنسجم مع الفوتر */}
-            <div className="p-1 transition-transform duration-300 group-hover:scale-105">
+          
+          {/* Logo & Brand Name */}
+          <Link to={ROUTES.home} className={`flex items-center gap-2 sm:gap-3 group py-2 cursor-pointer shrink-0 ${focusRing}`} aria-label="KIANKO COMPANY">
+            <div className="p-1 transition-transform duration-300 group-hover:scale-105 shrink-0">
               <img 
                 src="/assets/logo.png" 
                 alt="KIANKO Logo" 
-                className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-9 sm:h-10' : 'h-11 sm:h-13'}`} 
+                className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-8 sm:h-10' : 'h-10 sm:h-13'}`} 
                 style={{
                   filter: `drop-shadow(0px 2px 10px rgba(201, 37, 44, 0.45))`
                 }}
               />
             </div>
             <div className="text-start">
-              <span className={`block font-black tracking-wider transition-[font-size] duration-300 ${scrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`} style={{ color: themeColor }}>
+              <span className={`block font-black tracking-wider text-base sm:text-xl transition-[font-size] duration-300 ${scrolled ? 'sm:text-xl' : 'sm:text-2xl'}`} style={{ color: themeColor }}>
                 KIANKO <span className={darkMode ? 'text-white' : 'text-slate-900'}>COMPANY</span>
               </span>
-              <span className={`block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0' : 'h-4 opacity-100'}`}>
+              {/* يظهر العنوان الفرعي بوضوح في الشاشات الكبيرة ويختفي ذكياً في الموبايل لمنع التكدس */}
+              <span className={`hidden sm:block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0' : 'h-4 opacity-100'}`}>
                 {isAr ? 'شركة كيان لمنتجات الحديد' : 'KIAN IRON PRODUCTS COMPANY'}
               </span>
             </div>
           </Link>
 
+          {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center gap-4 text-xs font-bold">
             {before.map(desktopLink)}
 
@@ -206,6 +209,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
             </button>
           </div>
 
+          {/* Mobile Menu Toggle Button */}
           <div className="lg:hidden flex items-center gap-2">
             <button
               type="button"
@@ -221,6 +225,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
         </div>
       </div>
 
+      {/* Mobile Dropdown Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
