@@ -6,7 +6,11 @@ import {
   CheckCircle2, 
   ArrowRight, 
   Workflow, 
-  Zap
+  Zap,
+  Scale,
+  Award,
+  Layers,
+  Clock
 } from 'lucide-react';
 import { ROUTES } from '../routes';
 import SpotlightCard from '../components/ui/SpotlightCard';
@@ -112,21 +116,21 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
   ];
 
   const btnCls =
-    'relative inline-flex items-center justify-center gap-2 py-3.5 px-8 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl';
+    'relative inline-flex items-center justify-center gap-2 py-3.5 px-6 sm:px-8 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl text-xs sm:text-base w-full sm:w-auto';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20 text-start">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start">
       
       {/* 1. Page Header Section */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
+      <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
           <Factory className="w-4 h-4" style={{ color: themeColor }} />
           <span>{pick('INDUSTRIAL INFRASTRUCTURE', 'البنية التحتية الصناعية')}</span>
         </span>
-        <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight">
+        <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tight">
           {pick('Manufacturing Overview', 'نظرة عامة على القدرات الإنتاجية')}
         </h1>
-        <p className="text-slate-300 font-medium text-base sm:text-lg leading-relaxed">
+        <p className="text-slate-300 font-medium text-xs sm:text-lg leading-relaxed">
           {pick(
             'State-of-the-art automated cold-rolling, high-speed punching, and hot-dip galvanizing facilities powered by Kianko engineering.',
             'خطوط إنتاج آلية بالكامل ومصانع جلفنة حديثة مدعومة بأحدث تقنيات الهندسة وتشكيل المعادن.'
@@ -134,8 +138,8 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
         </p>
       </div>
 
-      {/* 2. Main Capabilities Grid (الكروت الـ 6 بتعديل لون الـ Hover للأحمر القرمزي) */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* 2. Main Capabilities Grid */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
         {capabilities.map((card) => (
           <SpotlightCard
             as="article"
@@ -144,7 +148,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           >
             <div>
               {/* حاوية الصورة */}
-              <div className="relative overflow-hidden h-52 bg-[#061022]">
+              <div className="relative overflow-hidden h-44 sm:h-52 bg-[#061022]">
                 <img
                   src={card.img}
                   alt={pick(card.titleEn, card.titleAr)}
@@ -152,30 +156,30 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <span
-                  className="absolute top-4 start-4 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md backdrop-blur-md bg-opacity-90"
+                  className="absolute top-3 sm:top-4 start-3 sm:start-4 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full font-bold shadow-md backdrop-blur-md bg-opacity-90"
                   style={{ backgroundColor: themeColor }}
                 >
                   {pick(card.badgeEn, card.badgeAr)}
                 </span>
               </div>
 
-              {/* تفاصيل الكارد مع لون الهفر المظبوط الهوية */}
-              <div className="p-6 space-y-3">
+              {/* تفاصيل الكارد */}
+              <div className="p-5 sm:p-6 space-y-2.5 sm:space-y-3">
                 <h3 
-                  className="text-xl font-bold text-white transition-colors duration-300"
+                  className="text-lg sm:text-xl font-bold text-white transition-colors duration-300"
                   onMouseEnter={(e) => (e.currentTarget.style.color = themeColor)}
                   onMouseLeave={(e) => (e.currentTarget.style.color = 'white')}
                 >
                   {pick(card.titleEn, card.titleAr)}
                 </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
+                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                   {pick(card.descEn, card.descAr)}
                 </p>
               </div>
             </div>
 
-            <div className="p-6 pt-0">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 pt-2 border-t border-blue-900/40">
+            <div className="p-5 sm:p-6 pt-0">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-400 pt-2 border-t border-blue-900/40">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{pick('ISO Certified Process', 'عملية معتمدة بجودة ISO')}</span>
               </div>
@@ -184,56 +188,89 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
         ))}
       </div>
 
-      {/* 3. Technical Metrics Bar */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-8 shadow-2xl">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-blue-900/60">
-          <div className="space-y-2 pt-4 sm:pt-0">
-            <span className="text-3xl font-black text-white">50,000+</span>
-            <p className="text-xs font-bold text-slate-300">{pick('Tons Annual Capacity', 'طاقة إنتاجية سنوية (طن)')}</p>
-          </div>
-          <div className="space-y-2 pt-4 sm:pt-0">
-            <span className="text-3xl font-black" style={{ color: themeColor }}>100%</span>
-            <p className="text-xs font-bold text-slate-300">{pick('ASTM A123 Compliance', 'مطابقة لمعايير الجلفنة')}</p>
-          </div>
-          <div className="space-y-2 pt-4 sm:pt-0">
-            <span className="text-3xl font-black text-white">1.0 - 3.0mm</span>
-            <p className="text-xs font-bold text-slate-300">{pick('Steel Sheet Thickness', 'نطاق سُمك الصُلب المعالج')}</p>
-          </div>
-          <div className="space-y-2 pt-4 sm:pt-0">
-            <span className="text-3xl font-black" style={{ color: themeColor }}>24/7</span>
-            <p className="text-xs font-bold text-slate-300">{pick('Automated Operations', 'تشغيل خطوط الإنتاج')}</p>
-          </div>
-        </div>
+      {/* 3. Technical Metrics Bar (المصميم المطور بإحصائيات كروت منفصلة وأيقونات مميزة) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {[
+          {
+            value: '50,000+',
+            labelEn: 'Tons Annual Capacity',
+            labelAr: 'طاقة إنتاجية سنوية (طن)',
+            icon: Scale,
+            isThemeColor: false,
+          },
+          {
+            value: '100%',
+            labelEn: 'ASTM A123 Compliance',
+            labelAr: 'مطابقة لمعايير الجلفنة',
+            icon: Award,
+            isThemeColor: true,
+          },
+          {
+            value: '1.0 - 3.0mm',
+            labelEn: 'Steel Sheet Thickness',
+            labelAr: 'نطاق سُمك الصُلب المعالج',
+            icon: Layers,
+            isThemeColor: false,
+          },
+          {
+            value: '24/7',
+            labelEn: 'Automated Operations',
+            labelAr: 'تشغيل خطوط الإنتاج',
+            icon: Clock,
+            isThemeColor: true,
+          },
+        ].map((metric, idx) => {
+          const IconComp = metric.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-4 sm:p-6 text-center space-y-2 shadow-xl hover:border-slate-500 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-center items-center group relative overflow-hidden"
+            >
+              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-900/90 border border-blue-900/80 mb-1 group-hover:scale-110 transition-transform">
+                <IconComp className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
+              </div>
+              <span
+                className="text-lg sm:text-3xl font-black tracking-tight whitespace-nowrap block text-white"
+                style={{ color: metric.isThemeColor ? themeColor : undefined }}
+              >
+                {metric.value}
+              </span>
+              <p className="text-slate-300 font-semibold text-[11px] sm:text-xs leading-tight">
+                {pick(metric.labelEn, metric.labelAr)}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* 4. Manufacturing Workflow Steps */}
-      <div className="space-y-12 pt-6">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80">
+      <div className="space-y-8 sm:space-y-12 pt-4">
+        <div className="text-center space-y-3 max-w-2xl mx-auto px-2">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80">
             <Workflow className="w-4 h-4 text-emerald-400" />
             <span>{pick('PRODUCTION PROCESS', 'مراحل التصنيع')}</span>
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
             {pick('Precision Engineering Workflow', 'خطوات دورة الإنتاج الفولاذية')}
           </h2>
-          <p className="text-slate-300 text-sm">
+          <p className="text-slate-300 text-xs sm:text-sm">
             {pick('From raw coil inspection to hot-dip galvanizing and heavy packaging.', 'من فحص الفولاذ الخام وحتى الجلفنة والتغليف للمنشآت.')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {workflowSteps.map((st) => (
             <div
               key={st.step}
-              className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-6 space-y-4 relative shadow-xl hover:border-slate-400 transition-all"
+              className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-5 sm:p-6 space-y-3 text-center sm:text-start relative shadow-xl hover:border-slate-400 transition-all flex flex-col items-center sm:items-start"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-black opacity-30 text-white">{st.step}</span>
+              <div className="w-full flex items-center justify-between">
+                <span className="text-2xl sm:text-3xl font-black opacity-30 text-white">{st.step}</span>
                 <div className="p-2 rounded-lg bg-slate-900 border border-blue-900/80">
                   <Zap className="w-4 h-4" style={{ color: themeColor }} />
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-white">{pick(st.titleEn, st.titleAr)}</h3>
+              <h3 className="text-base sm:text-lg font-bold text-white">{pick(st.titleEn, st.titleAr)}</h3>
               <p className="text-slate-300 text-xs leading-relaxed">{pick(st.descEn, st.descAr)}</p>
             </div>
           ))}
@@ -241,16 +278,16 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 5. Quality & Environmental Standards Section */}
-      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-8 sm:p-12 space-y-8 shadow-2xl">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          <div className="space-y-4">
-            <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80">
+      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
+          <div className="space-y-3 sm:space-y-4 text-center sm:text-start">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
               {pick('SUSTAINABILITY & SAFETY', 'السلامة والاستدامة')}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
               {pick('Eco-Friendly & Safe Manufacturing', 'تصنيع صديق للبيئة وآمن بالكامل')}
             </h2>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0">
               {pick(
                 'Our plants utilize zero-waste acid treatment recycling systems, eco-friendly zinc filtering, and strict worker safety protocol complying with international OSHA standards.',
                 'تعتمد مصانعنا على أنظمة إعادة تدوير الأحماض لمنع التلوث، وفلاتر الزنك البيئية، مع تطبيق معايير OSHA العالمية لسلامة الكوادر الفنية.'
@@ -258,14 +295,14 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {[
               { titleEn: 'Zero Acid Waste System', titleAr: 'نظام التدوير الكامل للأحماض' },
               { titleEn: 'OSHA Safety Protocol', titleAr: 'مطابقة معايير السلامة OSHA' },
               { titleEn: 'Zinc Fume Filtration', titleAr: 'فلاتر احتجاز أدخنة الزنك' },
               { titleEn: 'Energy Efficient Machinery', titleAr: 'ماكينات موفرة للطاقة الكهربائية' },
             ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-slate-900/80 border border-blue-900/40">
+              <div key={idx} className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-blue-900/40 text-start">
                 <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span className="text-xs font-bold text-white">{pick(item.titleEn, item.titleAr)}</span>
               </div>
@@ -275,28 +312,28 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 6. Call to Action */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl">
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl">
+        <h2 className="text-xl sm:text-4xl font-extrabold text-white">
           {pick('Need Custom Steel Fabrication Specifications?', 'تحتاج مواصفات تصنيع صُلب مخصصة لمشروعك؟')}
         </h2>
-        <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">
+        <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
           {pick(
             'Our engineering team provides dedicated consultation for load calculations, custom profile rolling, and galvanizing requirements.',
             'يقدم فريقنا الهندسي استشارات مخصصة لحسابات الأحمال، وتشكيل القطاعات، ومواصفات الجلفنة لمشروعك.'
           )}
         </p>
-        <div className="pt-2 flex flex-wrap justify-center gap-4">
+        <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Link
             to={ROUTES.contact}
             className={btnCls}
             style={{ backgroundColor: themeColor }}
           >
             <span>{pick('Request Technical Consultation', 'اطلب استشارة هندسية')}</span>
-            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 rtl:rotate-180" />
           </Link>
           <Link
             to={ROUTES.products}
-            className="inline-flex items-center gap-2 py-3.5 px-8 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-700 transition-all hover:scale-105 border border-blue-900/80"
+            className="inline-flex items-center justify-center gap-2 py-3.5 px-6 sm:px-8 rounded-xl font-bold text-xs sm:text-base text-white bg-slate-800 hover:bg-slate-700 transition-all hover:scale-105 border border-blue-900/80 w-full sm:w-auto"
           >
             <span>{pick('Explore Product Line', 'استكشف المنتجات')}</span>
           </Link>

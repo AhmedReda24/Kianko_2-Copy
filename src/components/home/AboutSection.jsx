@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { Factory, PencilRuler, Truck } from 'lucide-react';
-import logoImg from "../../../assets/logo.png";
 import { ROUTES } from '../../routes';
 import CtaLink from '../ui/CtaLink';
 import SectionHeading from '../ui/SectionHeading';
@@ -45,15 +44,9 @@ export default function AboutSection({ isAr, themeColor = '#C9252C' }) {
           <img
             src="/Image/factory-main.jpg"
             alt="Kianko Factory"
-            // loading="eager"
-            // fetchPriority="high"
-            // decoding="async"
             className="w-full h-[280px] sm:h-[400px] lg:h-[450px] object-cover brightness-90 group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#07132B] via-transparent to-transparent opacity-80" />
-          <div className="absolute top-4 start-4 sm:top-6 sm:start-6 bg-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border border-slate-200">
-            <img src={logoImg} alt="Kianko Logo" className="h-9 sm:h-12 w-auto object-contain" />
-          </div>
         </motion.div>
 
         <div className="space-y-4 sm:space-y-6">
@@ -75,7 +68,7 @@ export default function AboutSection({ isAr, themeColor = '#C9252C' }) {
 
           <div className="pt-2 sm:pt-4 flex flex-wrap gap-4">
             <CtaLink to={ROUTES.story} themeColor={themeColor}>
-              {isAr ? 'اقرأ قصتنا' : 'Read Our Story'}
+              {isAr ? 'اقرأقصتنا' : 'Read Our Story'}
             </CtaLink>
             <CtaLink to={ROUTES.contact} variant="glass" arrow={false}>
               {isAr ? 'تواصل مع كيانكو' : 'Reach KIANKO'}
