@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { ROUTES } from '../routes';
-import logoImg from '../../assets/logo.png';
+import logoImg from "../../assets/logo.png";
 import SocialLinks from './SocialLinks';
 
 export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
@@ -17,9 +17,10 @@ export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode =
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="grid md:grid-cols-4 gap-8 text-start">
           <div className="space-y-4 md:col-span-1">
-            <Link to={ROUTES.home} className="flex items-center gap-3">
-              <div className="bg-white p-1.5 rounded-xl shadow-md border border-slate-200">
-                <img src={logoImg} alt="Kianko Logo" className="h-10 w-auto object-contain" />
+            <Link to={ROUTES.home} className="flex items-center gap-3 group">
+              {/* تم إزالة الخلفية البيضاء والإطار لتصبح الصورة منسجمة مع الهيدر */}
+              <div className="p-1 transition-transform duration-300 group-hover:scale-105">
+                <img src={logoImg} alt="Kianko Logo" className="h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(201,37,44,0.3)]" />
               </div>
               <div>
                 <h3 className={`font-extrabold text-lg tracking-wider ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -35,7 +36,7 @@ export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode =
                 ? 'حلول هندسية وتشكيل معادن فائقة الدقة في الشرق الأوسط.'
                 : 'Precision engineering and steel manufacturing solutions across the MENA region.'}
             </p>
-            <SocialLinks themeColor={themeColor} isAr={isAr} />
+            <SocialLinks themeColor={themeColor} isAr= {isAr} />
           </div>
 
           <nav className="space-y-3 text-xs" aria-label={isAr ? 'الشركة' : 'Company'}>

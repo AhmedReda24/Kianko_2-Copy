@@ -1,43 +1,42 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Download, Search, X } from 'lucide-react';
 import { useProducts } from '../hooks/useContent';
-import { ROUTES } from '../routes';
+import { supabase } from "../lib/supabase";// تأكد أن مسار الـ supabase client صحيح عندك في المشروع
 import SpotlightCard from '../components/ui/SpotlightCard';
 
-// مسارات الـ 13 صورة بالترتيب الصحيح (أول 10 + 3 جديدة)
+const SUPABASE_BUCKET_URL = 'https://ohvjwenkocfragysvowp.supabase.co/storage/v1/object/public/datasheets';
+
 const customImages = [
-  '/Image/basket.jpg',                                // 1. Basket Type Cable Trays
-  '/Image/ladder.jpg',                                // 2. Heavy Duty Cable Ladders
-  '/Image/tray.jpg',                                  // 3. Perforated Cable Trays
-  '/Image/trunking.jpg',                              // 4. Cable Trunking Systems
-  '/Image/channels.jpg',                              // 5. Channels & Supports System
-  '/Image/plastering.jpg',                            // 6. Plastering & Blockworks Accessories
-  '/Image/Management Brackets.jpg',                   // 7. Management Brackets
-  '/Image/C-Channels.jpg',                            // 8. C-Channels
-  '/Image/Corner.jpg',                                // 9. Corner Beads & Profiles
-  '/Image/Drywall.jpg',                               // 10. Drywall Framing Systems
-  '/Image/wire mesh.jpg',                             // 11. Wire Mesh Basket Cable Trays
-  '/Image/heavy-duty beam clamps and spring .jpg',    // 12. Heavy-Duty Beam Clamps & Springs
-  '/Image/steel angle beads and expanded metal mesh.jpg', // 13. Steel Angle Beads & Expanded Mesh
+  '/Image/basket.jpg',
+  '/Image/ladder.jpg',
+  '/Image/tray.jpg',
+  '/Image/trunking.jpg',
+  '/Image/channels.jpg',
+  '/Image/plastering.jpg',
+  '/Image/Management Brackets.jpg',
+  '/Image/C-Channels.jpg',
+  '/Image/Corner.jpg',
+  '/Image/Drywall.jpg',
+  '/Image/wire mesh.jpg',
+  '/Image/heavy-duty beam clamps and spring .jpg',
+  '/Image/steel angle beads and expanded metal mesh.jpg',
 ];
 
-// أسماء وعناوين الـ 13 منتجاً (إنجليزي وعربي)
 const customNames = [
-  { name: 'Basket Type Cable Trays', nameAr: 'حوامل الكابلات الشبكية' },
-  { name: 'Heavy Duty Cable Ladders', nameAr: 'سلم الكابلات الثقيل' },
-  { name: 'Perforated Cable Trays', nameAr: 'حوامل الكابلات المثقبة' },
-  { name: 'Cable Trunking Systems', nameAr: 'أنظمة ترنونج الكابلات' },
-  { name: 'Channels & Supports System', nameAr: 'أنظمة القطاعات والتدعيم' },
-  { name: 'Plastering & Blockworks Accessories', nameAr: 'ملحقات المحارة والبلوك' },
-  { name: 'Management Brackets', nameAr: 'كتائب وحوامل الإدارة' },
-  { name: 'C-Channels', nameAr: 'قطاعات C-Channels' },
-  { name: 'Corner Beads & Profiles', nameAr: 'زوايا ومقاطع المحارة' },
-  { name: 'Drywall Framing Systems', nameAr: 'أنظمة هياكل الجبس بورد' },
-  { name: 'Wire Mesh Basket Cable Trays', nameAr: 'حوامل كابلات شبكية بسلك معدني' },
-  { name: 'Heavy-Duty Beam Clamps & Springs', nameAr: 'مشابك الكمرات الثقيلة واليايات' },
-  { name: 'Steel Angle Beads & Expanded Mesh', nameAr: 'زوايا فولاذية وشبك ممدد' },
+  { id: 'basket-tray', name: 'Basket Type Cable Trays', nameAr: 'حوامل الكابلات الشبكية', pdfName: 'basket-datasheet.pdf' },
+  { id: 'cable-ladder', name: 'Heavy Duty Cable Ladders', nameAr: 'سلم الكابلات الثقيل', pdfName: 'ladder-datasheet.pdf' },
+  { id: 'perforated-tray', name: 'Perforated Cable Trays', nameAr: 'حوامل الكابلات المثقبة', pdfName: 'tray-datasheet.pdf' },
+  { id: 'cable-trunking', name: 'Cable Trunking Systems', nameAr: 'أنظمة ترنونج الكابلات', pdfName: 'trunking-datasheet.pdf' },
+  { id: 'channels-system', name: 'Channels & Supports System', nameAr: 'أنظمة القطاعات والتدعيم', pdfName: 'channels-datasheet.pdf' },
+  { id: 'plastering-acc', name: 'Plastering & Blockworks Accessories', nameAr: 'ملحقات المحارة والبلوك', pdfName: 'plastering-datasheet.pdf' },
+  { id: 'mgmt-brackets', name: 'Management Brackets', nameAr: 'كتائب وحوامل الإدارة', pdfName: 'basket-datasheet.pdf' },
+  { id: 'c-channels', name: 'C-Channels', nameAr: 'قطاعات C-Channels', pdfName: 'channels-datasheet.pdf' },
+  { id: 'corner-beads', name: 'Corner Beads & Profiles', nameAr: 'زوايا ومقاطع المحارة', pdfName: 'plastering-datasheet.pdf' },
+  { id: 'drywall-framing', name: 'Drywall Framing Systems', nameAr: 'أنظمة هياكل الجبس بورد', pdfName: 'trunking-datasheet.pdf' },
+  { id: 'wire-mesh-tray', name: 'Wire Mesh Basket Cable Trays', nameAr: 'حوامل كابلات شبكية بسلك معدني', pdfName: 'basket-datasheet.pdf' },
+  { id: 'beam-clamps', name: 'Heavy-Duty Beam Clamps & Springs', nameAr: 'مشابك الكمرات الثقيلة واليايات', pdfName: 'channels-datasheet.pdf' },
+  { id: 'steel-angle-mesh', name: 'Steel Angle Beads & Expanded Mesh', nameAr: 'زوايا فولاذية وشبك ممدد', pdfName: 'plastering-datasheet.pdf' },
 ];
 
 export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
@@ -47,26 +46,36 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
   const [category, setCategory] = useState('all');
   const [query, setQuery] = useState('');
 
-  // دمج البيانات وتوسيع القائمة لتشمل الـ 13 منتجاً فعلياً
+  // دالة تسجيل وتتبع التحميل في سوبابيس في الخلفية
+  const handleDownload = async (productId, datasheetUrl) => {
+  try {
+    const { error } = await supabase.rpc('increment_downloads', { p_product_id: productId });
+    if (error) console.error('RPC Error:', error);
+  } catch (err) {
+    console.error('Failed to track download count:', err);
+  }
+  window.open(datasheetUrl, '_blank');
+};
+
   const products = useMemo(() => {
-    // نأخذ المنتجات الأصلية ونعدل أول 10
     const updated = rawProducts.map((p, index) => {
       if (index < 10 && customNames[index]) {
         return {
           ...p,
+          id: customNames[index].id,
           name: customNames[index].name,
           nameAr: customNames[index].nameAr,
           image: customImages[index],
+          datasheet: `${SUPABASE_BUCKET_URL}/${customNames[index].pdfName}`,
         };
       }
       return p;
     });
 
-    // إذا كانت المنتجات الأصلية أقل من 13، نقوم بإنشاء وإضافة الكاردات الإضافية فعلياً للقائمة
     const extraItems = customNames.slice(10).map((item, idx) => {
       const realIdx = idx + 10;
       return {
-        id: `extra-product-${realIdx}`,
+        id: item.id,
         name: item.name,
         nameAr: item.nameAr,
         category: idx === 0 ? 'management' : 'building',
@@ -77,7 +86,7 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
         image: customImages[realIdx],
         specs: ['Industrial grade steel', 'Corrosion resistant', 'High load capacity'],
         specsAr: ['صلب صناعي عالي الجودة', 'مقاوم للتآكل', 'قدرة تحمل عالية'],
-        datasheet: null,
+        datasheet: `${SUPABASE_BUCKET_URL}/${item.pdfName}`,
       };
     });
 
@@ -103,7 +112,7 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
   }, [products, category, query]);
 
   const btnCls =
-    'relative inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+    'relative inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white shadow-lg cursor-pointer';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10 text-start">
@@ -111,7 +120,7 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white">
           KIANKO <span style={{ color: themeColor }}>{pick('Product Catalog', 'كتالوج المنتجات')}</span>
         </h1>
-        <p className="text-slate-300 max-w-xl mx-auto font-medium">
+        <p className="text-slate-300 max-w-xl mx-auto font-medium text-sm sm:text-base">
           {pick(
             `Explore our portfolio of ${products.length} steel lines, cable management systems, and building profiles.`,
             `تعرّف على ${products.length} خطوط إنتاج من حوامل الكابلات والمقاطع المعدنية.`
@@ -152,7 +161,7 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                 role="tab"
                 aria-selected={on}
                 onClick={() => setCategory(f.id)}
-                className={`relative px-6 py-3 rounded-xl font-bold transition-colors duration-300 border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                className={`relative px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-colors duration-300 border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                   on ? 'text-white border-transparent' : 'bg-[#0A1832] text-slate-300 hover:bg-[#10244A] border-blue-900/60'
                 }`}
               >
@@ -191,9 +200,9 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
           </button>
         </div>
       ) : (
-        <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <AnimatePresence mode="popLayout">
-            {list.map((p, idx) => {
+            {list.map((p) => {
               const isAccessory = p.image?.includes('plastering');
 
               return (
@@ -206,16 +215,12 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                   transition={{ duration: 0.25 }}
                   className="h-full"
                 >
-                  {/* ======================================================== */}
-                  {/* START: Product Card [Index: {idx}] - {p.name} */}
-                  {/* ======================================================== */}
                   <SpotlightCard
                     as="article"
                     className="group h-full bg-[#0A1832] rounded-2xl border border-blue-900/60 shadow-xl hover:border-slate-500 hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 flex flex-col justify-between overflow-hidden"
                   >
                     <div>
-                      {/* حاوية الصورة */}
-                      <div className={`relative overflow-hidden h-56 ${isAccessory ? 'bg-[#061022] p-1.5 flex items-center justify-center' : 'bg-[#0A1832]'}`}>
+                      <div className={`relative overflow-hidden h-52 sm:h-56 ${isAccessory ? 'bg-[#061022] p-1.5 flex items-center justify-center' : 'bg-[#0A1832]'}`}>
                         {p.image ? (
                           <img
                             src={p.image}
@@ -229,16 +234,15 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                         </span>
                       </div>
 
-                      {/* تفاصيل الكارد ونصوص المنتج */}
-                      <div className="relative p-6 space-y-4">
+                      <div className="relative p-5 sm:p-6 space-y-4">
                         <h2 
-                          className="text-xl font-bold text-white transition-colors duration-300"
+                          className="text-lg sm:text-xl font-bold text-white transition-colors duration-300"
                           onMouseEnter={(e) => e.currentTarget.style.color = themeColor}
                           onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
                         >
                           {pick(p.name, p.nameAr)}
                         </h2>
-                        <p className="text-slate-300 text-sm leading-relaxed">{pick(p.desc, p.descAr)}</p>
+                        <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{pick(p.desc, p.descAr)}</p>
 
                         <div className="space-y-2 pt-2">
                           <h3 className="text-xs font-bold text-slate-400">{pick('Technical Specs', 'المواصفات الفنية')}</h3>
@@ -252,23 +256,18 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                       </div>
                     </div>
 
-                    {/* زر تحميل أو طلب الداتا شيت */}
-                    <div className="relative p-6 pt-0">
-                      {p.datasheet ? (
-                        <a href={p.datasheet} download className={`${btnCls} bg-slate-800 hover:bg-slate-700`}>
-                          <Download className="w-4 h-4" />
-                          <span>{pick('Download Datasheet', 'تحميل الداتا شيت')}</span>
-                        </a>
-                      ) : (
-                        <Link to={ROUTES.contact} className={`${btnCls} hover:opacity-90 shadow-lg`} style={{ backgroundColor: themeColor }}>
-                          <span>{pick('Request Datasheet', 'اطلب الداتا شيت')}</span>
-                        </Link>
-                      )}
+                    <div className="relative p-5 sm:p-6 pt-0">
+                      <button 
+                        type="button"
+                        onClick={() => handleDownload(p.id, p.datasheet)}
+                        className={btnCls}
+                        style={{ backgroundColor: themeColor }}
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>{pick('Download Datasheet', 'تحميل الداتا شيت')}</span>
+                      </button>
                     </div>
                   </SpotlightCard>
-                  {/* ======================================================== */}
-                  {/* END: Product Card [Index: {idx}] */}
-                  {/* ======================================================== */}
                 </motion.div>
               );
             })}

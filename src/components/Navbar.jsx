@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react';
 import { Menu, X, Globe, ChevronDown, Sun, Moon } from 'lucide-react';
-import logoImg from "../../assets/logo.png";
 import { ROUTES } from '../routes';
 
 const pages = {
@@ -113,8 +112,16 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-[height] duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
           <Link to={ROUTES.home} className={`flex items-center gap-3 group py-2 cursor-pointer ${focusRing}`} aria-label="KIANKO COMPANY">
-            <div className="bg-white p-1.5 rounded-xl shadow-md border border-slate-200 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300">
-              <img src={logoImg} alt="" className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-8 sm:h-9' : 'h-10 sm:h-12'}`} />
+            {/* اللوجو مع تأثير الظل الأحمر/الضياء المنسجم مع الفوتر */}
+            <div className="p-1 transition-transform duration-300 group-hover:scale-105">
+              <img 
+                src="/assets/logo.png" 
+                alt="KIANKO Logo" 
+                className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-9 sm:h-10' : 'h-11 sm:h-13'}`} 
+                style={{
+                  filter: `drop-shadow(0px 2px 10px rgba(201, 37, 44, 0.45))`
+                }}
+              />
             </div>
             <div className="text-start">
               <span className={`block font-black tracking-wider transition-[font-size] duration-300 ${scrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`} style={{ color: themeColor }}>

@@ -21,6 +21,7 @@ const Products = lazy(() => import('./pages/Products'));
 const Contact = lazy(() => import('./pages/Contact'));
 const LocationsPage = lazy(() => import('./pages/LocationsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+import AdminDashboard from './pages/AdminDashboard';
 
 // مكون إرجاع الصفحة للأعلى عند تغيير الـ Path أو الـ Refresh
 function ScrollToTop() {
@@ -113,6 +114,11 @@ export default function App() {
             <Route path={ROUTES.products} element={<Products {...pageProps} isAr={isAr} />} />
             <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
             <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
+            
+            {/* تم نقل مسار الأدمن قبل مسار الـ NotFound (*) */}
+            <Route path={ROUTES.admin || '/admin'} element={<AdminDashboard themeColor={themeColor} />} />
+
+            {/* مسار الصفحة غير الموجودة هو الأخير دائماً */}
             <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
           </Routes>
         </Suspense>
