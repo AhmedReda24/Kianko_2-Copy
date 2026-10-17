@@ -16,7 +16,7 @@ export default function CertificationsGrid({
     <div className="min-h-screen bg-[#07132B] text-slate-100 py-10 sm:py-16 px-4 sm:px-6 lg:px-8 text-start dir-rtl">
       <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12">
         
-        {/* 1. Header Section - العنوان على سطر واحد وكلمة كيانكو باللون الأحمر */}
+        {/* 1. Header Section */}
         <div className="text-center space-y-3 sm:space-y-4 max-w-4xl mx-auto">
           {badge && (
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-400 bg-white/10 backdrop-blur-md border border-white/10 shadow-sm">
@@ -40,7 +40,7 @@ export default function CertificationsGrid({
           </p>
         </div>
 
-        {/* 2. Dark Cards Grid - الكارد داكن وإطار الشهادة فقط أبيض */}
+        {/* 2. Dark Cards Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {accreditations.map((item) => (
             <div
@@ -49,25 +49,37 @@ export default function CertificationsGrid({
             >
               <div className="space-y-4">
                 
-                {/* إطار الشهادة فقط هو الأبيض الناصع */}
+                {/* إطار معاينة الشهادة (متجاوب مع الموبايل واللابتوب) */}
                 <div 
-                  className="relative rounded-xl overflow-hidden bg-white border border-slate-200 h-60 sm:h-64 flex items-center justify-center cursor-pointer group/frame shadow-md"
+                  className="relative rounded-xl overflow-hidden bg-white border border-slate-200 h-52 sm:h-64 flex items-center justify-center cursor-pointer group/frame shadow-md"
                   onClick={() => setSelectedPdf(item)}
                 >
+                  {/* المعاينة الحية تعمل بسلاسة على شاشات اللابتوب والكمبيوتر */}
                   <iframe
                     src={`${item.file}#page=1&view=FitH&toolbar=0&navpanes=0`}
                     title={item.name}
-                    className="w-full h-full pointer-events-none scale-105"
+                    className="w-full h-full pointer-events-none scale-105 hidden sm:block"
                   />
 
-                  {/* طبقة التفاعل عند الوقوف بالماوس للمعاينة */}
-                  <div className="absolute inset-0 bg-[#0A1832]/75 opacity-0 group-hover/frame:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs backdrop-blur-xs rounded-xl">
+                  {/* تصميم بديل ومرتب للغاية يظهر على الهواتف المحمولة */}
+                  <div className="sm:hidden flex flex-col items-center justify-center p-4 text-center space-y-2 bg-slate-50 w-full h-full">
+                    <div className="w-12 h-12 rounded-full bg-[#C9252C]/10 flex items-center justify-center text-[#C9252C]">
+                      <FileCheck className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-800 line-clamp-1">{item.name}</span>
+                    <span className="text-[11px] px-3 py-1 rounded-lg bg-[#0A1832] text-white font-semibold shadow-xs">
+                      {pick('Tap to View PDF', 'اضغط لمعاينة المستند')}
+                    </span>
+                  </div>
+
+                  {/* طبقة التفاعل عند المرور بالماوس على الشاشات الكبيرة */}
+                  <div className="absolute inset-0 bg-[#0A1832]/75 opacity-0 group-hover/frame:opacity-100 transition-opacity hidden sm:flex items-center justify-center gap-2 text-white font-bold text-xs backdrop-blur-xs rounded-xl">
                     <ExternalLink className="w-5 h-5 text-emerald-400" />
                     <span>{pick('Click to Preview PDF', 'انقر لمعاينة ملف الاعتماد')}</span>
                   </div>
                 </div>
 
-                {/* تفاصيل الاعتماد بالنصوص البيضاء المضيئة على الكارد الداكن */}
+                {/* تفاصيل الاعتماد */}
                 <div className="space-y-2">
                   <span 
                     className="px-3 py-1 rounded-md text-[11px] font-bold text-white inline-block shadow-xs"
@@ -84,7 +96,7 @@ export default function CertificationsGrid({
                 </div>
               </div>
 
-              {/* أسفل الكارد لزر التحميل وحالة التوثيق */}
+              {/* أسفل الكارد */}
               <div className="pt-4 border-t border-blue-900/40 flex items-center justify-between text-xs font-bold">
                 <span className="flex items-center gap-1.5 text-emerald-400">
                   <FileCheck className="w-4 h-4 shrink-0" />
@@ -106,7 +118,7 @@ export default function CertificationsGrid({
           ))}
         </div>
 
-        {/* 3. Lightbox Preview Modal (شاشة منبثقة لعرض الـ PDF بالكامل عند الضغط) */}
+        {/* 3. Lightbox Preview Modal */}
         {selectedPdf && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
             <div className="relative bg-[#0A1832] text-white border border-blue-900/60 rounded-2xl p-4 sm:p-6 max-w-5xl w-full space-y-4 shadow-2xl">
@@ -128,7 +140,7 @@ export default function CertificationsGrid({
                 </button>
               </div>
 
-              {/* إطار العرض المباشر داخل الـ Modal */}
+              {/* إطار العرض داخل النافذة المنبثقة */}
               <div className="bg-white rounded-xl h-[70vh] w-full overflow-hidden border border-slate-200 shadow-inner">
                 <iframe
                   src={`${selectedPdf.file}#toolbar=1`}
