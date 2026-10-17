@@ -35,12 +35,16 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
   const [active, setActive] = useState(0);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-start">
-      <div className="max-w-2xl mb-8 sm:mb-10">
-        <SectionHeading themeColor={themeColor}>
-          {isAr ? 'مجالات خبرتنا' : 'Areas of Expertise'}
-        </SectionHeading>
-        <p className="mt-3 sm:mt-4 leading-relaxed text-sm sm:text-base text-slate-300">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-start">
+      
+      {/* تم التعديل لتسنطير العنوان والوصف على الموبايل والمحاذاة يساراً/يميناً في الشاشات الكبيرة */}
+      <div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-start mb-8 sm:mb-10 px-2">
+        <div className="flex justify-center sm:justify-start">
+          <SectionHeading themeColor={themeColor}>
+            {isAr ? 'مجالات خبرتنا' : 'Areas of Expertise'}
+          </SectionHeading>
+        </div>
+        <p className="mt-3 sm:mt-4 leading-relaxed text-xs sm:text-base text-slate-300 max-w-prose mx-auto sm:mx-0">
           {isAr
             ? 'من حوامل الكابلات وإكسسوارات المحارة إلى الجلفنة، نغطي ما يحتاجه المشروع من الصلب بجودة ثابتة.'
             : 'From cable trays to plastering accessories and galvanizing, we cover the steel a project needs with consistent quality.'}

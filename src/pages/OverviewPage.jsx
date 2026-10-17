@@ -119,7 +119,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
     'relative inline-flex items-center justify-center gap-2 py-3.5 px-6 sm:px-8 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl text-xs sm:text-base w-full sm:w-auto';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start overflow-hidden">
       
       {/* 1. Page Header Section */}
       <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
@@ -127,10 +127,10 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           <Factory className="w-4 h-4" style={{ color: themeColor }} />
           <span>{pick('INDUSTRIAL INFRASTRUCTURE', 'البنية التحتية الصناعية')}</span>
         </span>
-        <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tight">
+        <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight">
           {pick('Manufacturing Overview', 'نظرة عامة على القدرات الإنتاجية')}
         </h1>
-        <p className="text-slate-300 font-medium text-xs sm:text-lg leading-relaxed">
+        <p className="text-slate-300 font-medium text-xs sm:text-base leading-relaxed">
           {pick(
             'State-of-the-art automated cold-rolling, high-speed punching, and hot-dip galvanizing facilities powered by Kianko engineering.',
             'خطوط إنتاج آلية بالكامل ومصانع جلفنة حديثة مدعومة بأحدث تقنيات الهندسة وتشكيل المعادن.'
@@ -166,7 +166,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
               {/* تفاصيل الكارد */}
               <div className="p-5 sm:p-6 space-y-2.5 sm:space-y-3">
                 <h3 
-                  className="text-lg sm:text-xl font-bold text-white transition-colors duration-300"
+                  className="text-base sm:text-xl font-bold text-white transition-colors duration-300"
                   onMouseEnter={(e) => (e.currentTarget.style.color = themeColor)}
                   onMouseLeave={(e) => (e.currentTarget.style.color = 'white')}
                 >
@@ -188,7 +188,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
         ))}
       </div>
 
-      {/* 3. Technical Metrics Bar (المصميم المطور بإحصائيات كروت منفصلة وأيقونات مميزة) */}
+      {/* 3. Technical Metrics Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {[
           {
@@ -230,7 +230,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
                 <IconComp className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
               </div>
               <span
-                className="text-lg sm:text-3xl font-black tracking-tight whitespace-nowrap block text-white"
+                className="text-base sm:text-2xl font-black tracking-tight whitespace-nowrap block text-white"
                 style={{ color: metric.isThemeColor ? themeColor : undefined }}
               >
                 {metric.value}
@@ -250,7 +250,8 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
             <Workflow className="w-4 h-4 text-emerald-400" />
             <span>{pick('PRODUCTION PROCESS', 'مراحل التصنيع')}</span>
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+          {/* تم تصغير حجم العنوان ليظهر على سطر واحد تماماً ومناسب للهاتف */}
+          <h2 className="text-base sm:text-2xl font-extrabold text-white whitespace-nowrap">
             {pick('Precision Engineering Workflow', 'خطوات دورة الإنتاج الفولاذية')}
           </h2>
           <p className="text-slate-300 text-xs sm:text-sm">
@@ -284,7 +285,8 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
             <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
               {pick('SUSTAINABILITY & SAFETY', 'السلامة والاستدامة')}
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+            {/* تم تصغير حجم العنوان ليظهر على سطر واحد تماماً ومناسب للهاتف */}
+            <h2 className="text-base sm:text-2xl font-extrabold text-white leading-tight whitespace-nowrap">
               {pick('Eco-Friendly & Safe Manufacturing', 'تصنيع صديق للبيئة وآمن بالكامل')}
             </h2>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0">
@@ -313,7 +315,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
 
       {/* 6. Call to Action */}
       <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl">
-        <h2 className="text-xl sm:text-4xl font-extrabold text-white">
+        <h2 className="text-base sm:text-2xl font-extrabold text-white">
           {pick('Need Custom Steel Fabrication Specifications?', 'تحتاج مواصفات تصنيع صُلب مخصصة لمشروعك؟')}
         </h2>
         <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">

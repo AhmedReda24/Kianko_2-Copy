@@ -58,20 +58,26 @@ export default function CertificatesSlider({ isAr, themeColor = '#C9252C' }) {
   const arrowCls = "grid place-items-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-white/25 text-white transition-colors hover:bg-white/10 cursor-pointer";
 
   return (
-    <section className="bg-[#061024] border-y border-blue-900/40 py-16 sm:py-20">
+    <section className="bg-[#061024] border-y border-blue-900/40 py-12 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-start">
-        <div className="flex flex-wrap items-end justify-between gap-6 mb-8 sm:mb-10">
-          <div className="max-w-2xl">
-            <SectionHeading themeColor={themeColor}>
-              {isAr ? 'الاعتمادات وشهادات الخبرة' : 'Accreditations & Experience Certificates'}
-            </SectionHeading>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed text-slate-300">
+        
+        {/* تم تسنطير العنوان والوصف على الموبايل، ووضع الأسهم في مكان متناسق */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 mb-8 sm:mb-10 text-center sm:text-start">
+          <div className="max-w-2xl px-2">
+            <div className="flex justify-center sm:justify-start">
+              <SectionHeading themeColor={themeColor}>
+                {isAr ? 'الاعتمادات وشهادات الخبرة' : 'Accreditations & Experience Certificates'}
+              </SectionHeading>
+            </div>
+            <p className="mt-3 sm:mt-4 text-xs sm:text-base leading-relaxed text-slate-300 max-w-prose mx-auto sm:mx-0">
               {isAr
                 ? 'اعتمادات وشهادات من جهات معتمدة تؤكد جودة منتجاتنا وسجل خبرتنا في المشاريع.'
                 : 'Certificates from recognised bodies that back up our product quality and project track record.'}
             </p>
           </div>
-          <div className="flex gap-3">
+          
+          {/* أسهم التنقل متناسقة */}
+          <div className="flex gap-3 shrink-0">
             <button type="button" onClick={() => emblaApi?.scrollPrev()} className={arrowCls} aria-label={isAr ? 'السابق' : 'Previous'}>
               <Prev className="w-5 h-5" />
             </button>

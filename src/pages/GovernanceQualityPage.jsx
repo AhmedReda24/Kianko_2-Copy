@@ -6,11 +6,11 @@ export default function GovernanceQualityPage({ lang = 'en', themeColor }) {
     <CertificationsGrid
       lang={lang}
       themeColor={themeColor}
-      badge={isAr ? 'الحوكمة والجودة' : 'GOVERNANCE & QUALITY'}
-      title={isAr ? 'الحوكمة والجودة في كيانكو' : 'Governance & Quality at KIANKO'}
+      badge={isAr ? 'الاعتمادات والجودة' : 'ACCREDITATIONS & QUALITY'}
+      title={isAr ? 'الاعتمادات والجودة في كيانكو' : 'Accreditations & Quality at KIANKO'}
       intro={isAr
-        ? 'الأنظمة والمعايير اللي بنشتغل بيها لضمان جودة ثابتة في كل مرحلة تصنيع.'
-        : 'The systems and standards we work to, so quality stays consistent at every stage of manufacturing.'}
+        ? 'الأنظمة والمعايير والاعتمادات الرسمية اللي بنشتغل بيها لضمان جودة ثابتة في كل مرحلة تصنيع.'
+        : 'The systems, standards, and official accreditations we work to, so quality stays consistent at every stage of manufacturing.'}
     />
   );
 }

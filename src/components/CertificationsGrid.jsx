@@ -1,60 +1,159 @@
-import { Download, ShieldCheck } from 'lucide-react';
-import { useAccreditations } from '../hooks/useContent';
-import SpotlightCard from './ui/SpotlightCard';
+import React, { useState } from 'react';
+import { Award, FileCheck, ExternalLink, X, Download } from 'lucide-react';
+import { accreditations } from '../data/accreditations';
 
-export default function CertificationsGrid({ lang = 'en', themeColor = '#C9252C', badge, title, intro }) {
+export default function CertificationsGrid({
+  lang = 'en',
+  themeColor = '#C9252C',
+  badge
+}) {
   const isAr = lang === 'ar';
-  const accreditations = useAccreditations();
+  const pick = (en, ar) => (isAr ? ar : en);
+
+  const [selectedPdf, setSelectedPdf] = useState(null);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12 text-start">
-      <div className="text-center space-y-3">
-        <span className="px-4 py-1.5 rounded-full text-white font-bold text-xs uppercase shadow-lg inline-block" style={{ backgroundColor: themeColor }}>
-          {badge}
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-black text-white">{title}</h1>
-        <p className="text-slate-400 max-w-2xl mx-auto text-sm">{intro}</p>
-      </div>
+    <div className="min-h-screen bg-[#07132B] text-slate-100 py-10 sm:py-16 px-4 sm:px-6 lg:px-8 text-start dir-rtl">
+      <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12">
+        
+        {/* 1. Header Section - العنوان على سطر واحد وكلمة كيانكو باللون الأحمر */}
+        <div className="text-center space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+          {badge && (
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-400 bg-white/10 backdrop-blur-md border border-white/10 shadow-sm">
+              <Award className="w-4 h-4 text-emerald-400" />
+              <span>{badge}</span>
+            </span>
+          )}
+          
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight flex items-center justify-center gap-2 flex-wrap">
+            <span>{pick('Accreditations & Quality at', 'الاعتمادات والجودة في')}</span>
+            <span style={{ color: themeColor }}>
+              {pick('KIANKO', 'كيانكو')}
+            </span>
+          </h1>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {accreditations.map((c) => (
-          <SpotlightCard
-            as="article"
-            key={c.id}
-            className="bg-[#0A1832] rounded-3xl p-6 border border-blue-900/60 shadow-2xl flex flex-col justify-between space-y-6 group hover:border-slate-500 hover:-translate-y-1 transition-all duration-500"
-          >
-            <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-slate-900 via-[#0B1E3D] to-slate-950 p-6 h-56 flex flex-col justify-between shadow-2xl">
-              <div className="flex justify-between items-start">
-                <p className="text-xs text-slate-300 font-bold">{isAr ? 'اعتماد' : 'ACCREDITATION'}</p>
-                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-                  <ShieldCheck className="w-6 h-6" />
+          <p className="text-slate-300 font-medium text-xs sm:text-base leading-relaxed max-w-2xl mx-auto">
+            {pick(
+              'The systems, standards, and official accreditations we work to, so quality stays consistent at every stage of manufacturing.',
+              'الأنظمة والمعايير والاعتمادات الرسمية التي نعمل بها لضمان جودة ثابتة في كل مرحلة تصنيع.'
+            )}
+          </p>
+        </div>
+
+        {/* 2. Dark Cards Grid - الكارد داكن وإطار الشهادة فقط أبيض */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {accreditations.map((item) => (
+            <div
+              key={item.id}
+              className="bg-[#0A1832] border border-blue-900/50 rounded-2xl p-5 sm:p-6 flex flex-col justify-between space-y-5 shadow-xl hover:border-blue-700/60 transition-all duration-300 group"
+            >
+              <div className="space-y-4">
+                
+                {/* إطار الشهادة فقط هو الأبيض الناصع */}
+                <div 
+                  className="relative rounded-xl overflow-hidden bg-white border border-slate-200 h-60 sm:h-64 flex items-center justify-center cursor-pointer group/frame shadow-md"
+                  onClick={() => setSelectedPdf(item)}
+                >
+                  <iframe
+                    src={`${item.file}#page=1&view=FitH&toolbar=0&navpanes=0`}
+                    title={item.name}
+                    className="w-full h-full pointer-events-none scale-105"
+                  />
+
+                  {/* طبقة التفاعل عند الوقوف بالماوس للمعاينة */}
+                  <div className="absolute inset-0 bg-[#0A1832]/75 opacity-0 group-hover/frame:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs backdrop-blur-xs rounded-xl">
+                    <ExternalLink className="w-5 h-5 text-emerald-400" />
+                    <span>{pick('Click to Preview PDF', 'انقر لمعاينة ملف الاعتماد')}</span>
+                  </div>
+                </div>
+
+                {/* تفاصيل الاعتماد بالنصوص البيضاء المضيئة على الكارد الداكن */}
+                <div className="space-y-2">
+                  <span 
+                    className="px-3 py-1 rounded-md text-[11px] font-bold text-white inline-block shadow-xs"
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    {item.code}
+                  </span>
+                  <h3 className="text-lg font-bold text-white group-hover:text-slate-200 transition-colors leading-snug">
+                    {pick(item.titleEn, item.titleAr)}
+                  </h3>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2">
+                    {pick(item.descEn, item.descAr)}
+                  </p>
                 </div>
               </div>
-              <div className="text-center space-y-2" dir="ltr">
-                <h2 className="text-2xl font-black text-white tracking-wider group-hover:scale-105 transition-transform">{c.name}</h2>
-                <p className="text-xs text-blue-300 font-semibold">{c.titleEn}</p>
+
+              {/* أسفل الكارد لزر التحميل وحالة التوثيق */}
+              <div className="pt-4 border-t border-blue-900/40 flex items-center justify-between text-xs font-bold">
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <FileCheck className="w-4 h-4 shrink-0" />
+                  <span>{pick('Verified Approval', 'اعتماد موثق')}</span>
+                </span>
+
+                <a
+                  href={item.file}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{pick('View Cert', 'تحميل المستند')}</span>
+                </a>
               </div>
-              <div />
             </div>
+          ))}
+        </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-white" dir="ltr">{c.name}</h3>
-              <h4 className="text-xs font-bold text-slate-300">{isAr ? c.titleAr : c.titleEn}</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">{isAr ? c.descAr : c.descEn}</p>
+        {/* 3. Lightbox Preview Modal (شاشة منبثقة لعرض الـ PDF بالكامل عند الضغط) */}
+        {selectedPdf && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
+            <div className="relative bg-[#0A1832] text-white border border-blue-900/60 rounded-2xl p-4 sm:p-6 max-w-5xl w-full space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-blue-900/50 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: themeColor }}>
+                    {selectedPdf.code}
+                  </span>
+                  <h3 className="text-sm sm:text-lg font-bold text-white truncate">
+                    {pick(selectedPdf.titleEn, selectedPdf.titleAr)}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPdf(null)}
+                  className="p-1.5 rounded-xl bg-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* إطار العرض المباشر داخل الـ Modal */}
+              <div className="bg-white rounded-xl h-[70vh] w-full overflow-hidden border border-slate-200 shadow-inner">
+                <iframe
+                  src={`${selectedPdf.file}#toolbar=1`}
+                  title={selectedPdf.name}
+                  className="w-full h-full"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-1">
+                <a
+                  href={selectedPdf.file}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white transition-all shadow-md"
+                  style={{ backgroundColor: themeColor }}
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{pick('Download Full Document', 'تحميل الاعتماد الرسمي كامل')}</span>
+                </a>
+              </div>
             </div>
+          </div>
+        )}
 
-            {c.file && (
-              <a
-                href={c.file}
-                download
-                className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl text-xs font-bold transition-colors border border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                <Download className="w-4 h-4" />
-                <span>{isAr ? 'تحميل ملف الشهادة' : 'Download Certificate'}</span>
-              </a>
-            )}
-          </SpotlightCard>
-        ))}
       </div>
     </div>
   );

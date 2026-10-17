@@ -7,11 +7,9 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
-  // حالة الصورة المكبرة عند الضغط على شهادة لها صورة حقيقية (Modal)
   const [selectedCert, setSelectedCert] = useState(null);
 
-  // مصفوفة الـ 10 اعتمادات بمسارات الصور المحدثة
-  const accreditations = useMemo(() => [
+  const accreditationsList = useMemo(() => [
     {
       id: 'iso-9001',
       code: 'ISO 9001:2015',
@@ -118,7 +116,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       id: 'sgs-inspection',
       code: 'Third-Party Batch Testing',
       titleEn: 'Mill Test & Batch Inspection',
-      titleAr: 'شهادات الفحص واختبار الدفعات',
+      titleAr: 'شهادات الفحص وااختبار الدفعات',
       descEn: 'In-house physical tensile, yield, and coating thickness verification with third-party readiness.',
       descAr: 'شهادات فحص فيزياء الصلب وسمك الطلاء لكل دفعة توريد مجهزة للاعتماد الاستشاري.',
       badgeEn: 'Lab Verified',
@@ -128,18 +126,24 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
   ], []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16 text-start">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-16 text-start">
       
       {/* 1. Header Section */}
-      <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
+      <div className="text-center space-y-3 sm:space-y-4 max-w-4xl mx-auto px-2">
         <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
           <Award className="w-4 h-4 text-emerald-400" />
           <span>{pick('GLOBAL ACCREDITATIONS & CERTIFICATES', 'الاعتمادات والجودة المعتمدة')}</span>
         </span>
-        <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tight">
-          {pick(`${accreditations.length} Accredited International Certifications`, `${accreditations.length} شهادات جودة واعترافات دولية`)}
+        
+        {/* تم تحديث الحجم ليكون متناسباً ومتجاوباً بين الهواتف واللابتوب */}
+        <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-snug">
+          {pick(
+            `${accreditationsList.length} Accredited International Certifications`,
+            `${accreditationsList.length} شهادات جودة واعترافات دولية`
+          )}
         </h1>
-        <p className="text-slate-300 font-medium text-xs sm:text-lg leading-relaxed">
+
+        <p className="text-slate-300 font-medium text-xs sm:text-base leading-relaxed max-w-2xl mx-auto">
           {pick(
             'Kianko Steel adheres to global quality, environmental safety, and galvanizing compliance frameworks.',
             'تلتزم كيانكو بأعلى معايير التصنيع والجودة والجلفنة للحلول الهيكلية وحوامل الكابلات.'
@@ -149,13 +153,12 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
 
       {/* 2. Full Accreditations Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
-        {accreditations.map((cert) => (
+        {accreditationsList.map((cert) => (
           <div
             key={cert.id}
             className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xl hover:border-slate-400 hover:-translate-y-1 transition-all duration-300 group"
           >
             <div className="space-y-3 sm:space-y-4">
-              {/* إذا كان الكارت يحتوي على صورة شهادة حقيقية */}
               {cert.hasImage ? (
                 <div 
                   className="relative rounded-2xl overflow-hidden bg-white p-2 border border-slate-700 shadow-inner group/img cursor-pointer h-52 sm:h-64 flex items-center justify-center"
@@ -177,12 +180,11 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
                 </div>
               )}
 
-              {/* تفاصيل الاعتماد */}
               <div className="space-y-1.5 sm:space-y-2">
                 <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold text-white inline-block" style={{ backgroundColor: themeColor }}>
                   {cert.code}
                 </span>
-                <h3 className="text-lg sm:text-xl font-bold text-white">{pick(cert.titleEn, cert.titleAr)}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-white leading-snug">{pick(cert.titleEn, cert.titleAr)}</h3>
                 <p className="text-slate-300 text-xs leading-relaxed">{pick(cert.descEn, cert.descAr)}</p>
               </div>
             </div>
@@ -206,16 +208,19 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
         ))}
       </div>
 
-      {/* 3. In-House Quality Control Pillars (المعدل والمحسّن للتسنطير والتكيف مع الهواتف) */}
-      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl">
+      {/* 3. In-House Quality Control Pillars */}
+      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-10 space-y-6 sm:space-y-8 shadow-2xl">
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
           <div className="space-y-3 sm:space-y-4 text-center sm:text-start">
             <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
               {pick('STRICT COMPLIANCE', 'الالتزام بالمواصفات')}
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+            
+            {/* تم تحديث حجم العنوان هنا أيضاً */}
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug">
               {pick('Beyond ISO Certification Standards', 'ما بعد معايير شهادات الآيزو')}
             </h2>
+
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0">
               {pick(
                 'Every steel profile and cable tray system undergoes physical tensile testing and coating thickness checks in our accredited testing lab before leaving the plant.',
@@ -241,8 +246,8 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       </div>
 
       {/* 4. CTA Section */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl">
-        <h2 className="text-xl sm:text-4xl font-extrabold text-white">
+      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-10 text-center space-y-5 sm:space-y-6 shadow-2xl">
+        <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug">
           {pick('Need Quality Certificates for Consultant Approval?', 'تحتاج صور الشهادات المعتمدة للتقديم للاستشاري؟')}
         </h2>
         <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">

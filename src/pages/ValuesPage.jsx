@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '../routes';
 import SpotlightCard from '../components/ui/SpotlightCard';
-import SectionHeading from '../components/ui/SectionHeading';
 
 export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
   const isAr = lang === 'ar';
@@ -79,7 +78,7 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start overflow-hidden">
       
       {/* 1. Header Section */}
       <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
@@ -98,7 +97,7 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
         </p>
       </div>
 
-      {/* 2. Values Grid (الكروت الأربعة الرئيسية متسنطرة في الهاتف) */}
+      {/* 2. Values Grid */}
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
         {values.map(({ icon: Icon, t, tAr, d, dAr }) => (
           <SpotlightCard
@@ -126,7 +125,7 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
         ))}
       </div>
 
-      {/* 3. Vision & Mission Section (تسنطير كروت الرؤية والرسالة بالكامل للشاشات الصغيرة) */}
+      {/* 3. Vision & Mission Section */}
       <div className="grid lg:grid-cols-2 gap-5 sm:gap-8">
         <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-10 space-y-4 sm:space-y-5 shadow-2xl relative overflow-hidden group hover:border-slate-500 transition-all text-center sm:text-start flex flex-col items-center sm:items-start">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-900 border border-blue-900/80">
@@ -161,10 +160,11 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
 
       {/* 4. Engineering Culture & Philosophy */}
       <div className="space-y-8 sm:space-y-12 pt-2 sm:pt-4">
-        <div className="text-center space-y-3 max-w-2xl mx-auto px-2">
-          <SectionHeading themeColor={themeColor}>
+        <div className="text-center space-y-3 max-w-2xl mx-auto px-2 flex flex-col items-center">
+          {/* سنترة تامة وصريحة للعنوان ليتوسط الشاشة على سطر واحد تماماً */}
+          <h2 className="text-base sm:text-2xl font-black text-white whitespace-nowrap text-center w-full block">
             {pick('Applied Engineering Ethics', 'تطبيق القيم في مواقع العمل')}
-          </SectionHeading>
+          </h2>
           <p className="text-slate-300 text-xs sm:text-sm">
             {pick('How we translate our core principles into daily manufacturing operations.', 'كيف نترجم قيمنا ومبادئنا إلى واقع ملموس في خطوط الإنتاج يومياً.')}
           </p>
