@@ -100,7 +100,7 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
 
         <div className="relative rounded-2xl overflow-hidden border border-blue-900/60 shadow-xl bg-[#061022] w-full aspect-[4/3] sm:aspect-auto sm:h-80">
           <img
-            src="/Image/Our Story.jpg"
+            src="/Image/Our Story.webp"
             alt="Kianko Steel History"
             className="w-full h-full object-cover object-center"
           />
@@ -157,10 +157,10 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       {/* 3. Dynamic Stats Section */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-4">
         {[
-          { target: 25, suffix: '+', labelEn: 'Years of Experience', labelAr: 'سنوات من الخبرة الريادية' },
+          { target: 3, suffix: '+', labelEn: 'Years of Experience', labelAr: 'سنوات من الخبرة الريادية' },
           { target: 500, suffix: '+', labelEn: 'Major Projects Delivered', labelAr: 'مشروع قومي وصناعي منجز' },
           { target: 100, suffix: '%+', labelEn: 'Quality Compliance', labelAr: 'مطابقة تامة للمواصفات العالمية' },
-          { target: 10, suffix: '+', labelEn: 'Export Countries', labelAr: 'دولة تصل إليها منتجاتنا' },
+          { target: 118, suffix: '+', labelEn: 'Export The Governorates', labelAr: 'محافظات تصل إليها منتجاتنا' },
         ].map((stat, i) => (
           <div key={i} className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-4 sm:p-6 text-center space-y-1.5 sm:space-y-2 shadow-xl hover:border-slate-500 transition-colors flex flex-col justify-center items-center">
             <h3 className="text-2xl sm:text-4xl font-black" style={{ color: themeColor }}>

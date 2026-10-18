@@ -8,19 +8,19 @@ import SpotlightCard from '../components/ui/SpotlightCard';
 const SUPABASE_BUCKET_URL = 'https://ohvjwenkocfragysvowp.supabase.co/storage/v1/object/public/datasheets';
 
 const customImages = [
-  '/Image/basket.jpg',
-  '/Image/ladder.jpg',
-  '/Image/tray.jpg',
-  '/Image/trunking.jpg',
-  '/Image/channels.jpg',
-  '/Image/plastering.jpg',
-  '/Image/Management Brackets.jpg',
-  '/Image/C-Channels.jpg',
-  '/Image/Corner.jpg',
-  '/Image/Drywall.jpg',
-  '/Image/wire mesh.jpg',
-  '/Image/heavy-duty beam clamps and spring .jpg',
-  '/Image/steel angle beads and expanded metal mesh.jpg',
+  '/Image/basket.webp',
+  '/Image/ladder.webp',
+  '/Image/tray.webp',
+  '/Image/trunking.webp',
+  '/Image/channels.webp',
+  '/Image/plastering.webp',
+  '/Image/Management Brackets.webp',
+  '/Image/C-Channels.webp',
+  '/Image/Corner.webp',
+  '/Image/Drywall.webp',
+  '/Image/wire mesh.webp',
+  '/Image/heavy-duty beam clamps and spring .webp',
+  '/Image/steel angle beads and expanded metal mesh.webp',
 ];
 
 const customNames = [

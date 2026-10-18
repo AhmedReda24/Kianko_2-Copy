@@ -6,25 +6,25 @@ const stats = [
     value: 3, prefix: '+',
     title: 'Locations', titleAr: 'مواقع ومجمعات',
     subtitle: 'Across the Region', subtitleAr: 'في جميع أنحاء المنطقة',
-    img: '/Image/stats-locations.jpg',
+    img: '/Image/stats-locations.webp',
   },
   {
-    value: 100, prefix: '+',
+    value: 300, prefix: '+',
     title: 'Building Solutions', titleAr: 'حل إجمالي',
     subtitle: 'Engineered Steel Products', subtitleAr: 'منتجات حديدية هندسية',
-    img: '/Image/stats-solutions.jpg',
+    img: '/Image/stats-solutions.webp',
   },
   {
     value: 3, prefix: '',
     title: 'Main Activities', titleAr: 'أنشطة رئيسية',
     subtitle: 'Design, Manufacture, & Supply', subtitleAr: 'التصميم، التصنيع، والتوريد',
-    img: '/Image/stats-activities.jpg',
+    img: '/Image/stats-activities.webp',
   },
   {
-    value: 7000, prefix: '+',
+    value: 14, prefix: '+',
     title: 'Projects', titleAr: 'مشروع',
     subtitle: 'Across the MENA Region', subtitleAr: 'في الشرق الأوسط وشمال إفريقيا',
-    img: '/Image/stats-projects.jpg',
+    img: '/Image/stats-projects.webp',
   },
 ];
 

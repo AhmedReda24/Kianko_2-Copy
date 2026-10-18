@@ -28,51 +28,64 @@ const faqs = [
   },
 ];
 
-export default function FaqSection({ isAr, themeColor }) {
+export default function FaqSection({ isAr, themeColor = '#e11d48' }) {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-start">
-      
-      {/* عنوان بحجم مصغر ومضبوط ليبقى الكلام بجانب بعضه بشكل ممتاز */}
-      <div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-start mb-10 sm:mb-12 px-2">
-        <h2 className="text-xl sm:text-3xl font-black tracking-tight text-white">
-          {isAr ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
-        </h2>
-        <p className="mt-2.5 text-xs sm:text-base text-slate-300 max-w-prose mx-auto sm:mx-0 leading-relaxed">
-          {isAr ? 'إجابات سريعة على أهم استفسارات المهندسين والمقاولين.' : 'Quick answers to common engineering and procurement queries.'}
+    <section 
+      dir={isAr ? 'rtl' : 'ltr'} 
+      className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-start"
+    >
+      {/* هيدر القسم مع الشريط العمودي الأحمر الجانبي المتناسق مع تصميم التصريحات والتراخيص */}
+      <div className="mb-8 sm:mb-10 max-w-3xl">
+        <div className="ltr:border-l-4 rtl:border-r-4 border-red-600 ltr:pl-3.5 rtl:pr-3.5 sm:ltr:pl-4 sm:rtl:pr-4 py-0.5">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            {isAr ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
+          </h2>
+        </div>
+        <p className="mt-3 text-xs sm:text-sm lg:text-base text-slate-400 max-w-2xl leading-relaxed ltr:pl-3.5 rtl:pr-3.5 sm:ltr:pl-4 sm:rtl:pr-4">
+          {isAr
+            ? 'إجابات سريعة على أهم استفسارات المهندسين والمقاولين.'
+            : 'Quick answers to common engineering and procurement queries.'}
         </p>
       </div>
 
-      {/* مسافات مريحة وواسعة بين الكروت */}
-      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6">
+      {/* قائمة الكروت - متجاوبة ومطابقة لتصميم البطاقات العلوية */}
+      <div className="w-full max-w-5xl mx-auto space-y-3.5 sm:space-y-4">
         {faqs.map((faq, idx) => {
           const isOpen = openIndex === idx;
           return (
             <div
               key={idx}
-              className="rounded-2xl border border-blue-900/50 bg-[#0B1B3A]/60 hover:border-blue-700 transition-all duration-300 overflow-hidden shadow-md"
+              className={`rounded-xl sm:rounded-2xl border transition-all duration-300 overflow-hidden shadow-lg ${
+                isOpen 
+                  ? 'border-red-600/60 bg-[#0b162c] shadow-red-950/10' 
+                  : 'border-blue-900/40 bg-[#091328]/80 hover:border-blue-700/60 hover:bg-[#0b1730]'
+              }`}
             >
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? -1 : idx)}
-                className="w-full flex items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 text-start focus:outline-none cursor-pointer"
+                className="w-full flex items-center justify-between gap-3 sm:gap-4 p-4 sm:p-5 lg:p-6 text-start focus:outline-none cursor-pointer select-none"
               >
-                <span className="flex items-center gap-2.5 sm:gap-3">
-                  <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" style={{ color: themeColor }} />
-                  <span className="font-extrabold text-sm sm:text-lg text-white leading-snug">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <HelpCircle 
+                    className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 transition-colors duration-300" 
+                    style={{ color: isOpen ? '#ef4444' : themeColor || '#ef4444' }} 
+                  />
+                  <span className="font-bold text-sm sm:text-base lg:text-lg text-white leading-snug">
                     {isAr ? faq.qAr : faq.qEn}
                   </span>
-                </span>
+                </div>
                 <ChevronDown
-                  className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform duration-300 text-slate-400 ${
-                    isOpen ? 'rotate-180' : ''
+                  className={`w-5 h-5 shrink-0 transition-transform duration-300 text-slate-400 ${
+                    isOpen ? 'rotate-180 text-red-500' : ''
                   }`}
                 />
               </button>
 
               {isOpen && (
-                <div className="px-4 sm:px-6 pb-5 sm:pb-6 pt-1 sm:pt-2 text-xs sm:text-base leading-relaxed border-t border-blue-900/40 text-slate-300">
+                <div className="px-4 sm:px-5 lg:px-6 pb-5 pt-1 sm:pt-2 text-xs sm:text-sm lg:text-base leading-relaxed border-t border-blue-900/30 text-slate-300 bg-black/10">
                   {isAr ? faq.aAr : faq.aEn}
                 </div>
               )}

@@ -13,9 +13,9 @@ export default function CertificatesSlider({ isAr, themeColor = '#C9252C' }) {
   // دمج صور الـ ISO الثلاث الحقيقية في أول ثلاثة كروت مع الحفاظ على باقي الكروت
   const certificates = useMemo(() => {
     const isoImages = [
-      '/Image/ISO-9001-2015.jpg',
-      '/Image/ISO-14001-2015.jpg',
-      '/Image/ISO-45001-2018.jpg',
+      '/Image/ISO-9001-2015.webp',
+      '/Image/ISO-14001-2015.webp',
+      '/Image/ISO-45001-2018.webp',
     ];
 
     return rawCertificates.map((cert, index) => {

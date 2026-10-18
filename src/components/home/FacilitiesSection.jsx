@@ -22,7 +22,7 @@ export default function FacilitiesSection({ isAr, themeColor }) {
             className="absolute top-16 sm:top-20 bottom-0 start-0 w-[88%] border-4 border-[#4B5B7A] rounded-2xl"
           />
           <img
-            src="/Image/factory-main.jpg"
+            src="/Image/factory-main.webp"
             alt="Kianko Facility"
             loading="lazy"
             className="relative z-10 ms-6 sm:ms-11 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2.75rem)] h-52 sm:h-64 object-cover brightness-90 rounded-2xl shadow-xl"

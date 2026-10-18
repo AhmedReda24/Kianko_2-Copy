@@ -3,7 +3,7 @@ import SectionHeading from '../ui/SectionHeading';
 
 const highlights = [
   { icon: Globe2, val: 'MENA Region', valAr: 'الشرق الأوسط وشمال إفريقيا', label: 'Export Coverage', labelAr: 'تغطية التصدير' },
-  { icon: Truck, val: '24/7 Logistics', valAr: 'شحن ولوجستيات مستمرة', label: 'On-Time Delivery', labelAr: 'التزام تام بالمواعيد' },
+  { icon: Truck, val: '8/6 Logistics', valAr: 'شحن ولوجستيات مستمرة', label: 'On-Time Delivery', labelAr: 'التزام تام بالمواعيد' },
   { icon: ShieldCheck, val: '100% Quality', valAr: 'جودة واختبارات 100%', label: 'ASTM & BS Compliant', labelAr: 'مطابقة للمواصفات' },
   { icon: Users, val: '+500 Clients', valAr: '+500 عميل إستراتيجي', label: 'Trusted Partners', labelAr: 'شركاء النجاح' },
 ];
@@ -22,8 +22,8 @@ export default function MenaReachSection({ isAr, themeColor }) {
           </div>
           <p className="mt-3 sm:mt-4 text-xs sm:text-base leading-relaxed text-slate-300 max-w-prose mx-auto sm:mx-0">
             {isAr
-              ? 'تمتد خدمات كيانكو لتغطي كبرى المشاريع العمرانية والصناعية في مصر والشرق الأوسط، محققة أطول فترة استدامة وأعلى معايير أمان الهياكل الإنشائية.'
-              : 'KIANKO supplies steel and cable management solutions to iconic developments across Egypt and the MENA region with unmatched reliability.'}
+              ? 'تمتد خدمات كيانكو لتغطي كبرى المشاريع العمرانية والصناعية في المملكة العربية السعودية والشرق الأوسط، محققة أطول فترة استدامة وأعلى معايير أمان الهياكل الإنشائية.'
+              : 'KIANKO supplies steel and cable management solutions to iconic developments across Kingdom Of Saudi Arabia and the MENA region with unmatched reliability.'}
           </p>
         </div>
 

@@ -4,7 +4,7 @@ import CtaLink from '../ui/CtaLink';
 
 export default function CtaSection({ isAr, themeColor = '#C9252C' }) {
   // تثبيت رقم سعودي رسمي ومتسق مع بيانات فروع السعودية
-  const phone = '+966 11 234 5678';
+  const phone = '+966 50 557 0663';
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -14,7 +14,7 @@ export default function CtaSection({ isAr, themeColor = '#C9252C' }) {
       >
         <div className="max-w-xl space-y-3 sm:space-y-4">
           <h2 className="font-display text-xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight">
-            {isAr ? 'عندك مشروع محتاج حديد؟' : 'Have a project that needs steel?'}
+            {isAr ? 'عندك مشروع محتاج حلول الصلب والحديد؟' : 'Have a project that needs steel solutions?'}
           </h2>
           <p className="text-xs sm:text-base text-white/90 leading-relaxed">
             {isAr ? 'ابعتلنا المواصفات ونرد عليك بعرض سعر.' : 'Send us your specifications and we will reply with a quotation.'}

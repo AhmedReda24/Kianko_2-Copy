@@ -47,7 +47,7 @@ export default function AboutSection({ isAr, themeColor = '#C9252C' }) {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <img
-            src="/Image/factory-main.jpg"
+            src="/Image/factory-main.webp"
             alt="Kianko Factory"
             className="w-full h-full object-cover object-center brightness-90 group-hover:scale-105 transition-transform duration-700"
           />
