@@ -49,6 +49,15 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
 
   const groupActive = group.some((id) => ROUTES[id] === pathname);
 
+  // ربط حالة الـ darkMode مباشرة مع الـ html element ليعمل الثيم على الموقع كله
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   useEffect(() => {
     if (!dropdownOpen) return;
     const onDown = (e) => {
@@ -117,21 +126,27 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
           
           {/* Logo & Brand Title */}
           <Link to={ROUTES.home} className={`flex items-center gap-2 sm:gap-3 group py-2 cursor-pointer shrink-0 ${focusRing}`} aria-label="KIANKO COMPANY">
-            <div className="p-0.5 shrink-0 transition-transform duration-300 group-hover:scale-105">
+            
+            <div className={`p-1 sm:p-1.5 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 transition-all duration-300 group-hover:scale-105 ${
+              darkMode 
+                ? 'bg-slate-900/60 border border-slate-700/50 shadow-inner' 
+                : 'bg-slate-50 border border-slate-200/80 shadow-sm'
+            }`}>
               <img 
                 src={logoImg} 
                 alt="KIANKO" 
-                className={`w-auto object-contain transition-[height] duration-300 ${scrolled ? 'h-8 sm:h-10' : 'h-9 sm:h-12'}`} 
+                className={`w-auto object-contain rounded-lg transition-[height] duration-300 ${scrolled ? 'h-7 sm:h-9' : 'h-8 sm:h-11'}`} 
                 style={{
-                  filter: `drop-shadow(0px 2px 8px rgba(201, 37, 44, 0.45))`
+                  filter: `drop-shadow(0px 2px 6px rgba(201, 37, 44, 0.35))`
                 }}
               />
             </div>
+
             <div className="text-start leading-tight">
               <span className={`block font-black tracking-wider text-sm sm:text-xl transition-[font-size] duration-300 ${scrolled ? 'sm:text-xl' : 'sm:text-2xl'}`} style={{ color: themeColor }}>
                 KIANKO <span className={darkMode ? 'text-white' : 'text-slate-900'}>COMPANY</span>
               </span>
-              <span className={`hidden sm:block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0' : 'h-4 opacity-100'}`}>
+              <span className={`hidden sm:block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0 overflow-hidden' : 'h-4 opacity-100'}`}>
                 {isAr ? 'شركة كيان لمنتجات الحديد' : 'KIAN IRON PRODUCTS COMPANY'}
               </span>
             </div>

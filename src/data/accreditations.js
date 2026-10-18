@@ -8,7 +8,8 @@ export const accreditations = [{
         titleEn: 'Approval Seven',
         descAr: 'اعتماد التوريد والمواد الرسمي الخاص بمشروع سيفن (SEVEN).',
         descEn: 'Official material submittal approval for Seven project.',
-        file: `${BASE_URL}Approval-Seven.pdf`
+        file: `${BASE_URL}Approval-Seven.pdf`,
+        image: `${BASE_URL}Approval-Seven.webp` // 👈 ربط صورة الشهادة المباشرة
     },
     {
         id: 'approval-02',
@@ -18,7 +19,8 @@ export const accreditations = [{
         titleEn: 'Approval Water',
         descAr: 'اعتماد التوريد والمواد لشركة نقل المياه الوطنية.',
         descEn: 'Official material approval for Water project.',
-        file: `${BASE_URL}Approval-water.pdf`
+        file: `${BASE_URL}Approval-water.pdf`,
+        image: `${BASE_URL}Approval-Water.webp`
     },
     {
         id: 'material-approval',
@@ -28,7 +30,8 @@ export const accreditations = [{
         titleEn: 'Material Approval',
         descAr: 'شهادة الاعتماد وفحص الجودة للمواد والتصنيع.',
         descEn: 'Material approval and quality inspection certificate.',
-        file: `${BASE_URL}Material-Approval.pdf`
+        file: `${BASE_URL}Material-Approval.pdf`,
+        image: `${BASE_URL}Approval-Material.webp`
     },
     {
         id: 'astm-04',
@@ -38,7 +41,8 @@ export const accreditations = [{
         titleEn: 'Block & Plastering Accessories Submittal',
         descAr: 'اعتماد المواد والبيانات الفنية لإكسسوارات المباني واللياسة.',
         descEn: 'Material submittal and data sheet for block & plastering accessories.',
-        file: `${BASE_URL}Block-Plaster-Accessories.pdf`
+        file: `${BASE_URL}Block-Plaster-Accessories.pdf`,
+        image: `${BASE_URL}Block-Plaster.webp`
     },
     {
         id: 'pqd-05',
@@ -48,7 +52,8 @@ export const accreditations = [{
         titleEn: 'Modern Metal PQL Approval',
         descAr: 'اعتماد التأهيل المسبق PQL لمصنع كيانكو للمنتجات الحديدية.',
         descEn: 'PQL approval for Modern Metal Industries Company.',
-        file: `${BASE_URL}Modern-Metal-Industries.pdf`
+        file: `${BASE_URL}Modern-Metal-Industries.pdf`,
+        image: `${BASE_URL}Modern-Metal-Industries.webp`
     },
     {
         id: 'hill-06',
@@ -58,7 +63,8 @@ export const accreditations = [{
         titleEn: 'Hill International Response Code B',
         descAr: 'موافقة واعتماد استشاري هيل إنترناشيونال لإكسسوارات المباني.',
         descEn: 'Hill International response approval for block & plaster accessories.',
-        file: `${BASE_URL}Modern-Metal-Industries-2.pdf`
+        file: `${BASE_URL}Modern-Metal-Industries-2.pdf`,
+        image: `${BASE_URL}Modern-Metal-Industries-2.webp`
     },
     {
         id: 'approval-aramco',
@@ -68,7 +74,8 @@ export const accreditations = [{
         titleEn: 'Aramco Approval',
         descAr: 'اعتماد الموردين والمواد المعتمد لمشاريع أرامكو.',
         descEn: 'Official Aramco material and vendor approval certificate.',
-        file: `${BASE_URL}Approval-Aramco.pdf`
+        file: `${BASE_URL}Approval-Aramco.pdf`,
+        image: `${BASE_URL}Approval-Aramco.webp`
     },
     {
         id: 'approval-neom',
@@ -78,7 +85,8 @@ export const accreditations = [{
         titleEn: 'Neom Approval',
         descAr: 'اعتماد التوريد والمواد الخاص بمشاريع نيوم.',
         descEn: 'Official material submittal approval for Neom projects.',
-        file: `${BASE_URL}Approval-Neom.pdf`
+        file: `${BASE_URL}Approval-Neom.pdf`,
+        image: `${BASE_URL}Approval-Neom.webp`
     },
     {
         id: 'approval-masar',
@@ -88,7 +96,8 @@ export const accreditations = [{
         titleEn: 'Masar Makkah Approval',
         descAr: 'اعتماد المواد الرسمي لمشروع وجهة مسار بمكة المكرمة.',
         descEn: 'Official material approval for Masar Makkah development project.',
-        file: `${BASE_URL}Approval-Masar.pdf`
+        file: `${BASE_URL}Approval-Masar.pdf`,
+        image: `${BASE_URL}Approval-Masar.webp`
     },
     {
         id: 'approval-king-salman',
@@ -98,7 +107,8 @@ export const accreditations = [{
         titleEn: 'King Salman Park Approval',
         descAr: 'اعتماد التوريد لمشروع حديقة الملك سلمان بالرياض.',
         descEn: 'Official material submittal approval for King Salman Park project.',
-        file: `${BASE_URL}Approval-King-Salman-Park.pdf`
+        file: `${BASE_URL}Approval-King-Salman-Park.pdf`,
+        image: `${BASE_URL}Approval-King-Salman-park.webp`
     },
     {
         id: 'approval-new-murabba',
@@ -108,7 +118,8 @@ export const accreditations = [{
         titleEn: 'New Murabba Approval',
         descAr: 'اعتماد المواد المعتمد لمشروع تطوير المربع الجديد.',
         descEn: 'Official approval certificate for New Murabba development.',
-        file: `${BASE_URL}Approval-New-Murabba.pdf`
+        file: `${BASE_URL}Approval-New-Murabba.pdf`,
+        image: `${BASE_URL}Approval-New-Murabba.webp`
     },
     {
         id: 'approval-prime',
@@ -118,7 +129,8 @@ export const accreditations = [{
         titleEn: 'Prime Approval',
         descAr: 'اعتماد المواد والتوريد المعتمد لمشاريع برايم.',
         descEn: 'Official material approval for Prime projects.',
-        file: `${BASE_URL}Approval-Prime.pdf`
+        file: `${BASE_URL}Approval-Prime.pdf`,
+        image: `${BASE_URL}Approval-prime.webp`
     },
     {
         id: 'approval-red-sea',
@@ -128,7 +140,8 @@ export const accreditations = [{
         titleEn: 'Red Sea Global Approval',
         descAr: 'اعتماد التوريد الرسمي لمشاريع وجهة البحر الأحمر.',
         descEn: 'Official approval for Red Sea Global development projects.',
-        file: `${BASE_URL}Approval-Red-Sea.pdf`
+        file: `${BASE_URL}Approval-Red-Sea.pdf`,
+        image: `${BASE_URL}Approval-Red-Sea.webp`
     },
     {
         id: 'plastering-accessories',
@@ -138,6 +151,7 @@ export const accreditations = [{
         titleEn: 'Plastering Accessories Approval',
         descAr: 'اعتماد المواد والبيانات الفنية الشاملة لإكسسوارات اللياسة.',
         descEn: 'Technical data and approval for plastering accessories.',
-        file: `${BASE_URL}Plastering-Accessories-Moder.pdf`
+        file: `${BASE_URL}Plastering-Accessories-Moder.pdf`,
+        image: `${BASE_URL}Block-Plaster.webp`
     }
 ];

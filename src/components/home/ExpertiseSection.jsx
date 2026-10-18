@@ -31,20 +31,26 @@ const areas = [
   },
 ];
 
-export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
+export default function ExpertiseSection({ isAr, themeColor = '#C9252C', darkMode = true }) {
   const [active, setActive] = useState(0);
+
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  
+  // تصميم الكارد ليتناسب كلياً مع اللايت والدارك
+  const cardStyle = darkMode 
+    ? 'border-blue-900/60 bg-[#061024]' 
+    : 'border-slate-300 bg-white shadow-xl';
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-start">
       
-      {/* تم التعديل لتسنطير العنوان والوصف على الموبايل والمحاذاة يساراً/يميناً في الشاشات الكبيرة */}
       <div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-start mb-8 sm:mb-10 px-2">
         <div className="flex justify-center sm:justify-start">
-          <SectionHeading themeColor={themeColor}>
+          <SectionHeading themeColor={themeColor} darkMode={darkMode}>
             {isAr ? 'مجالات خبرتنا' : 'Areas of Expertise'}
           </SectionHeading>
         </div>
-        <p className="mt-3 sm:mt-4 leading-relaxed text-xs sm:text-base text-slate-300 max-w-prose mx-auto sm:mx-0">
+        <p className={`mt-3 sm:mt-4 leading-relaxed text-xs sm:text-base max-w-prose mx-auto sm:mx-0 ${textDesc}`}>
           {isAr
             ? 'من حوامل الكابلات وإكسسوارات المحارة إلى الجلفنة، نغطي ما يحتاجه المشروع من الصلب بجودة ثابتة.'
             : 'From cable trays to plastering accessories and galvanizing, we cover the steel a project needs with consistent quality.'}
@@ -61,7 +67,7 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               style={{ flexGrow: isActive ? 4 : 1 }}
-              className="group relative h-64 lg:h-auto lg:basis-0 min-w-0 overflow-hidden rounded-2xl border border-blue-900/60 shadow-xl transition-[flex-grow] duration-500 ease-out cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className={`group relative h-64 lg:h-auto lg:basis-0 min-w-0 overflow-hidden rounded-2xl border transition-[flex-grow] duration-500 ease-out cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${cardStyle}`}
             >
               <img
                 src={a.img}
@@ -69,11 +75,17 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
                 loading="lazy"
                 decoding="async"
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
-                  isActive ? 'brightness-[0.6] scale-100' : 'brightness-[0.4] scale-110'
-                } max-lg:brightness-[0.55]`}
+                  isActive ? 'brightness-[0.7] scale-100' : 'brightness-[0.45] scale-110'
+                } max-lg:brightness-[0.6]`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#061024] via-[#061024]/40 to-transparent" />
-              <span aria-hidden="true" dir="ltr" className="absolute top-4 start-5 font-display text-4xl sm:text-5xl font-black text-white/25 transition-colors duration-500 group-hover:text-white/60">
+              {/* تدرج مرن حسب الثيم */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${
+                darkMode 
+                  ? 'from-[#061024] via-[#061024]/40 to-transparent' 
+                  : 'from-slate-950 via-slate-900/50 to-transparent'
+              }`} />
+
+              <span aria-hidden="true" dir="ltr" className={`absolute top-4 start-5 font-display text-4xl sm:text-5xl font-black transition-colors duration-500 ${darkMode ? 'text-white/30 group-hover:text-white/80' : 'text-white/50 group-hover:text-white'}`}>
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div
@@ -82,7 +94,7 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
               />
 
               <div className="absolute bottom-0 inset-x-0 p-5 lg:p-6">
-                <h3 className="text-lg lg:text-2xl font-extrabold text-white leading-tight">
+                <h3 className="text-lg lg:text-2xl font-extrabold text-white leading-tight drop-shadow-md">
                   {isAr ? a.titleAr : a.title}
                 </h3>
                 <div
@@ -90,10 +102,10 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C' }) {
                     isActive ? 'lg:max-h-40 lg:opacity-100' : 'lg:max-h-0 lg:opacity-0'
                   }`}
                 >
-                  <p className="mt-2 text-xs sm:text-sm text-slate-200 leading-relaxed max-w-md">
+                  <p className="mt-2 text-xs sm:text-sm text-slate-100 leading-relaxed max-w-md drop-shadow">
                     {isAr ? a.textAr : a.text}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-white">
+                  <span className="mt-3 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-white drop-shadow">
                     {isAr ? 'تعرّف على المنتجات' : 'View products'}
                     <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                   </span>

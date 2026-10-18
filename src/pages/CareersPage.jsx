@@ -4,10 +4,7 @@ import { useJobs } from '../hooks/useContent';
 import SpotlightCard from '../components/ui/SpotlightCard';
 import { submitJobApplication, CV_MAX_BYTES, CV_TYPES } from '../lib/api';
 
-const field =
-  'w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-
-export default function CareersPage({ lang = 'en', themeColor = '#C9252C' }) {
+export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
   const jobs = useJobs();
@@ -59,30 +56,48 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C' }) {
     }
   };
 
+  // الألوان الديناميكية المتكيفة بدقة مع الثيم
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
+  const cardBg = darkMode ? 'bg-slate-900/80 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900 shadow-md';
+  const jobTitleColor = darkMode ? 'text-white' : 'text-slate-900';
+  const jobDeptColor = darkMode ? 'text-slate-400' : 'text-slate-500';
+  
+  const formBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white' : 'bg-white border-slate-300 text-slate-900 shadow-2xl';
+  const inputBg = darkMode 
+    ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus:border-slate-500' 
+    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-slate-400';
+  const uploadBox = darkMode 
+    ? 'border-slate-700 bg-slate-900/50 hover:border-slate-500 text-slate-300' 
+    : 'border-slate-300 bg-slate-50 hover:border-slate-400 text-slate-700';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12 text-start">
       <div className="text-center space-y-3">
-        <h1 className="text-4xl sm:text-5xl font-black">{pick('Careers at KIANKO STEEL', 'انضم لفرق كيانكو الهندسية')}</h1>
-        <p className="text-slate-400 text-base">
+        <h1 className={`text-4xl sm:text-5xl font-black ${textTitle}`}>{pick('Careers at KIANKO STEEL', 'انضم لفرق كيانكو الهندسية')}</h1>
+        <p className={`text-base ${textDesc}`}>
           {pick('Shape the future of heavy industrial engineering with our team.', 'نبحث دائماً عن المهندسين والفنيين الشغوفين بالصناعة')}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-12 items-start">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-white mb-6">{pick('Open Positions', 'الوظائف المتاحة حالياً')}</h2>
+          <h2 className={`text-2xl font-bold mb-6 ${textTitle}`}>{pick('Open Positions', 'الوظائف المتاحة حالياً')}</h2>
           {jobs.map((job) => {
             const on = job.id === jobId;
             return (
               <SpotlightCard
                 key={job.id}
-                className={`bg-slate-900/80 p-6 rounded-2xl border flex justify-between items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 ${
-                  on ? 'border-white/40' : 'border-slate-800 hover:border-slate-700'
+                darkMode={darkMode}
+                className={`${cardBg} p-6 rounded-2xl border flex justify-between items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 ${
+                  on 
+                    ? (darkMode ? 'border-white/40' : 'border-slate-400 shadow-lg') 
+                    : (darkMode ? 'border-slate-800 hover:border-slate-700' : 'border-slate-200 hover:border-slate-300')
                 }`}
               >
                 <div>
-                  <h3 className="font-bold text-white text-base">{pick(job.titleEn, job.titleAr)}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{job.dept}</p>
+                  <h3 className={`font-bold text-base ${jobTitleColor}`}>{pick(job.titleEn, job.titleAr)}</h3>
+                  <p className={`text-xs mt-1 ${jobDeptColor}`}>{job.dept}</p>
                 </div>
                 <button
                   type="button"
@@ -97,16 +112,16 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C' }) {
           })}
         </div>
 
-        <div ref={formRef} className="bg-[#0A1832] p-8 rounded-3xl border border-blue-900/60 shadow-2xl space-y-6 scroll-mt-28">
-          <h2 className="text-xl font-bold text-white">{pick('Send Your Resume', 'إرسال السيرة الذاتية مباشرة')}</h2>
+        <div ref={formRef} className={`p-8 rounded-3xl border shadow-2xl space-y-6 scroll-mt-28 ${formBg}`}>
+          <h2 className={`text-xl font-bold ${textTitle}`}>{pick('Send Your Resume', 'إرسال السيرة الذاتية مباشرة')}</h2>
 
           {status === 'sent' ? (
             <div role="status" className="space-y-3 text-center">
               <CheckCircle2 className="w-14 h-14 text-green-500 mx-auto" />
-              <p className="text-emerald-300 text-sm font-semibold">
+              <p className={`text-sm font-semibold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                 {pick('Application received. We will contact you if there is a suitable role.', 'تم استلام طلبك، هنتواصل معاك لو فيه وظيفة مناسبة.')}
               </p>
-              <button type="button" onClick={() => setStatus('idle')} className="text-sm font-bold text-white underline underline-offset-4 hover:opacity-80">
+              <button type="button" onClick={() => setStatus('idle')} className={`text-sm font-bold underline underline-offset-4 hover:opacity-80 ${textTitle}`}>
                 {pick('Submit another application', 'تقديم طلب تاني')}
               </button>
             </div>
@@ -120,26 +135,26 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C' }) {
               </div>
 
               {selectedJob && (
-                <p className="flex items-center justify-between gap-3 text-xs bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-slate-200">
-                  <span>{pick('Applying for:', 'التقديم على:')} <strong className="text-white">{pick(selectedJob.titleEn, selectedJob.titleAr)}</strong></span>
-                  <button type="button" onClick={() => setJobId('')} aria-label={pick('Clear selection', 'إلغاء الاختيار')} className="hover:text-white">
+                <p className={`flex items-center justify-between gap-3 text-xs border rounded-xl px-4 py-2 ${darkMode ? 'bg-white/5 border-white/10 text-slate-200' : 'bg-slate-100 border-slate-300 text-slate-800'}`}>
+                  <span>{pick('Applying for:', 'التقديم على:')} <strong className={textTitle}>{pick(selectedJob.titleEn, selectedJob.titleAr)}</strong></span>
+                  <button type="button" onClick={() => setJobId('')} aria-label={pick('Clear selection', 'إلغاء الاختيار')} className="hover:opacity-75">
                     <X className="w-4 h-4" />
                   </button>
                 </p>
               )}
 
-              <input type="text" aria-label={pick('Full Name', 'الاسم بالكامل')} placeholder={pick('Full Name', 'الاسم بالكامل')} autoComplete="name" required minLength={2} maxLength={120} value={form.name} onChange={set('name')} className={field} />
-              <input type="email" aria-label={pick('Email Address', 'البريد الإلكتروني')} placeholder={pick('Email Address', 'البريد الإلكتروني')} autoComplete="email" dir="ltr" required maxLength={200} value={form.email} onChange={set('email')} className={field} />
-              <input type="tel" aria-label={pick('Phone Number', 'رقم الهاتف')} placeholder={pick('Phone Number', 'رقم الهاتف')} autoComplete="tel" dir="ltr" required minLength={5} maxLength={40} value={form.phone} onChange={set('phone')} className={field} />
+              <input type="text" aria-label={pick('Full Name', 'الاسم بالكامل')} placeholder={pick('Full Name', 'الاسم بالكامل')} autoComplete="name" required minLength={2} maxLength={120} value={form.name} onChange={set('name')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
+              <input type="email" aria-label={pick('Email Address', 'البريد الإلكتروني')} placeholder={pick('Email Address', 'البريد الإلكتروني')} autoComplete="email" dir="ltr" required maxLength={200} value={form.email} onChange={set('email')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
+              <input type="tel" aria-label={pick('Phone Number', 'رقم الهاتف')} placeholder={pick('Phone Number', 'رقم الهاتف')} autoComplete="tel" dir="ltr" required minLength={5} maxLength={40} value={form.phone} onChange={set('phone')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
 
-              <label className="block border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center space-y-2 hover:border-slate-500 cursor-pointer focus-within:border-white">
+              <label className={`block border-2 border-dashed rounded-2xl p-6 text-center space-y-2 cursor-pointer focus-within:border-white ${uploadBox}`}>
                 <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                <span className="block text-xs text-slate-300 font-medium">
+                <span className="block text-xs font-medium">
                   {file ? file.name : pick('Click to upload your CV (PDF or DOCX, max 5 MB)', 'اضغط لرفع السيرة الذاتية (PDF أو DOCX، حد أقصى 5 ميجا)')}
                 </span>
                 <input type="file" accept=".pdf,.doc,.docx" className="sr-only" onChange={onFile} />
               </label>
-              {fileError && <p role="alert" className="text-xs text-red-300">{fileError}</p>}
+              {fileError && <p role="alert" className="text-xs text-red-500 font-semibold">{fileError}</p>}
 
               {status === 'error' && (
                 <p role="alert" className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900 rounded-xl p-3">

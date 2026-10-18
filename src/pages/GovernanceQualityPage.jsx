@@ -1,11 +1,12 @@
 import CertificationsGrid from '../components/CertificationsGrid';
 
-export default function GovernanceQualityPage({ lang = 'en', themeColor }) {
+export default function GovernanceQualityPage({ lang = 'en', themeColor, darkMode }) {
   const isAr = lang === 'ar';
   return (
     <CertificationsGrid
       lang={lang}
       themeColor={themeColor}
+      darkMode={darkMode}
       badge={isAr ? 'الاعتمادات والجودة' : 'ACCREDITATIONS & QUALITY'}
       title={isAr ? 'الاعتمادات والجودة في كيانكو' : 'Accreditations & Quality at KIANKO'}
       intro={isAr

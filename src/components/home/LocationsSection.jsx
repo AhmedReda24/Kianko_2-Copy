@@ -12,7 +12,6 @@ const TYPE = {
 const digitsOnly = (v = '') => v.replace(/\D/g, '');
 const telHref = (v = '') => `tel:${v.replace(/\s/g, '')}`;
 
-// الأولوية: mapEmbed يدوي ← إحداثيات (lat/lng) ← مفيش خريطة (بنعرض الصورة)
 function getEmbedSrc(loc, isAr) {
   if (loc?.mapEmbed) return loc.mapEmbed;
   if (loc?.lat != null && loc?.lng != null) {
@@ -33,9 +32,8 @@ function getMapsLink(loc) {
 
 const focusCls =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-const actionBase = `inline-flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 ${focusCls}`;
 
-export default function LocationsSection({ isAr, themeColor, asPage = false }) {
+export default function LocationsSection({ isAr, themeColor, asPage = false, darkMode = true }) {
   const locations = useLocations();
   const pick = (en, ar) => (isAr ? ar : en);
 
@@ -48,17 +46,31 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
   const mapsLink = getMapsLink(active);
   const waNumber = digitsOnly(active.whatsapp);
 
+  // ألوان متكيفة حسب الثيم
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const tabActiveBg = darkMode ? 'bg-white/10 text-white border-slate-300' : 'bg-slate-200 text-slate-900 border-slate-400';
+  const tabInactiveBg = darkMode ? 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-sm';
+  const detailBoxBg = darkMode ? 'bg-[#0B1B3A] border-blue-900/60 text-white' : 'bg-white border-slate-200 shadow-2xl text-slate-800';
+
+  // زر الخرائط المتكيف
+  const mapBtnStyle = darkMode 
+    ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20' 
+    : 'bg-slate-200 border border-slate-300 text-slate-900 hover:bg-slate-300 font-bold';
+
+  const actionBase = `inline-flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 ${focusCls}`;
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-start">
       <div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-start mb-8 sm:mb-10 px-2">
         <div className="flex justify-center sm:justify-start">
-          <div className="text-xl sm:text-3xl font-black tracking-tight text-white">
+          <div className={`text-xl sm:text-3xl font-black tracking-tight ${textTitle}`}>
             <SectionHeading as={asPage ? 'h1' : 'h2'} themeColor={themeColor}>
-              {pick('Our Locations', 'مواقعنا')}
+              <span className={textTitle}>{pick('Our Locations', 'مواقعنا')}</span>
             </SectionHeading>
           </div>
         </div>
-        <p className="mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed text-slate-300 max-w-lg mx-auto sm:mx-0">
+        <p className={`mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed max-w-lg mx-auto sm:mx-0 ${textDesc}`}>
           {pick(
             'Our branches across Saudi Arabia — choose a location to see the map and contact details.',
             'فروعنا في المملكة العربية السعودية — اختر الموقع لعرض الخريطة وبيانات التواصل.'
@@ -80,25 +92,23 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveId(l.id)}
-                className={`flex items-center gap-4 text-start p-4 rounded-2xl border-s-4 transition-all duration-300 shadow-sm cursor-pointer ${focusCls} ${
-                  isActive
-                    ? 'bg-white/10 text-white border-slate-300'
-                    : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]'
+                className={`flex items-center gap-4 text-start p-4 rounded-2xl border-s-4 transition-all duration-300 cursor-pointer ${focusCls} ${
+                  isActive ? tabActiveBg : tabInactiveBg
                 }`}
                 style={{ borderColor: isActive ? themeColor : 'transparent' }}
               >
                 <span
                   className="relative grid place-items-center h-11 w-11 rounded-xl shrink-0 text-white shadow-md transition-colors"
-                  style={{ backgroundColor: isActive ? themeColor : 'rgba(255,255,255,0.1)' }}
+                  style={{ backgroundColor: isActive ? themeColor : (darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1') }}
                 >
-                  <Icon className="relative w-5 h-5" />
+                  <Icon className="relative w-5 h-5 text-white" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold text-blue-300">{pick(meta.label, meta.labelAr)}</span>
-                  <span className="block font-extrabold leading-snug text-sm sm:text-base text-white">
+                  <span className={`block text-xs font-bold ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>{pick(meta.label, meta.labelAr)}</span>
+                  <span className={`block font-extrabold leading-snug text-sm sm:text-base ${isActive ? textTitle : (darkMode ? 'text-slate-200' : 'text-slate-800')}`}>
                     {pick(l.name, l.nameAr)}
                   </span>
-                  <span className="block text-xs text-slate-400 mt-0.5">{pick(l.city, l.cityAr)}</span>
+                  <span className={`block text-xs mt-0.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{pick(l.city, l.cityAr)}</span>
                 </span>
               </button>
             );
@@ -106,7 +116,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
         </div>
 
         {/* تفاصيل الفرع */}
-        <div className="lg:col-span-3 rounded-2xl overflow-hidden border border-blue-900/60 bg-[#0B1B3A] shadow-2xl">
+        <div className={`lg:col-span-3 rounded-2xl overflow-hidden border shadow-2xl ${detailBoxBg}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={active.id}
@@ -115,7 +125,6 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-            
               <div className="relative h-56 sm:h-72 bg-slate-900">
                 {embedSrc ? (
                   <iframe
@@ -148,21 +157,21 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
 
               <div className="p-5 sm:p-8 space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-2xl font-extrabold text-white leading-snug">
+                  <h3 className={`text-lg sm:text-2xl font-extrabold leading-snug ${textTitle}`}>
                     {pick(active.name, active.nameAr)}
                   </h3>
-                  <p className="text-blue-300 text-xs sm:text-sm font-semibold mt-1">{pick(active.city, active.cityAr)}</p>
+                  <p className={`text-xs sm:text-sm font-semibold mt-1 ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>{pick(active.city, active.cityAr)}</p>
                 </div>
 
-                <ul className="space-y-4 text-sm text-slate-200">
+                <ul className={`space-y-4 text-sm ${textDesc}`}>
                   <li className="flex items-start gap-3.5">
                     <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: themeColor }} />
-                    <span>{pick(active.address, active.addressAr)}</span>
+                    <span className={textTitle}>{pick(active.address, active.addressAr)}</span>
                   </li>
                   {active.phone && (
                     <li className="flex items-center gap-3.5">
                       <Phone className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <a href={telHref(active.phone)} dir="ltr" className="font-bold text-white hover:underline">
+                      <a href={telHref(active.phone)} dir="ltr" className={`font-bold hover:underline ${textTitle}`}>
                         {active.phone}
                       </a>
                     </li>
@@ -170,7 +179,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                   {active.email && (
                     <li className="flex items-center gap-3.5">
                       <Mail className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <a href={`mailto:${active.email}`} className="hover:underline break-all">
+                      <a href={`mailto:${active.email}`} className={`hover:underline break-all ${textTitle}`}>
                         {active.email}
                       </a>
                     </li>
@@ -178,7 +187,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                   {(active.hours || active.hoursAr) && (
                     <li className="flex items-center gap-3.5">
                       <Clock className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <span>{pick(active.hours, active.hoursAr)}</span>
+                      <span className={textTitle}>{pick(active.hours, active.hoursAr)}</span>
                     </li>
                   )}
                 </ul>
@@ -187,7 +196,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                   {active.phone && (
                     <a
                       href={telHref(active.phone)}
-                      className={`${actionBase} shadow-lg`}
+                      className={`${actionBase} text-white shadow-lg`}
                       style={{ backgroundColor: themeColor }}
                     >
                       <Phone className="w-4 h-4" />
@@ -199,7 +208,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                       href={`https://wa.me/${waNumber}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${actionBase} bg-emerald-600 shadow-lg`}
+                      className={`${actionBase} text-white bg-emerald-600 shadow-lg`}
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>{pick('WhatsApp', 'واتساب')}</span>
@@ -209,7 +218,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false }) {
                     href={mapsLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${actionBase} bg-white/10 border border-white/20`}
+                    className={`${actionBase} ${mapBtnStyle}`}
                   >
                     <MapPin className="w-4 h-4" />
                     <span>{pick('Open in Google Maps', 'افتح في خرائط جوجل')}</span>

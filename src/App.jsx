@@ -8,7 +8,7 @@ import BackToTop from './components/ui/BackToTop';
 import { ROUTES, PAGE_TITLES, pageKeyFromPath } from './routes';
 import ChatWidget from './components/ChatWidget';
 
-// كل صفحة في ملف لوحدها وبتتحمّل عند الحاجة فقط (Code Splitting)
+// Code Splitting
 const Home = lazy(() => import('./pages/Home'));
 const OurStoryPage = lazy(() => import('./pages/OurStoryPage'));
 const OverviewPage = lazy(() => import('./pages/OverviewPage'));
@@ -23,12 +23,25 @@ const LocationsPage = lazy(() => import('./pages/LocationsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 import AdminDashboard from './pages/AdminDashboard';
 
-// مكون إرجاع الصفحة للأعلى عند تغيير الـ Path أو الـ Refresh
 function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    document.body.style.overflow = 'hidden';
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    const timer = setTimeout(() => {
+      document.body.style.overflow = '';
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return null;
@@ -46,22 +59,32 @@ function PageLoader({ themeColor }) {
 }
 
 export default function App() {
-  // قراءة اللغة المخزنة من الlocalStorage مسبقاً، أو الافتراضي 'en' لو أول مرة يفتح
   const [lang, setLangState] = useState(() => {
     return localStorage.getItem('kian_lang') || 'en';
   });
   
   const [darkMode, setDarkMode] = useState(true);
-  const [themeColor, setThemeColor] = useState('#C9252C'); // Kianko Red
+  const [themeColor, setThemeColor] = useState('#C9252C');
 
   const { pathname } = useLocation();
   const pageKey = pageKeyFromPath(pathname);
 
-  // دالة مخصصة لتحديث الحفظ في الlocalStorage مع الState لتجنب أي مشاكل
   const setLang = (newLang) => {
     setLangState(newLang);
     localStorage.setItem('kian_lang', newLang);
   };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.style.backgroundColor = '#07132B';
+      document.body.style.color = '#F1F5F9';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.style.backgroundColor = '#F8FAFC';
+      document.body.style.color = '#1E293B';
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -73,62 +96,59 @@ export default function App() {
     document.title = lang === 'ar' ? ar : en;
   }, [pageKey, lang]);
 
-  const pageProps = { lang, themeColor };
+  const pageProps = { lang, themeColor, darkMode };
   const isAr = lang === 'ar';
 
   return (
     <MotionConfig reducedMotion="user">
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        darkMode ? 'bg-[#07132B] text-slate-100' : 'bg-slate-50 text-slate-800'
-      }`}
-    >
-      <ScrollToTop />
-      <ScrollProgress themeColor={themeColor} />
-      <Navbar
-        lang={lang}
-        setLang={setLang}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        themeColor={themeColor}
-        setThemeColor={setThemeColor}
-      />
+      <div
+        className={`min-h-screen transition-colors duration-300 ${
+          darkMode ? 'bg-[#07132B] text-slate-100' : 'bg-slate-50 text-slate-800'
+        }`}
+      >
+        <ScrollToTop />
+        <ScrollProgress themeColor={themeColor} />
+        <Navbar
+          lang={lang}
+          setLang={setLang}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          themeColor={themeColor}
+          setThemeColor={setThemeColor}
+        />
 
-      <main className="pb-12">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        >
-        <Suspense fallback={<PageLoader themeColor={themeColor} />}>
-          <Routes>
-            <Route path={ROUTES.home} element={<Home {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.story} element={<OurStoryPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.overview} element={<OverviewPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.values} element={<ValuesPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.quality} element={<GovernanceQualityPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.iso} element={<IsoCertificationsPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.careers} element={<CareersPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.projects} element={<ProjectsPage {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.products} element={<Products {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
-            <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
-            
-            {/* تم نقل مسار الأدمن قبل مسار الـ NotFound (*) */}
-            <Route path={ROUTES.admin || '/admin'} element={<AdminDashboard themeColor={themeColor} />} />
+        <main className="pb-12">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Suspense fallback={<PageLoader themeColor={themeColor} />}>
+              <Routes>
+                <Route path={ROUTES.home} element={<Home {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.story} element={<OurStoryPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.overview} element={<OverviewPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.values} element={<ValuesPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.quality} element={<GovernanceQualityPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.iso} element={<IsoCertificationsPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.careers} element={<CareersPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.projects} element={<ProjectsPage {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.products} element={<Products {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
+                <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
+                
+                <Route path={ROUTES.admin || '/admin'} element={<AdminDashboard themeColor={themeColor} />} />
+                <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
+              </Routes>
+            </Suspense>
+          </motion.div>
+        </main>
 
-            {/* مسار الصفحة غير الموجودة هو الأخير دائماً */}
-            <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
-          </Routes>
-        </Suspense>
-        </motion.div>
-      </main>
-
-      <Footer lang={lang} themeColor={themeColor} />
-      <BackToTop themeColor={themeColor} isAr={isAr} />
-      <ChatWidget />
-    </div>
+        <Footer lang={lang} themeColor={themeColor} darkMode={darkMode} />
+        <BackToTop themeColor={themeColor} isAr={isAr} />
+        <ChatWidget />
+      </div>
     </MotionConfig>
   );
 }

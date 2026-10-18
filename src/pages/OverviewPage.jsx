@@ -15,11 +15,17 @@ import {
 import { ROUTES } from '../routes';
 import SpotlightCard from '../components/ui/SpotlightCard';
 
-export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
+export default function OverviewPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
-  // 1. القدرات الإنتاجية الـ 6 الرئيسية لمصنع كيانكو بمسارات الصور الجديدة المباشرة
+  // تحديث كلاسات الألوان الصريحة المباشرة بناءً على حالة darkMode
+  const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-white border-slate-200';
+  const innerCardBg = darkMode ? 'bg-[#061022] border-blue-900/40' : 'bg-slate-100 border-slate-200';
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+
+  // 1. القدرات الإنتاجية الـ 6 الرئيسية لمصنع كيانكو
   const capabilities = useMemo(() => [
     {
       id: 'roll-forming',
@@ -123,14 +129,14 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
       
       {/* 1. Page Header Section */}
       <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
+        <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-md ${cardBg}`}>
           <Factory className="w-4 h-4" style={{ color: themeColor }} />
-          <span>{pick('INDUSTRIAL INFRASTRUCTURE', 'البنية التحتية الصناعية')}</span>
+          <span className={textTitle}>{pick('INDUSTRIAL INFRASTRUCTURE', 'البنية التحتية الصناعية')}</span>
         </span>
-        <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight">
+        <h1 className={`text-2xl sm:text-5xl font-black tracking-tight ${textTitle}`}>
           {pick('Manufacturing Overview', 'نظرة عامة على القدرات الإنتاجية')}
         </h1>
-        <p className="text-slate-300 font-medium text-xs sm:text-base leading-relaxed">
+        <p className={`font-medium text-xs sm:text-base leading-relaxed ${textDesc}`}>
           {pick(
             'State-of-the-art automated cold-rolling, high-speed punching, and hot-dip galvanizing facilities powered by Kianko engineering.',
             'خطوط إنتاج آلية بالكامل ومصانع جلفنة حديثة مدعومة بأحدث تقنيات الهندسة وتشكيل المعادن.'
@@ -144,11 +150,11 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           <SpotlightCard
             as="article"
             key={card.id}
-            className="group bg-[#0A1832] rounded-3xl border border-blue-900/60 shadow-xl overflow-hidden flex flex-col justify-between hover:border-slate-500 hover:-translate-y-1 hover:shadow-2xl transition-all duration-500"
+            className={`group rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 ${cardBg}`}
           >
             <div>
               {/* حاوية الصورة */}
-              <div className="relative overflow-hidden h-44 sm:h-52 bg-[#061022]">
+              <div className={`relative overflow-hidden h-44 sm:h-52 ${innerCardBg}`}>
                 <img
                   src={card.img}
                   alt={pick(card.titleEn, card.titleAr)}
@@ -165,21 +171,17 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
 
               {/* تفاصيل الكارد */}
               <div className="p-5 sm:p-6 space-y-2.5 sm:space-y-3">
-                <h3 
-                  className="text-base sm:text-xl font-bold text-white transition-colors duration-300"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = themeColor)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = 'white')}
-                >
+                <h3 className={`text-base sm:text-xl font-bold transition-colors duration-300 ${textTitle}`}>
                   {pick(card.titleEn, card.titleAr)}
                 </h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                <p className={`text-xs sm:text-sm leading-relaxed ${textDesc}`}>
                   {pick(card.descEn, card.descAr)}
                 </p>
               </div>
             </div>
 
             <div className="p-5 sm:p-6 pt-0">
-              <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-400 pt-2 border-t border-blue-900/40">
+              <div className={`flex items-center gap-2 text-[11px] sm:text-xs font-bold pt-2 border-t ${textDesc} ${darkMode ? 'border-blue-900/40' : 'border-slate-200'}`}>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{pick('ISO Certified Process', 'عملية معتمدة بجودة ISO')}</span>
               </div>
@@ -224,18 +226,18 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           return (
             <div
               key={idx}
-              className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-4 sm:p-6 text-center space-y-2 shadow-xl hover:border-slate-500 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-center items-center group relative overflow-hidden"
+              className={`border rounded-2xl p-4 sm:p-6 text-center space-y-2 shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-center items-center group relative overflow-hidden ${cardBg}`}
             >
-              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-900/90 border border-blue-900/80 mb-1 group-hover:scale-110 transition-transform">
+              <div className={`p-2 sm:p-2.5 rounded-xl border mb-1 group-hover:scale-110 transition-transform ${innerCardBg}`}>
                 <IconComp className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
               </div>
               <span
-                className="text-base sm:text-2xl font-black tracking-tight whitespace-nowrap block text-white"
+                className={`text-base sm:text-2xl font-black tracking-tight whitespace-nowrap block ${textTitle}`}
                 style={{ color: metric.isThemeColor ? themeColor : undefined }}
               >
                 {metric.value}
               </span>
-              <p className="text-slate-300 font-semibold text-[11px] sm:text-xs leading-tight">
+              <p className={`font-semibold text-[11px] sm:text-xs leading-tight ${textDesc}`}>
                 {pick(metric.labelEn, metric.labelAr)}
               </p>
             </div>
@@ -246,15 +248,14 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
       {/* 4. Manufacturing Workflow Steps */}
       <div className="space-y-8 sm:space-y-12 pt-4">
         <div className="text-center space-y-3 max-w-2xl mx-auto px-2">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80">
+          <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border ${cardBg}`}>
             <Workflow className="w-4 h-4 text-emerald-400" />
-            <span>{pick('PRODUCTION PROCESS', 'مراحل التصنيع')}</span>
+            <span className={textTitle}>{pick('PRODUCTION PROCESS', 'مراحل التصنيع')}</span>
           </span>
-          {/* تم تصغير حجم العنوان ليظهر على سطر واحد تماماً ومناسب للهاتف */}
-          <h2 className="text-base sm:text-2xl font-extrabold text-white whitespace-nowrap">
+          <h2 className={`text-base sm:text-2xl font-extrabold sm:whitespace-nowrap ${textTitle}`}>
             {pick('Precision Engineering Workflow', 'خطوات دورة الإنتاج الفولاذية')}
           </h2>
-          <p className="text-slate-300 text-xs sm:text-sm">
+          <p className={`text-xs sm:text-sm ${textDesc}`}>
             {pick('From raw coil inspection to hot-dip galvanizing and heavy packaging.', 'من فحص الفولاذ الخام وحتى الجلفنة والتغليف للمنشآت.')}
           </p>
         </div>
@@ -263,33 +264,32 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           {workflowSteps.map((st) => (
             <div
               key={st.step}
-              className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-5 sm:p-6 space-y-3 text-center sm:text-start relative shadow-xl hover:border-slate-400 transition-all flex flex-col items-center sm:items-start"
+              className={`border rounded-2xl p-5 sm:p-6 space-y-3 text-center sm:text-start relative shadow-xl hover:border-slate-400 transition-all flex flex-col items-center sm:items-start ${cardBg}`}
             >
               <div className="w-full flex items-center justify-between">
-                <span className="text-2xl sm:text-3xl font-black opacity-30 text-white">{st.step}</span>
-                <div className="p-2 rounded-lg bg-slate-900 border border-blue-900/80">
+                <span className={`text-2xl sm:text-3xl font-black opacity-40 ${textTitle}`}>{st.step}</span>
+                <div className={`p-2 rounded-lg border ${innerCardBg}`}>
                   <Zap className="w-4 h-4" style={{ color: themeColor }} />
                 </div>
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-white">{pick(st.titleEn, st.titleAr)}</h3>
-              <p className="text-slate-300 text-xs leading-relaxed">{pick(st.descEn, st.descAr)}</p>
+              <h3 className={`text-base sm:text-lg font-bold ${textTitle}`}>{pick(st.titleEn, st.titleAr)}</h3>
+              <p className={`text-xs leading-relaxed ${textDesc}`}>{pick(st.descEn, st.descAr)}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* 5. Quality & Environmental Standards Section */}
-      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl">
+      <div className={`border rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl transition-colors duration-300 ${cardBg}`}>
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
           <div className="space-y-3 sm:space-y-4 text-center sm:text-start">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
+            <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold border inline-block ${innerCardBg} ${textTitle}`}>
               {pick('SUSTAINABILITY & SAFETY', 'السلامة والاستدامة')}
             </span>
-            {/* تم تصغير حجم العنوان ليظهر على سطر واحد تماماً ومناسب للهاتف */}
-            <h2 className="text-base sm:text-2xl font-extrabold text-white leading-tight whitespace-nowrap">
+            <h2 className={`text-base sm:text-2xl font-extrabold leading-tight sm:whitespace-nowrap ${textTitle}`}>
               {pick('Eco-Friendly & Safe Manufacturing', 'تصنيع صديق للبيئة وآمن بالكامل')}
             </h2>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0">
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0 ${textDesc}`}>
               {pick(
                 'Our plants utilize zero-waste acid treatment recycling systems, eco-friendly zinc filtering, and strict worker safety protocol complying with international OSHA standards.',
                 'تعتمد مصانعنا على أنظمة إعادة تدوير الأحماض لمنع التلوث، وفلاتر الزنك البيئية، مع تطبيق معايير OSHA العالمية لسلامة الكوادر الفنية.'
@@ -304,9 +304,9 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
               { titleEn: 'Zinc Fume Filtration', titleAr: 'فلاتر احتجاز أدخنة الزنك' },
               { titleEn: 'Energy Efficient Machinery', titleAr: 'ماكينات موفرة للطاقة الكهربائية' },
             ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-blue-900/40 text-start">
+              <div key={idx} className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border text-start ${innerCardBg}`}>
                 <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-xs font-bold text-white">{pick(item.titleEn, item.titleAr)}</span>
+                <span className={`text-xs font-bold ${textTitle}`}>{pick(item.titleEn, item.titleAr)}</span>
               </div>
             ))}
           </div>
@@ -314,11 +314,11 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 6. Call to Action */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl">
-        <h2 className="text-base sm:text-2xl font-extrabold text-white">
+      <div className={`border rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl transition-colors duration-300 ${cardBg}`}>
+        <h2 className={`text-base sm:text-2xl font-extrabold ${textTitle}`}>
           {pick('Need Custom Steel Fabrication Specifications?', 'تحتاج مواصفات تصنيع صُلب مخصصة لمشروعك؟')}
         </h2>
-        <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
+        <p className={`max-w-xl mx-auto text-xs sm:text-sm leading-relaxed ${textDesc}`}>
           {pick(
             'Our engineering team provides dedicated consultation for load calculations, custom profile rolling, and galvanizing requirements.',
             'يقدم فريقنا الهندسي استشارات مخصصة لحسابات الأحمال، وتشكيل القطاعات، ومواصفات الجلفنة لمشروعك.'
@@ -335,7 +335,7 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C' }) {
           </Link>
           <Link
             to={ROUTES.products}
-            className="inline-flex items-center justify-center gap-2 py-3.5 px-6 sm:px-8 rounded-xl font-bold text-xs sm:text-base text-white bg-slate-800 hover:bg-slate-700 transition-all hover:scale-105 border border-blue-900/80 w-full sm:w-auto"
+            className={`inline-flex items-center justify-center gap-2 py-3.5 px-6 sm:px-8 rounded-xl font-bold text-xs sm:text-base border transition-all hover:scale-105 w-full sm:w-auto ${innerCardBg} ${textTitle}`}
           >
             <span>{pick('Explore Product Line', 'استكشف المنتجات')}</span>
           </Link>

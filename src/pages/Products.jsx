@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Download, Search, X } from 'lucide-react';
 import { useProducts } from '../hooks/useContent';
-import { supabase } from "../lib/supabase";// تأكد أن مسار الـ supabase client صحيح عندك في المشروع
+import { supabase } from "../lib/supabase";
 import SpotlightCard from '../components/ui/SpotlightCard';
 
 const SUPABASE_BUCKET_URL = 'https://ohvjwenkocfragysvowp.supabase.co/storage/v1/object/public/datasheets';
@@ -39,23 +39,29 @@ const customNames = [
   { id: 'steel-angle-mesh', name: 'Steel Angle Beads & Expanded Mesh', nameAr: 'زوايا فولاذية وشبك ممدد', pdfName: 'plastering-datasheet.pdf' },
 ];
 
-export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
+export default function Products({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
   const rawProducts = useProducts();
   const [category, setCategory] = useState('all');
   const [query, setQuery] = useState('');
 
-  // دالة تسجيل وتتبع التحميل في سوبابيس في الخلفية
+  // تحكم صريح بالألوان حسب الثيم
+  const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-white border-slate-200';
+  const innerImgBg = darkMode ? 'bg-[#061022]' : 'bg-slate-100';
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const inputBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white placeholder:text-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400';
+
   const handleDownload = async (productId, datasheetUrl) => {
-  try {
-    const { error } = await supabase.rpc('increment_downloads', { p_product_id: productId });
-    if (error) console.error('RPC Error:', error);
-  } catch (err) {
-    console.error('Failed to track download count:', err);
-  }
-  window.open(datasheetUrl, '_blank');
-};
+    try {
+      const { error } = await supabase.rpc('increment_downloads', { p_product_id: productId });
+      if (error) console.error('RPC Error:', error);
+    } catch (err) {
+      console.error('Failed to track download count:', err);
+    }
+    window.open(datasheetUrl, '_blank');
+  };
 
   const products = useMemo(() => {
     const updated = rawProducts.map((p, index) => {
@@ -112,15 +118,15 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
   }, [products, category, query]);
 
   const btnCls =
-    'relative inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white shadow-lg cursor-pointer';
+    'relative inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg cursor-pointer';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10 text-start">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-white">
+        <h1 className={`text-3xl sm:text-5xl font-extrabold ${textTitle}`}>
           KIANKO <span style={{ color: themeColor }}>{pick('Product Catalog', 'كتالوج المنتجات')}</span>
         </h1>
-        <p className="text-slate-300 max-w-xl mx-auto font-medium text-sm sm:text-base">
+        <p className={`max-w-xl mx-auto font-medium text-sm sm:text-base ${textDesc}`}>
           {pick(
             `Explore our portfolio of ${products.length} steel lines, cable management systems, and building profiles.`,
             `تعرّف على ${products.length} خطوط إنتاج من حوامل الكابلات والمقاطع المعدنية.`
@@ -132,12 +138,12 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
         <div className="relative w-full max-w-md">
           <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 start-4 w-4 h-4 text-slate-400" />
           <input
-            type="search"
+            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label={pick('Search products', 'ابحث في المنتجات')}
             placeholder={pick('Search products…', 'ابحث في المنتجات…')}
-            className="w-full ps-11 pe-10 py-3 rounded-xl bg-[#0A1832] border border-blue-900/60 text-white text-sm placeholder:text-slate-500 focus:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className={`w-full ps-11 pe-10 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`}
           />
           {query && (
             <button
@@ -162,7 +168,7 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                 aria-selected={on}
                 onClick={() => setCategory(f.id)}
                 className={`relative px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-colors duration-300 border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                  on ? 'text-white border-transparent' : 'bg-[#0A1832] text-slate-300 hover:bg-[#10244A] border-blue-900/60'
+                  on ? 'text-white border-transparent' : `${cardBg}${textDesc} hover:opacity-90`
                 }`}
               >
                 {on && (
@@ -186,15 +192,15 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {list.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-blue-900/70 p-12 text-center space-y-4">
-          <p className="text-slate-300">{pick('No products match your search.', 'مفيش منتجات مطابقة للبحث.')}</p>
+        <div className={`rounded-2xl border border-dashed p-12 text-center space-y-4 ${cardBg}`}>
+          <p className={textDesc}>{pick('No products match your search.', 'مفيش منتجات مطابقة للبحث.')}</p>
           <button
             type="button"
             onClick={() => {
               setQuery('');
               setCategory('all');
             }}
-            className="text-sm font-bold text-white underline underline-offset-4 hover:opacity-80"
+            className={`text-sm font-bold underline underline-offset-4 hover:opacity-80 ${textTitle}`}
           >
             {pick('Reset filters', 'إعادة ضبط الفلاتر')}
           </button>
@@ -217,10 +223,10 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                 >
                   <SpotlightCard
                     as="article"
-                    className="group h-full bg-[#0A1832] rounded-2xl border border-blue-900/60 shadow-xl hover:border-slate-500 hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 flex flex-col justify-between overflow-hidden"
+                    className={`group h-full rounded-2xl border shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 flex flex-col justify-between overflow-hidden ${cardBg}`}
                   >
                     <div>
-                      <div className={`relative overflow-hidden h-52 sm:h-56 ${isAccessory ? 'bg-[#061022] p-1.5 flex items-center justify-center' : 'bg-[#0A1832]'}`}>
+                      <div className={`relative overflow-hidden h-52 sm:h-56 ${isAccessory ? `${innerImgBg} p-1.5 flex items-center justify-center` : innerImgBg}`}>
                         {p.image ? (
                           <img
                             src={p.image}
@@ -235,19 +241,15 @@ export default function Products({ lang = 'en', themeColor = '#C9252C' }) {
                       </div>
 
                       <div className="relative p-5 sm:p-6 space-y-4">
-                        <h2 
-                          className="text-lg sm:text-xl font-bold text-white transition-colors duration-300"
-                          onMouseEnter={(e) => e.currentTarget.style.color = themeColor}
-                          onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
-                        >
+                        <h2 className={`text-lg sm:text-xl font-bold transition-colors duration-300 ${textTitle}`}>
                           {pick(p.name, p.nameAr)}
                         </h2>
-                        <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{pick(p.desc, p.descAr)}</p>
+                        <p className={`text-xs sm:text-sm leading-relaxed ${textDesc}`}>{pick(p.desc, p.descAr)}</p>
 
                         <div className="space-y-2 pt-2">
                           <h3 className="text-xs font-bold text-slate-400">{pick('Technical Specs', 'المواصفات الفنية')}</h3>
                           {(isAr ? p.specsAr : p.specs)?.map((spec) => (
-                            <div key={spec} className="flex items-center gap-2 text-xs font-medium text-slate-200">
+                            <div key={spec} className={`flex items-center gap-2 text-xs font-medium ${textDesc}`}>
                               <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                               <span>{spec}</span>
                             </div>

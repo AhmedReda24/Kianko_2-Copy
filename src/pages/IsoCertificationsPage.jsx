@@ -3,11 +3,20 @@ import { ShieldCheck, Award, FileCheck, CheckCircle2, ZoomIn, X, Download, Arrow
 import { Link } from 'react-router';
 import { ROUTES } from '../routes';
 
-export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C9252C' }) {
+export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
   const [selectedCert, setSelectedCert] = useState(null);
+
+  // المتغيرات المتكيفة مع الثيم (فاتح / داكن)
+  const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white' : 'bg-white border-slate-200 text-slate-950 shadow-xl';
+  const textTitle = darkMode ? 'text-white' : 'text-slate-950';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const badgeBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/80' : 'bg-slate-100 text-slate-800 border-slate-300';
+  const subSectionBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-white border-slate-200 shadow-2xl';
+  const subBoxBg = darkMode ? 'bg-slate-900/80 border-blue-900/40 text-white' : 'bg-slate-50 border-slate-200 text-slate-900';
+  const modalBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/80' : 'bg-white text-slate-900 border-slate-300';
 
   const accreditationsList = useMemo(() => [
     {
@@ -130,20 +139,19 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       
       {/* 1. Header Section */}
       <div className="text-center space-y-3 sm:space-y-4 max-w-4xl mx-auto px-2">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
+        <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md border ${badgeBg}`}>
           <Award className="w-4 h-4 text-emerald-400" />
           <span>{pick('GLOBAL ACCREDITATIONS & CERTIFICATES', 'الاعتمادات والجودة المعتمدة')}</span>
         </span>
         
-        {/* تم تحديث الحجم ليكون متناسباً ومتجاوباً بين الهواتف واللابتوب */}
-        <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-snug">
+        <h1 className={`text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-snug ${textTitle}`}>
           {pick(
             `${accreditationsList.length} Accredited International Certifications`,
             `${accreditationsList.length} شهادات جودة واعترافات دولية`
           )}
         </h1>
 
-        <p className="text-slate-300 font-medium text-xs sm:text-base leading-relaxed max-w-2xl mx-auto">
+        <p className={`font-medium text-xs sm:text-base leading-relaxed max-w-2xl mx-auto ${textDesc}`}>
           {pick(
             'Kianko Steel adheres to global quality, environmental safety, and galvanizing compliance frameworks.',
             'تلتزم كيانكو بأعلى معايير التصنيع والجودة والجلفنة للحلول الهيكلية وحوامل الكابلات.'
@@ -156,7 +164,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
         {accreditationsList.map((cert) => (
           <div
             key={cert.id}
-            className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xl hover:border-slate-400 hover:-translate-y-1 transition-all duration-300 group"
+            className={`rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xl transition-all duration-300 group border ${cardBg}`}
           >
             <div className="space-y-3 sm:space-y-4">
               {cert.hasImage ? (
@@ -175,7 +183,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
                   </div>
                 </div>
               ) : (
-                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-slate-900 border border-blue-900/80 flex items-center justify-center shadow-inner">
+                <div className={`h-12 w-12 sm:h-14 sm:w-14 rounded-2xl border flex items-center justify-center shadow-inner ${darkMode ? 'bg-slate-900 border-blue-900/80' : 'bg-slate-100 border-slate-300'}`}>
                   <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: themeColor }} />
                 </div>
               )}
@@ -184,12 +192,12 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
                 <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold text-white inline-block" style={{ backgroundColor: themeColor }}>
                   {cert.code}
                 </span>
-                <h3 className="text-base sm:text-lg font-bold text-white leading-snug">{pick(cert.titleEn, cert.titleAr)}</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">{pick(cert.descEn, cert.descAr)}</p>
+                <h3 className={`text-base sm:text-lg font-bold leading-snug ${textTitle}`}>{pick(cert.titleEn, cert.titleAr)}</h3>
+                <p className={`text-xs leading-relaxed ${textDesc}`}>{pick(cert.descEn, cert.descAr)}</p>
               </div>
             </div>
 
-            <div className="pt-3 sm:pt-4 border-t border-blue-900/40 flex items-center justify-between text-xs font-bold text-slate-300">
+            <div className={`pt-3 sm:pt-4 border-t flex items-center justify-between text-xs font-bold ${darkMode ? 'border-blue-900/40 text-slate-300' : 'border-slate-200 text-slate-700'}`}>
               <span className="flex items-center gap-1.5 text-emerald-400 text-[11px] sm:text-xs">
                 <FileCheck className="w-4 h-4 shrink-0" />
                 <span>{pick(cert.badgeEn, cert.badgeAr)}</span>
@@ -198,7 +206,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
                 <button
                   type="button"
                   onClick={() => setSelectedCert(cert)}
-                  className="text-white hover:underline flex items-center gap-1 cursor-pointer text-[11px] sm:text-xs"
+                  className={`hover:underline flex items-center gap-1 cursor-pointer text-[11px] sm:text-xs ${textTitle}`}
                 >
                   <span>{pick('View Cert', 'معاينة الشهادة')}</span>
                 </button>
@@ -209,19 +217,18 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       </div>
 
       {/* 3. In-House Quality Control Pillars */}
-      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-10 space-y-6 sm:space-y-8 shadow-2xl">
+      <div className={`rounded-3xl p-5 sm:p-10 space-y-6 sm:space-y-8 border ${subSectionBg}`}>
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
           <div className="space-y-3 sm:space-y-4 text-center sm:text-start">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
+            <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold inline-block border ${darkMode ? 'text-white bg-slate-800 border-blue-900/80' : 'text-slate-800 bg-slate-100 border-slate-300'}`}>
               {pick('STRICT COMPLIANCE', 'الالتزام بالمواصفات')}
             </span>
             
-            {/* تم تحديث حجم العنوان هنا أيضاً */}
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug">
+            <h2 className={`text-lg sm:text-2xl md:text-3xl font-extrabold leading-snug ${textTitle}`}>
               {pick('Beyond ISO Certification Standards', 'ما بعد معايير شهادات الآيزو')}
             </h2>
 
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0">
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0 ${textDesc}`}>
               {pick(
                 'Every steel profile and cable tray system undergoes physical tensile testing and coating thickness checks in our accredited testing lab before leaving the plant.',
                 'تخضع جميع قطاعات الصلب وأنظمة حوامل الكابلات لاختبارات إجهاد الشد والسمك في معمل الفحص المعتمد لدينا قبل الخروج للمواقع.'
@@ -236,9 +243,9 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
               { titleEn: 'Tensile Strength Physical Testing', titleAr: 'اختبارات إجهاد الشد والتحمل الفولاذي' },
               { titleEn: 'Digital Zinc Coating Thickness Test', titleAr: 'قياس سمك الزنك الرقمي بالميكرون' },
             ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-blue-900/40 text-start">
+              <div key={idx} className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border text-start ${subBoxBg}`}>
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-xs font-bold text-white">{pick(item.titleEn, item.titleAr)}</span>
+                <span className={`text-xs font-bold ${textTitle}`}>{pick(item.titleEn, item.titleAr)}</span>
               </div>
             ))}
           </div>
@@ -246,11 +253,11 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       </div>
 
       {/* 4. CTA Section */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-10 text-center space-y-5 sm:space-y-6 shadow-2xl">
-        <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug">
+      <div className={`rounded-3xl p-6 sm:p-10 text-center space-y-5 sm:space-y-6 shadow-2xl border ${darkMode ? 'bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border-blue-900/60' : 'bg-slate-100 border-slate-300'}`}>
+        <h2 className={`text-lg sm:text-2xl md:text-3xl font-extrabold leading-snug ${textTitle}`}>
           {pick('Need Quality Certificates for Consultant Approval?', 'تحتاج صور الشهادات المعتمدة للتقديم للاستشاري؟')}
         </h2>
-        <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
+        <p className={`max-w-xl mx-auto text-xs sm:text-sm leading-relaxed ${textDesc}`}>
           {pick(
             'Request verified copies of our ISO certificates and mill test reports directly for your project submittals.',
             'اطلب نسخاً معتمدة وموثوقة من شهادات ISO وتقارير فحص المصنع لتقديمها مباشرة ضمن أوراق اعتماد المشروع.'
@@ -271,15 +278,15 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       {/* 5. Lightbox Modal */}
       {selectedCert && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-          <div className="relative bg-[#0A1832] border border-blue-900/80 rounded-3xl p-4 sm:p-6 max-w-2xl w-full space-y-3 sm:space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blue-900/60 pb-3">
-              <h3 className="text-sm sm:text-lg font-bold text-white truncate max-w-[80%]">
+          <div className={`relative rounded-3xl p-4 sm:p-6 max-w-2xl w-full space-y-3 sm:space-y-4 shadow-2xl border ${modalBg}`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${darkMode ? 'border-blue-900/60' : 'border-slate-200'}`}>
+              <h3 className={`text-sm sm:text-lg font-bold truncate max-w-[80%] ${textTitle}`}>
                 {selectedCert.code} - {pick(selectedCert.titleEn, selectedCert.titleAr)}
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedCert(null)}
-                className="p-1.5 sm:p-2 rounded-xl bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer ${darkMode ? 'bg-slate-900 text-slate-300 hover:text-white' : 'bg-slate-100 text-slate-700 hover:text-slate-900'}`}
               >
                 <X className="w-5 h-5" />
               </button>

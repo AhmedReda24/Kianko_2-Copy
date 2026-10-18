@@ -3,7 +3,6 @@ import { ShieldCheck, Factory, Cpu, ArrowRight, CheckCircle2, History, Play, Pau
 import { Link } from 'react-router';
 import { ROUTES } from '../routes';
 
-// مكون العداد المتحرك (Animated Counter)
 function Counter({ target, duration = 2000, suffix = '' }) {
   const [count, setCount] = useState(0);
 
@@ -28,11 +27,10 @@ function Counter({ target, duration = 2000, suffix = '' }) {
   );
 }
 
-export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
+export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
-  // مرجع لتشغيل وإيقاف الفيديو يدوياً
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -47,7 +45,6 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
     }
   };
 
-  // بيانات المحطات الزمنية
   const timelineEvents = [
     {
       year: '1998',
@@ -79,26 +76,32 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
     },
   ];
 
+  // كلاسات الألوان الصريحة لضمان توافق التباين 100%
+  const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-slate-100 border-slate-300';
+  const innerCardBg = darkMode ? 'bg-[#061022] border-blue-900/40' : 'bg-white border-slate-200';
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-700';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16 text-center sm:text-start overflow-hidden">
       
       {/* 1. Header & Banner Section */}
-      <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 items-center bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-10 shadow-2xl">
+      <div className={`grid lg:grid-cols-2 gap-8 sm:gap-10 items-center border rounded-3xl p-5 sm:p-10 shadow-2xl transition-colors duration-300 ${cardBg}`}>
         <div className="space-y-4 sm:space-y-6 flex flex-col items-center sm:items-start">
-          <span className="px-4 py-1.5 rounded-full text-white font-bold text-xs uppercase inline-block" style={{ backgroundColor: themeColor }}>
+          <span className="px-4 py-1.5 rounded-full text-white font-bold text-xs uppercase inline-block shadow-sm" style={{ backgroundColor: themeColor }}>
             {isAr ? 'قصتنا وتأسيسنا' : 'OUR HERITAGE'}
           </span>
-          <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-white leading-tight">
+          <h1 className={`text-lg sm:text-2xl lg:text-3xl font-black leading-tight ${textTitle}`}>
             {isAr ? 'عقود من التميز والصناعة الثقيلة' : 'Decades of Industrial Steel Leadership'}
           </h1>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0 text-center sm:text-start">
+          <p className={`text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0 text-center sm:text-start ${textDesc}`}>
             {isAr
               ? 'نروي قصة ريادة امتدت لعقود في ابتكار وتصنيع أنظمة الصلب وحوامل الكابلات، لنكون الشريك الأساسي في أضخم المشاريع الإنشائية والصناعية بالمنطقة.'
               : 'We pioneer decades of excellence in manufacturing advanced steel structures and cable systems, empowering major regional infrastructure.'}
           </p>
         </div>
 
-        <div className="relative rounded-2xl overflow-hidden border border-blue-900/60 shadow-xl bg-[#061022] w-full aspect-[4/3] sm:aspect-auto sm:h-80">
+        <div className={`relative rounded-2xl overflow-hidden border shadow-xl w-full aspect-[4/3] sm:aspect-auto sm:h-80 ${innerCardBg}`}>
           <img
             src="/Image/Our Story.webp"
             alt="Kianko Steel History"
@@ -110,25 +113,25 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       {/* 2. Main Content Section (Story + Video Player) */}
       <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
         <div className="space-y-4 sm:space-y-6 leading-relaxed text-sm sm:text-base flex flex-col items-center sm:items-start text-center sm:text-start">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-white leading-snug">
+          <h2 className={`text-base sm:text-xl lg:text-2xl font-extrabold leading-snug ${textTitle}`}>
             {isAr ? 'تاريخ ممتد في تشكيل المعادن وتلبية المشاريع' : 'Building Strong Foundations Across the Region'}
           </h2>
 
-          <p className="text-slate-300 font-medium text-xs sm:text-sm">
+          <p className={`font-medium text-xs sm:text-sm ${textDesc}`}>
             {isAr
               ? 'تأسست كيانكو للصناعات الحديدية كأحد الصروح الصناعية الرائدة المتخصصة في إنتاج وتشكيل قطاعات الصُلب، وحوامل الكابلات الهندسية، والسلالم المعدنية الفولاذية بمختلف المواصفات.'
               : 'Kianko For Steel Industries was established to pioneer precision steel fabrication, cable management systems, and heavy structural profiles engineered to world-class standards.'}
           </p>
 
-          <p className="text-slate-300 font-medium text-xs sm:text-sm">
+          <p className={`font-medium text-xs sm:text-sm ${textDesc}`}>
             {isAr
               ? 'نمضي بخطى ثابتة نحو تطوير خطوط الإنتاج والاعتماد على أحدث ماكينات التدلفين الدقيق والجلفنة على الساخن لتقديم حلول متكاملة تُنفذ في كبرى المشاريع بالشرق الأوسط.'
               : 'Our commitment to engineering accuracy and continuous technological investment has secured Kianko as a cornerstone partner for major national infrastructure developments.'}
           </p>
         </div>
 
-        {/* تم سنترة مشغل الفيديو وضبطه تماماً */}
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-blue-900/60 bg-slate-900 w-full max-w-lg mx-auto aspect-video sm:aspect-auto sm:h-80 flex items-center justify-center group">
+        {/* مشغل الفيديو */}
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-900 w-full max-w-lg mx-auto aspect-video sm:aspect-auto sm:h-80 flex items-center justify-center group">
           <video
             ref={videoRef}
             src="/Image/OurStory.mp4"
@@ -162,11 +165,11 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
           { target: 100, suffix: '%+', labelEn: 'Quality Compliance', labelAr: 'مطابقة تامة للمواصفات العالمية' },
           { target: 118, suffix: '+', labelEn: 'Export The Governorates', labelAr: 'محافظات تصل إليها منتجاتنا' },
         ].map((stat, i) => (
-          <div key={i} className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-4 sm:p-6 text-center space-y-1.5 sm:space-y-2 shadow-xl hover:border-slate-500 transition-colors flex flex-col justify-center items-center">
+          <div key={i} className={`border rounded-2xl p-4 sm:p-6 text-center space-y-1.5 sm:space-y-2 shadow-xl hover:border-slate-500 transition-colors flex flex-col justify-center items-center ${cardBg}`}>
             <h3 className="text-2xl sm:text-4xl font-black" style={{ color: themeColor }}>
               <Counter target={stat.target} suffix={stat.suffix} />
             </h3>
-            <p className="text-slate-300 font-semibold text-xs sm:text-sm">{pick(stat.labelEn, stat.labelAr)}</p>
+            <p className={`font-semibold text-xs sm:text-sm ${textDesc}`}>{pick(stat.labelEn, stat.labelAr)}</p>
           </div>
         ))}
       </div>
@@ -174,23 +177,23 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       {/* 4. Timeline Section */}
       <div className="space-y-8 sm:space-y-12 pt-4 sm:pt-8 flex flex-col items-center">
         <div className="text-center space-y-3 sm:space-y-4 max-w-2xl mx-auto px-2">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80">
+          <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border ${cardBg}`}>
             <History className="w-4 h-4 text-red-500" />
-            <span>{pick('OUR JOURNEY', 'رحلة التطور')}</span>
+            <span className={textTitle}>{pick('OUR JOURNEY', 'رحلة التطور')}</span>
           </span>
-          <h2 className="text-xl sm:text-3xl font-extrabold text-white">
+          <h2 className={`text-xl sm:text-3xl font-extrabold ${textTitle}`}>
             {pick('Key Milestones in Our Evolution', 'محطات رئيسية في مسيرة نمونا')}
           </h2>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 relative w-full text-center sm:text-start">
           {timelineEvents.map((evt, idx) => (
-            <div key={idx} className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xl hover:border-slate-400 transition-all flex flex-col items-center sm:items-start">
-              <span className="text-xl sm:text-2xl font-black px-3 py-1 rounded-lg bg-slate-900 border border-blue-900/80 inline-block" style={{ color: themeColor }}>
+            <div key={idx} className={`border rounded-2xl p-5 sm:p-6 space-y-3 shadow-xl hover:border-slate-400 transition-all flex flex-col items-center sm:items-start ${cardBg}`}>
+              <span className={`text-xl sm:text-2xl font-black px-3 py-1 rounded-lg border inline-block ${innerCardBg}`} style={{ color: themeColor }}>
                 {evt.year}
               </span>
-              <h3 className="text-base sm:text-lg font-bold text-white">{pick(evt.titleEn, evt.titleAr)}</h3>
-              <p className="text-slate-300 text-xs leading-relaxed text-center sm:text-start">{pick(evt.descEn, evt.descAr)}</p>
+              <h3 className={`text-base sm:text-lg font-bold ${textTitle}`}>{pick(evt.titleEn, evt.titleAr)}</h3>
+              <p className={`text-xs leading-relaxed text-center sm:text-start ${textDesc}`}>{pick(evt.descEn, evt.descAr)}</p>
             </div>
           ))}
         </div>
@@ -199,10 +202,10 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       {/* 5. Core Pillars Section */}
       <div className="space-y-8 sm:space-y-12 pt-4 flex flex-col items-center">
         <div className="text-center space-y-3 sm:space-y-4 max-w-2xl mx-auto px-2">
-          <h2 className="text-xl sm:text-3xl font-extrabold text-white">
+          <h2 className={`text-xl sm:text-3xl font-extrabold ${textTitle}`}>
             {pick('Our Core Manufacturing Pillars', 'ركائز التصنيع الأساسية لدينا')}
           </h2>
-          <p className="text-slate-300 text-xs sm:text-sm">
+          <p className={`text-xs sm:text-sm ${textDesc}`}>
             {pick(
               'Driven by innovation, precision engineering, and uncompromising safety standards.',
               'مدفوعون بالابتكار، الهندسة الدقيقة، ومعايير السلامة التي لا تقبل التنازل.'
@@ -236,12 +239,12 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
           ].map((pillar, idx) => {
             const IconComponent = pillar.icon;
             return (
-              <div key={idx} className="bg-[#0A1832] border border-blue-900/60 rounded-2xl p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xl hover:border-slate-500 transition-all flex flex-col items-center sm:items-start">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-slate-900 border border-blue-900/80 shadow-inner">
+              <div key={idx} className={`border rounded-2xl p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xl hover:border-slate-500 transition-all flex flex-col items-center sm:items-start ${cardBg}`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border shadow-inner ${innerCardBg}`}>
                   <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white">{pick(pillar.titleEn, pillar.titleAr)}</h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed text-center sm:text-start">{pick(pillar.descEn, pillar.descAr)}</p>
+                <h3 className={`text-lg sm:text-xl font-bold ${textTitle}`}>{pick(pillar.titleEn, pillar.titleAr)}</h3>
+                <p className={`text-xs sm:text-sm leading-relaxed text-center sm:text-start ${textDesc}`}>{pick(pillar.descEn, pillar.descAr)}</p>
               </div>
             );
           })}
@@ -249,16 +252,16 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 6. Quality & Compliance Section */}
-      <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl">
+      <div className={`border rounded-3xl p-5 sm:p-12 space-y-6 sm:space-y-8 shadow-2xl transition-colors duration-300 ${cardBg}`}>
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
           <div className="space-y-3 sm:space-y-4 flex flex-col items-center sm:items-start text-center sm:text-start">
-            <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-slate-800 border border-blue-900/80 inline-block">
+            <span className={`px-4 py-1.5 rounded-full text-xs font-bold border inline-block ${innerCardBg} ${textTitle}`}>
               {pick('GLOBAL STANDARDS', 'المعايير الدولية')}
             </span>
-            <h2 className="text-xl sm:text-3xl font-extrabold text-white leading-snug">
+            <h2 className={`text-xl sm:text-3xl font-extrabold leading-snug ${textTitle}`}>
               {pick('Certified Excellence & Compliance', 'اعتمادات جودة موثوقة ومطابقة')}
             </h2>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            <p className={`text-xs sm:text-sm leading-relaxed ${textDesc}`}>
               {pick(
                 'Our manufacturing facility complies with international ISO standards and regional electrical coding guidelines.',
                 'تلتزم جميع منتجاتنا وخطوط الإنتاج بأعلى معايير ISO العالمية وأكواد السلامة الميكانيكية والكهربائية.'
@@ -273,9 +276,9 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
               { titleEn: 'NEMA VE-1 Compliant', titleAr: 'معايير NEMA VE-1 لحوامل الكابلات' },
               { titleEn: '100% Load-Tested Steel', titleAr: 'صلب مفحوص 100% لتحمل الأحمال' },
             ].map((cert, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-blue-900/40 text-start">
+              <div key={idx} className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border text-start ${innerCardBg}`}>
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-xs font-bold text-white">{pick(cert.titleEn, cert.titleAr)}</span>
+                <span className={`text-xs font-bold ${textTitle}`}>{pick(cert.titleEn, cert.titleAr)}</span>
               </div>
             ))}
           </div>
@@ -283,11 +286,11 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 7. Call to Action Section */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl flex flex-col items-center">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-white leading-snug max-w-2xl mx-auto px-2">
+      <div className={`border rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl flex flex-col items-center ${cardBg}`}>
+        <h2 className={`text-base sm:text-xl lg:text-2xl font-extrabold leading-snug max-w-2xl mx-auto px-2 ${textTitle}`}>
           {pick('Ready to Explore Our Advanced Product Lines?', 'هل أنت مستعد لاستعراض خطوط إنتاجنا؟')}
         </h2>
-        <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm">
+        <p className={`max-w-xl mx-auto text-xs sm:text-sm ${textDesc}`}>
           {pick(
             'Discover our comprehensive catalog of cable management systems, steel channels, and building accessories.',
             'اكتشف كتالوجنا الشامل لأنظمة إدارة الكابلات، القطاعات المعدنية، وملحقات البناء.'
@@ -305,7 +308,7 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C' }) {
           <a
             href="/Image/Kianko-Profile.pdf" 
             download
-            className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-800 hover:bg-slate-700 shadow-xl transition-all hover:scale-105 border border-blue-900/80"
+            className={`inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm shadow-xl transition-all hover:scale-105 border ${innerCardBg} ${textTitle}`}
           >
             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>{pick('Download Company Profile', 'تحميل بروفايل الشركة')}</span>

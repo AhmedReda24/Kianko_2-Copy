@@ -1,7 +1,9 @@
 import { motion } from 'motion/react';
 
-// عنوان الأقسام الرئيسي الأصلي - أبيض ناصع 100% بدون أي تباين خفي
-export default function SectionHeading({ children, themeColor = '#C9252C', as: Tag = 'h2', className = '' }) {
+export default function SectionHeading({ children, themeColor = '#C9252C', as: Tag = 'h2', className = '', darkMode = true }) {
+  // لون العنوان يتغير بذكاء حسب الثيم (أسود غامق في اللايت، وأبيض في الدارك)
+  const textColor = darkMode ? 'text-white' : 'text-slate-900';
+
   return (
     <div className="flex items-stretch gap-5">
       <motion.span
@@ -13,7 +15,7 @@ export default function SectionHeading({ children, themeColor = '#C9252C', as: T
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       />
-      <Tag className={`font-display text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white ${className}`}>
+      <Tag className={`font-display text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight ${textColor} ${className}`}>
         {children}
       </Tag>
     </div>

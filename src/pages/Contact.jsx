@@ -5,26 +5,58 @@ import { useLocations } from '../hooks/useContent';
 import { ROUTES } from '../routes';
 import { supabase } from '../lib/supabase';
 
-// دالة الـ CRUD وإرسال البيانات لـ Make.com
-export async function submitContactMessage({ name, email, phone, locationId, message, lang }) {
+function isGibberish(text) {
+  if (/(.)\1{3,}/i.test(text)) return true;
+  return false;
+}
+
+function validateForm({ name, email, phone }) {
+  const errors = [];
+
+  const cleanName = name.trim();
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = phone.trim().replace(/\s+/g, '');
+
+  const nameRegex = /^[\u0621-\u064Aa-zA-Z\s]{3,50}$/;
+  if (!cleanName || !nameRegex.test(cleanName) || isGibberish(cleanName)) {
+    errors.push('يرجى إدخال اسم ثلاثي أو ثنائي صحيح بدون حروف عشوائية.');
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+    errors.push('يرجى إدخال بريد إلكتروني صحيح ومفعل.');
+  }
+
+  const phoneRegex = /^(\+?[0-9]{8,15})$/;
+  if (!cleanPhone || !phoneRegex.test(cleanPhone)) {
+    errors.push('يرجى إدخال رقم هاتف صحيح (مثال: +966500000000 أو 0500000000).');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    cleanData: {
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+    },
+  };
+}
+
+export async function submitContactMessage({ name, email, phone, locationId, lang }) {
   const messageData = {
     name,
     email,
     phone,
     location_id: locationId === 'any' ? null : locationId,
-    message,
+    message: 'طلب تواصل سريع',
     lang,
     status: 'new',
   };
 
-  // 1. الحفظ في Supabase
   const { data, error } = await supabase.from('contact_messages').insert([messageData]);
+  if (error) throw new Error(error.message);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  // 2. إرسال البيانات إلى Webhook الخاص بـ Make.com (لو الرابط متحدد في الـ env)
   const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
   if (webhookUrl) {
     try {
@@ -41,37 +73,42 @@ export async function submitContactMessage({ name, email, phone, locationId, mes
   return data;
 }
 
-const empty = { name: '', email: '', phone: '', branch: 'any', message: '', website: '' };
-
+const empty = { name: '', email: '', phone: '', branch: 'any', website: '' };
 const telHref = (v = '') => `tel:${v.replace(/\s/g, '')}`;
 
-export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
+export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
   const locations = useLocations();
 
-  const [status, setStatus] = useState('idle'); // idle | sending | sent | error
+  const [status, setStatus] = useState('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState(empty);
 
-  // الإيميلات الموجودة فعلًا فقط (لو مفيش إيميل بيتخفي الصف)
   const emails = [...new Set(locations.map((l) => l.email).filter(Boolean))];
-
   const set = (key) => (e) => setFormData({ ...formData, [key]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+
     if (formData.website) {
       setStatus('sent');
       return;
     }
+
+    const validation = validateForm(formData);
+    if (!validation.isValid) {
+      setStatus('error');
+      setErrorMessage(validation.errors[0]);
+      return;
+    }
+
     setStatus('sending');
     try {
       await submitContactMessage({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
+        ...validation.cleanData,
         locationId: formData.branch,
-        message: formData.message,
         lang,
       });
       setFormData(empty);
@@ -79,12 +116,19 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
     } catch (err) {
       console.error('[contact]', err);
       setStatus('error');
+      setErrorMessage(
+        pick('Failed to send request. Please try again.', 'حدث خطأ أثناء الإرسال، يرجى المحاولة مرة أخرى.')
+      );
     }
   };
 
-  const input =
-    'w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-base sm:text-sm focus:border-(--accent) focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-  const label = 'text-xs font-bold text-slate-300';
+  // ألوان متكيفة حسب الثيم
+  const cardBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/40' : 'bg-white text-slate-800 border-slate-200 shadow-xl';
+  const formCardBg = darkMode ? 'bg-slate-900/50 border-slate-800 text-white' : 'bg-white border-slate-200 shadow-xl text-slate-800';
+  const inputBg = darkMode ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400';
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
+  const labelColor = darkMode ? 'text-xs font-bold text-slate-300' : 'text-xs font-bold text-slate-700';
 
   return (
     <div
@@ -92,41 +136,42 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
       style={{ '--accent': themeColor }}
     >
       <div className="text-center space-y-3">
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black">
+        <h1 className={`text-2xl sm:text-4xl lg:text-5xl font-black ${textTitle}`}>
           {pick('Get in Touch with', 'تواصل مع')} <span style={{ color: themeColor }}>KIANKO</span>
         </h1>
-        <p className="text-slate-400 max-w-xl mx-auto font-medium text-sm sm:text-base">
+        <p className={`max-w-xl mx-auto font-medium text-sm sm:text-base ${textDesc}`}>
           {pick(
-            'Our sales and engineering support teams are ready to assist with your project quotes.',
-            'يسعد فريقنا الهندسي والتجاري بالرد على استفساراتكم وتقديم عروض الأسعار.'
+            'Our team will contact you directly via phone or email.',
+            'أدخل بياناتك وسيقوم فريقنا بالتواصل معك عبر الهاتف أو البريد الإلكتروني.'
           )}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 items-start">
         {/* الشريط الجانبي */}
-        <aside className="bg-[#0A1832] text-white rounded-3xl p-6 sm:p-8 space-y-6 sm:space-y-8 shadow-2xl border border-blue-900/40">
-          <h2 className="text-xl sm:text-2xl font-bold border-b border-blue-900 pb-4">
+        <aside className={`rounded-3xl p-6 sm:p-8 space-y-6 sm:space-y-8 border ${cardBg}`}>
+          <h2 className={`text-xl sm:text-2xl font-bold border-b pb-4 ${darkMode ? 'border-blue-900 text-white' : 'border-slate-200 text-slate-900'}`}>
             {pick('Contact Information', 'معلومات التواصل')}
           </h2>
 
           <div className="space-y-6 text-sm">
             {locations.map((l) => (
               <div key={l.id} className="flex items-start gap-4">
+                {/* تم تعديل خلفية الأيقونة لتكون واضحة وبارزة تماماً */}
                 <div
-                  className="p-3 rounded-xl text-white shrink-0"
-                  style={{ backgroundColor: `${themeColor}40` }}
+                  className="p-3 rounded-2xl shrink-0 shadow-md border border-white/10"
+                  style={{ backgroundColor: themeColor }}
                 >
-                  <MapPin className="w-5 h-5" />
+                  <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0 space-y-1">
-                  <h3 className="font-bold text-white">{pick(l.name, l.nameAr)}</h3>
-                  <p className="text-slate-400">{pick(l.address, l.addressAr)}</p>
+                  <h3 className={`font-bold ${textTitle}`}>{pick(l.name, l.nameAr)}</h3>
+                  <p className={textDesc}>{pick(l.address, l.addressAr)}</p>
                   {l.phone && (
                     <a
                       href={telHref(l.phone)}
                       dir="ltr"
-                      className="inline-flex items-center gap-2 font-semibold text-slate-200 hover:text-white"
+                      className={`inline-flex items-center gap-2 font-semibold hover:opacity-80 ${textTitle}`}
                     >
                       <Phone className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
                       <span>{l.phone}</span>
@@ -139,14 +184,14 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
             {emails.map((em) => (
               <div key={em} className="flex items-start gap-4">
                 <div
-                  className="p-3 rounded-xl text-white shrink-0"
-                  style={{ backgroundColor: `${themeColor}40` }}
+                  className="p-3 rounded-2xl shrink-0 shadow-md border border-white/10"
+                  style={{ backgroundColor: themeColor }}
                 >
-                  <Mail className="w-5 h-5" />
+                  <Mail className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-slate-300">{pick('Email Address', 'البريد الإلكتروني')}</h3>
-                  <a href={`mailto:${em}`} className="block text-slate-400 mt-1 hover:text-white break-all">
+                  <h3 className={`font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{pick('Email Address', 'البريد الإلكتروني')}</h3>
+                  <a href={`mailto:${em}`} className={`block mt-1 hover:opacity-80 break-all ${textDesc}`}>
                     {em}
                   </a>
                 </div>
@@ -154,10 +199,10 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
             ))}
           </div>
 
-          <div className="border-t border-blue-900 pt-6">
+          <div className={`border-t pt-6 ${darkMode ? 'border-blue-900' : 'border-slate-200'}`}>
             <Link
               to={ROUTES.locations}
-              className="inline-flex items-center gap-2 text-sm font-bold text-white hover:underline"
+              className={`inline-flex items-center gap-2 text-sm font-bold hover:underline ${textTitle}`}
             >
               {pick('All locations & maps', 'كل الفروع والخرائط')}
               <ArrowRight className="w-4 h-4 rtl:rotate-180" />
@@ -165,55 +210,51 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
           </div>
         </aside>
 
-        {/* نموذج التواصل */}
-        <div className="lg:col-span-2 bg-slate-900/50 p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl">
+        {/* نموذج طلب الاتصال */}
+        <div className={`lg:col-span-2 p-5 sm:p-8 rounded-3xl border shadow-2xl ${formCardBg}`}>
           {status === 'sent' ? (
-            <div role="status" className="p-6 sm:p-8 text-center space-y-4 bg-green-950/40 rounded-2xl border border-green-800">
+            <div role="status" className={`p-6 sm:p-8 text-center space-y-4 rounded-2xl border ${darkMode ? 'bg-green-950/40 border-green-800' : 'bg-green-50 border-green-200'}`}>
               <CheckCircle2 className="w-14 h-14 sm:w-16 sm:h-16 text-green-500 mx-auto" />
-              <h2 className="text-xl sm:text-2xl font-bold text-white">{pick('Message sent!', 'تم إرسال رسالتك!')}</h2>
-              <p className="text-slate-300 text-sm sm:text-base">
+              <h2 className={`text-xl sm:text-2xl font-bold ${textTitle}`}>{pick('Request Received!', 'تم استلام طلبك بنجاح!')}</h2>
+              <p className={`text-sm sm:text-base ${textDesc}`}>
                 {pick(
-                  'Thank you for reaching out to Kianko. Our team will get back to you soon.',
+                  'Thank you. Our team will contact you shortly.',
                   'شكراً لتواصلك مع كيانكو. هيرد عليك فريقنا في أقرب وقت.'
                 )}
               </p>
               <button
                 type="button"
                 onClick={() => setStatus('idle')}
-                className="text-sm font-bold text-white underline underline-offset-4 hover:opacity-80"
+                className={`text-sm font-bold underline underline-offset-4 hover:opacity-85 ${textTitle}`}
               >
-                {pick('Send another message', 'إرسال رسالة تانية')}
+                {pick('Submit another request', 'إرسال طلب جديد')}
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-              {/* Honeypot */}
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6" noValidate>
               <div className="hidden" aria-hidden="true">
-                <label>
-                  Website
-                  <input type="text" tabIndex={-1} autoComplete="off" value={formData.website} onChange={set('website')} />
-                </label>
+                <input type="text" tabIndex={-1} autoComplete="off" value={formData.website} onChange={set('website')} />
               </div>
 
               <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="c-name" className={label}>{pick('Full Name', 'الاسم بالكامل')}</label>
-                  <input id="c-name" type="text" required minLength={2} maxLength={120} autoComplete="name" value={formData.name} onChange={set('name')} className={input} />
+                  <label htmlFor="c-name" className={labelColor}>{pick('Full Name', 'الاسم بالكامل')}</label>
+                  <input id="c-name" type="text" required autoComplete="name" value={formData.name} onChange={set('name')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} placeholder={pick('e.g. Ahmed Ali', 'مثال: أحمد علي')} />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="c-phone" className={label}>{pick('Phone Number', 'رقم الهاتف')}</label>
-                  <input id="c-phone" type="tel" inputMode="tel" required minLength={5} maxLength={40} autoComplete="tel" dir="ltr" placeholder="+966 5x xxx xxxx" value={formData.phone} onChange={set('phone')} className={input} />
+                  <label htmlFor="c-phone" className={labelColor}>{pick('Phone Number', 'رقم الهاتف')}</label>
+                  <input id="c-phone" type="tel" inputMode="tel" required autoComplete="tel" dir="ltr" placeholder="+966 5x xxx xxxx" value={formData.phone} onChange={set('phone')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} />
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="c-email" className={label}>{pick('Email Address', 'البريد الإلكتروني')}</label>
-                  <input id="c-email" type="email" required maxLength={200} autoComplete="email" dir="ltr" value={formData.email} onChange={set('email')} className={input} />
+                  <label htmlFor="c-email" className={labelColor}>{pick('Email Address', 'البريد الإلكتروني')}</label>
+                  <input id="c-email" type="email" required autoComplete="email" dir="ltr" placeholder="name@domain.com" value={formData.email} onChange={set('email')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="c-branch" className={label}>{pick('Preferred location', 'الفرع المفضل للتواصل')}</label>
-                  <select id="c-branch" value={formData.branch} onChange={set('branch')} className={input}>
+                  <label htmlFor="c-branch" className={labelColor}>{pick('Preferred location', 'الفرع المفضل للتواصل')}</label>
+                  <select id="c-branch" value={formData.branch} onChange={set('branch')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`}>
                     <option value="any">{pick('Any Location', 'أي فرع')}</option>
                     {locations.map((l) => (
                       <option key={l.id} value={l.id}>{pick(l.name, l.nameAr)}</option>
@@ -222,30 +263,10 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="c-msg" className={label}>{pick('Inquiry Message', 'تفاصيل الطلب أو الرسالة')}</label>
-                <textarea
-                  id="c-msg"
-                  rows={4}
-                  required
-                  minLength={5}
-                  maxLength={4000}
-                  placeholder={pick('Specify your structural steel specifications...', 'اكتب تفاصيل الكميات المطلوبة أو المواصفات...')}
-                  value={formData.message}
-                  onChange={set('message')}
-                  className={input}
-                />
-              </div>
-
               {status === 'error' && (
                 <p role="alert" className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900 rounded-xl p-3">
-                  <AlertCircle className="w-5 h-5 shrink-0" />
-                  <span>
-                    {pick(
-                      'We could not send your message. Please try again, or call us on the number shown.',
-                      'مقدرناش نبعت رسالتك. جرّب تاني، أو كلمنا على الرقم الموضح.'
-                    )}
-                  </span>
+                  <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+                  <span>{errorMessage}</span>
                 </p>
               )}
 
@@ -257,7 +278,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C' }) {
               >
                 {status === 'sending' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 rtl:-scale-x-100" />}
                 <span>
-                  {status === 'sending' ? pick('Sending…', 'جاري الإرسال…') : pick('Send Message', 'إرسال الرسالة الآن')}
+                  {status === 'sending' ? pick('Sending…', 'جاري الإرسال…') : pick('Request Contact', 'طلب تواصل الآن')}
                 </span>
               </button>
             </form>

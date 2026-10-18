@@ -16,11 +16,22 @@ import {
 import { ROUTES } from '../routes';
 import SpotlightCard from '../components/ui/SpotlightCard';
 
-export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
+export default function ValuesPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
-  // القيم الأربعة الرئيسية
+  const cardBg = darkMode 
+    ? 'bg-gradient-to-b from-[#0e1d3e] to-[#081226] border-blue-900/50' 
+    : 'bg-white border-slate-200 shadow-lg';
+    
+  const visionCardBg = darkMode 
+    ? 'bg-gradient-to-b from-[#0d1c3a] to-[#071124] border-blue-900/60' 
+    : 'bg-white border-slate-200 shadow-xl';
+
+  const textTitle = darkMode ? 'text-white' : 'text-slate-900';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const iconBoxBg = darkMode ? 'bg-slate-900/85 border-blue-900/80' : 'bg-slate-100 border-slate-200';
+
   const values = useMemo(() => [
     { 
       icon: Cog, 
@@ -52,7 +63,6 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
     },
   ], []);
 
-  // فلسفة العمل والتطبيق الميداني
   const philosophyPillars = [
     {
       icon: Users,
@@ -78,18 +88,18 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-20 text-start overflow-hidden">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-10 sm:space-y-16 text-start overflow-hidden">
       
       {/* 1. Header Section */}
       <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto px-2">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-[#0A1832] border border-blue-900/80 shadow-md">
+        <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-md ${darkMode ? 'bg-[#0A1832] text-white border-blue-900/80' : 'bg-slate-100 text-slate-800 border-slate-300'}`}>
           <Sparkles className="w-4 h-4" style={{ color: themeColor }} />
           <span>{pick('CORE GUIDING PRINCIPLES', 'المبادئ والمحركات الأساسية')}</span>
         </span>
-        <h1 className="text-3xl sm:text-6xl font-black text-white tracking-tight">
+        <h1 className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight ${textTitle}`}>
           {pick('Our Core Values', 'قيمنا ومبادئنا الراسخة')}
         </h1>
-        <p className="text-slate-300 font-medium text-xs sm:text-lg leading-relaxed">
+        <p className={`font-medium text-xs sm:text-base lg:text-lg leading-relaxed ${textDesc}`}>
           {pick(
             'The foundational ethics and engineering standards driving every Kianko steel component produced.',
             'المبادئ والمعايير الهندسية التي تحكم كل منتج وقطاع فولاذي يخرج من مصانع كيانكو.'
@@ -103,23 +113,27 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
           <SpotlightCard
             as="article"
             key={t}
-            className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-start gap-4 sm:gap-6 bg-[#0A1832] p-5 sm:p-8 rounded-3xl border border-blue-900/60 transition-all duration-300 hover:-translate-y-1 hover:border-slate-500 shadow-xl group"
+            className={`relative p-5 sm:p-7 rounded-2xl border transition-all duration-300 shadow-xl group overflow-hidden ${cardBg}`}
           >
-            <span
-              className="relative grid place-items-center h-14 w-14 sm:h-14 sm:w-14 rounded-2xl text-white shrink-0 transition-transform duration-300 group-hover:scale-110 shadow-lg"
+            <div 
+              className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ backgroundColor: themeColor }}
-            >
-              <Icon className="w-7 h-7 sm:w-7 sm:h-7" />
-            </span>
-            <div className="space-y-1.5 sm:space-y-2">
-              <h2 
-                className="text-xl sm:text-2xl font-bold text-white transition-colors duration-300"
-                onMouseEnter={(e) => (e.currentTarget.style.color = themeColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'white')}
-              >
-                {pick(t, tAr)}
-              </h2>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{pick(d, dAr)}</p>
+            />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className="relative grid place-items-center h-10 w-10 sm:h-12 sm:w-12 rounded-xl text-white shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-md"
+                  style={{ backgroundColor: themeColor }}
+                >
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </span>
+                <h2 className={`text-base sm:text-xl font-bold transition-colors duration-300 leading-snug ${textTitle}`}>
+                  {pick(t, tAr)}
+                </h2>
+              </div>
+
+              <p className={`text-xs sm:text-sm leading-relaxed ${textDesc}`}>{pick(d, dAr)}</p>
             </div>
           </SpotlightCard>
         ))}
@@ -127,14 +141,26 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
 
       {/* 3. Vision & Mission Section */}
       <div className="grid lg:grid-cols-2 gap-5 sm:gap-8">
-        <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-10 space-y-4 sm:space-y-5 shadow-2xl relative overflow-hidden group hover:border-slate-500 transition-all text-center sm:text-start flex flex-col items-center sm:items-start">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-900 border border-blue-900/80">
-            <Eye className="w-6 h-6" style={{ color: themeColor }} />
+        {/* Our Vision Card */}
+        <div className={`relative border rounded-2xl p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-2xl transition-all duration-300 group overflow-hidden ${visionCardBg}`}>
+          <div 
+            className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300"
+            style={{ backgroundColor: themeColor }}
+          />
+
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border group-hover:scale-105 transition-transform duration-300 shrink-0"
+              style={{ backgroundColor: `${themeColor}15`, borderColor: `${themeColor}30` }}
+            >
+              <Eye className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
+            </div>
+            <h2 className={`text-lg sm:text-2xl font-extrabold tracking-wide ${textTitle}`}>
+              {pick('Our Vision', 'رؤيتنا المستقبليّة')}
+            </h2>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            {pick('Our Vision', 'رؤيتنا المستقبليّة')}
-          </h2>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+
+          <p className={`text-xs sm:text-sm lg:text-base leading-relaxed ${textDesc}`}>
             {pick(
               'To be the undisputed MENA region leader in precision cable management systems and structural steel components, recognized for quality, reliability, and engineering innovation.',
               'أن نكون الخيار الأول والقيادي في الشرق الأوسط وشمال أفريقيا لأنظمة إدارة الكابلات والقطاعات المعدنية الهندسية، والمثال المحتذى به في الجودة والابتكار.'
@@ -142,14 +168,20 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
           </p>
         </div>
 
-        <div className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-10 space-y-4 sm:space-y-5 shadow-2xl relative overflow-hidden group hover:border-slate-500 transition-all text-center sm:text-start flex flex-col items-center sm:items-start">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-900 border border-blue-900/80">
-            <Compass className="w-6 h-6 text-emerald-400" />
+        {/* Our Mission Card */}
+        <div className={`relative border rounded-2xl p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-2xl transition-all duration-300 group overflow-hidden ${visionCardBg}`}>
+          <div className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 bg-emerald-500" />
+
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
+              <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+            </div>
+            <h2 className={`text-lg sm:text-2xl font-extrabold tracking-wide ${textTitle}`}>
+              {pick('Our Mission', 'رسالتنا اليومية')}
+            </h2>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            {pick('Our Mission', 'رسالتنا اليومية')}
-          </h2>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+
+          <p className={`text-xs sm:text-sm lg:text-base leading-relaxed ${textDesc}`}>
             {pick(
               'Delivering world-class steel solutions that empower national infrastructure, strictly adhering to global quality codes while fostering long-term trust with our technical partners.',
               'تقديم حلول فولاذية مطابقة لأعلى المعايير العالمية التي تدعم المشاريع القومية، مع وبناء شراكات دائمة قائمة على الثقة والالتزام التام.'
@@ -159,30 +191,37 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 4. Engineering Culture & Philosophy */}
-      <div className="space-y-8 sm:space-y-12 pt-2 sm:pt-4">
-        <div className="text-center space-y-3 max-w-2xl mx-auto px-2 flex flex-col items-center">
-          {/* سنترة تامة وصريحة للعنوان ليتوسط الشاشة على سطر واحد تماماً */}
-          <h2 className="text-base sm:text-2xl font-black text-white whitespace-nowrap text-center w-full block">
+      <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-4">
+        <div className="text-center space-y-2 max-w-2xl mx-auto px-2 flex flex-col items-center">
+          <h2 className={`text-xl sm:text-3xl font-black tracking-tight ${textTitle}`}>
             {pick('Applied Engineering Ethics', 'تطبيق القيم في مواقع العمل')}
           </h2>
-          <p className="text-slate-300 text-xs sm:text-sm">
+          <p className={`text-xs sm:text-sm lg:text-base ${textDesc}`}>
             {pick('How we translate our core principles into daily manufacturing operations.', 'كيف نترجم قيمنا ومبادئنا إلى واقع ملموس في خطوط الإنتاج يومياً.')}
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {philosophyPillars.map((p, idx) => {
             const IconComponent = p.icon;
             return (
               <div 
                 key={idx} 
-                className="bg-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-8 space-y-3 sm:space-y-4 shadow-xl hover:border-slate-500 transition-all text-center sm:text-start flex flex-col items-center sm:items-start"
+                className={`relative border rounded-2xl p-5 sm:p-6 space-y-3 shadow-xl transition-all duration-300 group overflow-hidden ${visionCardBg}`}
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-900 border border-blue-900/80 shadow-inner">
-                  <IconComponent className="w-6 h-6" style={{ color: themeColor }} />
+                <div 
+                  className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ backgroundColor: themeColor }}
+                />
+
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border group-hover:scale-105 transition-transform duration-300 shrink-0 ${iconBoxBg}`}>
+                    <IconComponent className="w-5 h-5" style={{ color: themeColor }} />
+                  </div>
+                  <h3 className={`text-base sm:text-lg font-bold ${textTitle}`}>{pick(p.titleEn, p.titleAr)}</h3>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white">{pick(p.titleEn, p.titleAr)}</h3>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{pick(p.descEn, p.descAr)}</p>
+
+                <p className={`text-xs sm:text-sm leading-relaxed ${textDesc}`}>{pick(p.descEn, p.descAr)}</p>
               </div>
             );
           })}
@@ -190,11 +229,11 @@ export default function ValuesPage({ lang = 'en', themeColor = '#C9252C' }) {
       </div>
 
       {/* 5. CTA / Partner With Kianko */}
-      <div className="bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border border-blue-900/60 rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl">
-        <h2 className="text-xl sm:text-4xl font-extrabold text-white">
+      <div className={`relative border rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center space-y-5 sm:space-y-6 shadow-2xl overflow-hidden ${darkMode ? 'bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border-blue-900/60' : 'bg-slate-100 border-slate-300'}`}>
+        <h2 className={`text-xl sm:text-3xl lg:text-4xl font-extrabold ${textTitle}`}>
           {pick('Build Your Next Landmark with Kianko Values', 'ابنِ مشروعك القادم بصلابة قيم كيانكو')}
         </h2>
-        <p className="text-slate-300 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
+        <p className={`max-w-xl mx-auto text-xs sm:text-sm lg:text-base leading-relaxed ${textDesc}`}>
           {pick(
             'Partner with a manufacturer that prioritizes your project timelines, safety codes, and exact technical specifications.',
             'تعاون مع مصنع يضع مواعيد مشروعك، وأكواد الأمان، والمواصفات الهندسية الدقيقة في مقدمة أولوياته.'

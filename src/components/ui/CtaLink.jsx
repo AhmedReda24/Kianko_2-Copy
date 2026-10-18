@@ -11,7 +11,17 @@ const variants = {
 };
 
 // زر بلمعة بتعدّي عليه عند الهوفر وسهم بيتحرك
-export default function CtaLink({ to, href, themeColor, variant = 'primary', arrow = true, className = '', children, ...rest }) {
+export default function CtaLink({ 
+  to, 
+  href, 
+  themeColor, 
+  variant = 'primary', 
+  arrow = true, 
+  darkMode, // 👈 استخراج darkMode هنا يمنع وصوله لعناصر الـ DOM التحتية
+  className = '', 
+  children, 
+  ...rest 
+}) {
   const style = variant === 'primary' ? { backgroundColor: themeColor } : undefined;
   const cls = `${base} ${variants[variant]} ${className}`;
 

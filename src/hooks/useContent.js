@@ -41,8 +41,8 @@ export const useLocations = () => useRemote('locations', api.fetchLocations, loc
 export const useProducts = () => useRemote('products', api.fetchProducts, localProducts);
 export const useAccreditations = () => useRemote('accreditations', api.fetchAccreditations, localAccreditations);
 
-// تم تفعيل السحب المباشر من Supabase للشهادات مع إبقاء الملف المحلي كاحتياطي فقط
-export const useCertificates = () => useRemote('certificates', api.fetchCertificates, localCertificates);
+// تم جعل الشهادات تعتمد على البيانات المحلية (accreditations.js) مباشرة لمنع خطأ عمود sort_order في Supabase
+export const useCertificates = () => localCertificates;
 
 export const useJobs = () => useRemote('jobs', api.fetchJobs, localJobs);
 export const useProjects = () => useRemote('projects', api.fetchProjects, localProjects);
