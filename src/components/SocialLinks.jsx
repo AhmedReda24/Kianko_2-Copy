@@ -48,9 +48,15 @@ const items = [
   },
 ];
 
-export default function SocialLinks({ themeColor = '#C9252C', isAr = false }) {
+// ✅ استقبال darkMode كـ Prop لضبط الألوان بناءً على حالة الموقع
+export default function SocialLinks({ themeColor = '#C9252C', isAr = false, darkMode = true }) {
+  // تحديد ألوان الأيقونات بناءً على الوضع الداكن أو الفاتح
+  const baseColors = darkMode 
+    ? 'border-white/15 bg-white/5 text-slate-200 hover:text-white' 
+    : 'border-slate-300 bg-slate-200 text-slate-600 hover:text-white';
+
   return (
-    <ul className="flex items-center gap-3" aria-label={isAr ? 'حساباتنا على مواقع التواصل' : 'Our social media'}>
+    <ul className="flex items-center gap-3 pt-1" aria-label={isAr ? 'حساباتنا على مواقع التواصل' : 'Our social media'}>
       {items.map(({ key, label, icon }) => (
         <li key={key}>
           <a
@@ -58,13 +64,14 @@ export default function SocialLinks({ themeColor = '#C9252C', isAr = false }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="grid place-items-center h-10 w-10 rounded-full border border-white/15 bg-white/5 text-slate-200 transition-colors duration-300 hover:text-white hover:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            // ✅ زيادة حجم الدائرة إلى h-11 w-11 (44px) لتتوافق مع معايير مساحة اللمس 100% في Lighthouse
+            className={`grid place-items-center h-11 w-11 rounded-full border transition-colors duration-300 hover:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white shadow-sm ${baseColors}`}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColor)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
             onFocus={(e) => (e.currentTarget.style.backgroundColor = themeColor)}
             onBlur={(e) => (e.currentTarget.style.backgroundColor = '')}
           >
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" aria-hidden="true">
               {icon}
             </svg>
           </a>

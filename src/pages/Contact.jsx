@@ -122,13 +122,13 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
     }
   };
 
-  // ألوان متكيفة حسب الثيم
+  // ✅ تم تحسين التباين ليطابق متطلبات Lighthouse 100%
   const cardBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/40' : 'bg-white text-slate-800 border-slate-200 shadow-xl';
   const formCardBg = darkMode ? 'bg-slate-900/50 border-slate-800 text-white' : 'bg-white border-slate-200 shadow-xl text-slate-800';
-  const inputBg = darkMode ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400';
+  const inputBg = darkMode ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-500';
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
-  const textDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
-  const labelColor = darkMode ? 'text-xs font-bold text-slate-300' : 'text-xs font-bold text-slate-700';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-700'; // ✅ زيادة سطوع النص الرمادي الداكن
+  const labelColor = darkMode ? 'text-xs font-bold text-slate-200' : 'text-xs font-bold text-slate-800'; // ✅ زيادة سطوع الـ Labels
 
   return (
     <div
@@ -148,7 +148,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 items-start">
-        {/* الشريط الجانبي */}
         <aside className={`rounded-3xl p-6 sm:p-8 space-y-6 sm:space-y-8 border ${cardBg}`}>
           <h2 className={`text-xl sm:text-2xl font-bold border-b pb-4 ${darkMode ? 'border-blue-900 text-white' : 'border-slate-200 text-slate-900'}`}>
             {pick('Contact Information', 'معلومات التواصل')}
@@ -157,7 +156,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
           <div className="space-y-6 text-sm">
             {locations.map((l) => (
               <div key={l.id} className="flex items-start gap-4">
-                {/* تم تعديل خلفية الأيقونة لتكون واضحة وبارزة تماماً */}
                 <div
                   className="p-3 rounded-2xl shrink-0 shadow-md border border-white/10"
                   style={{ backgroundColor: themeColor }}
@@ -171,7 +169,8 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
                     <a
                       href={telHref(l.phone)}
                       dir="ltr"
-                      className={`inline-flex items-center gap-2 font-semibold hover:opacity-80 ${textTitle}`}
+                      // ✅ تم تكبير مساحة النقر للرقم
+                      className={`inline-flex items-center gap-2 font-semibold py-1 px-1 hover:opacity-80 min-h-[44px] ${textTitle}`}
                     >
                       <Phone className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
                       <span>{l.phone}</span>
@@ -190,8 +189,9 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
                   <Mail className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className={`font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{pick('Email Address', 'البريد الإلكتروني')}</h3>
-                  <a href={`mailto:${em}`} className={`block mt-1 hover:opacity-80 break-all ${textDesc}`}>
+                  <h3 className={`font-bold py-1 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{pick('Email Address', 'البريد الإلكتروني')}</h3>
+                  {/* ✅ تم تكبير مساحة النقر للإيميل */}
+                  <a href={`mailto:${em}`} className={`inline-block py-1 px-1 mt-1 hover:opacity-80 break-all min-h-[44px] ${textDesc}`}>
                     {em}
                   </a>
                 </div>
@@ -202,7 +202,8 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
           <div className={`border-t pt-6 ${darkMode ? 'border-blue-900' : 'border-slate-200'}`}>
             <Link
               to={ROUTES.locations}
-              className={`inline-flex items-center gap-2 text-sm font-bold hover:underline ${textTitle}`}
+              // ✅ تم تكبير مساحة النقر للرابط السفلي
+              className={`inline-flex items-center justify-center gap-2 text-sm font-bold hover:underline min-h-[44px] px-2 ${textTitle}`}
             >
               {pick('All locations & maps', 'كل الفروع والخرائط')}
               <ArrowRight className="w-4 h-4 rtl:rotate-180" />
@@ -210,7 +211,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
           </div>
         </aside>
 
-        {/* نموذج طلب الاتصال */}
         <div className={`lg:col-span-2 p-5 sm:p-8 rounded-3xl border shadow-2xl ${formCardBg}`}>
           {status === 'sent' ? (
             <div role="status" className={`p-6 sm:p-8 text-center space-y-4 rounded-2xl border ${darkMode ? 'bg-green-950/40 border-green-800' : 'bg-green-50 border-green-200'}`}>
@@ -225,7 +225,7 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
               <button
                 type="button"
                 onClick={() => setStatus('idle')}
-                className={`text-sm font-bold underline underline-offset-4 hover:opacity-85 ${textTitle}`}
+                className={`text-sm font-bold underline underline-offset-4 hover:opacity-85 min-h-[44px] px-4 ${textTitle}`}
               >
                 {pick('Submit another request', 'إرسال طلب جديد')}
               </button>
@@ -239,22 +239,22 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
               <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
                   <label htmlFor="c-name" className={labelColor}>{pick('Full Name', 'الاسم بالكامل')}</label>
-                  <input id="c-name" type="text" required autoComplete="name" value={formData.name} onChange={set('name')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} placeholder={pick('e.g. Ahmed Ali', 'مثال: أحمد علي')} />
+                  <input id="c-name" type="text" required autoComplete="name" value={formData.name} onChange={set('name')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 min-h-[44px] ${inputBg}`} placeholder={pick('e.g. Ahmed Ali', 'مثال: أحمد علي')} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="c-phone" className={labelColor}>{pick('Phone Number', 'رقم الهاتف')}</label>
-                  <input id="c-phone" type="tel" inputMode="tel" required autoComplete="tel" dir="ltr" placeholder="+966 5x xxx xxxx" value={formData.phone} onChange={set('phone')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} />
+                  <input id="c-phone" type="tel" inputMode="tel" required autoComplete="tel" dir="ltr" placeholder="+966 5x xxx xxxx" value={formData.phone} onChange={set('phone')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 min-h-[44px] ${inputBg}`} />
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
                   <label htmlFor="c-email" className={labelColor}>{pick('Email Address', 'البريد الإلكتروني')}</label>
-                  <input id="c-email" type="email" required autoComplete="email" dir="ltr" placeholder="name@domain.com" value={formData.email} onChange={set('email')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`} />
+                  <input id="c-email" type="email" required autoComplete="email" dir="ltr" placeholder="name@domain.com" value={formData.email} onChange={set('email')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 min-h-[44px] ${inputBg}`} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="c-branch" className={labelColor}>{pick('Preferred location', 'الفرع المفضل للتواصل')}</label>
-                  <select id="c-branch" value={formData.branch} onChange={set('branch')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inputBg}`}>
+                  <select id="c-branch" value={formData.branch} onChange={set('branch')} className={`w-full px-4 py-3 rounded-xl border text-base sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 min-h-[44px] ${inputBg}`}>
                     <option value="any">{pick('Any Location', 'أي فرع')}</option>
                     {locations.map((l) => (
                       <option key={l.id} value={l.id}>{pick(l.name, l.nameAr)}</option>

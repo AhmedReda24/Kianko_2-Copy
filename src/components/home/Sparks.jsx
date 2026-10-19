@@ -20,7 +20,13 @@ export default function Sparks() {
         <motion.span
           key={i}
           className="absolute bottom-16 rounded-full bg-amber-300"
-          style={{ left: `${s.left}%`, width: s.size, height: s.size, boxShadow: '0 0 8px 2px rgba(251,191,36,0.55)' }}
+          style={{ 
+            left: `${s.left}%`, 
+            width: s.size, 
+            height: s.size, 
+            boxShadow: '0 0 8px 2px rgba(251,191,36,0.55)',
+            willChange: 'transform, opacity' // السطر ده هينقل الانيميشن لكرت الشاشة فوراً
+          }}
           initial={{ y: 0, x: 0, opacity: 0 }}
           animate={{ y: -s.rise, x: s.drift, opacity: [0, 1, 0] }}
           transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: 'easeOut' }}

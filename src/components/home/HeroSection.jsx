@@ -31,12 +31,11 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
     { to: ROUTES.locations, icon: MapPin, t: 'Branches & Office', tAr: 'الفروع والمكتب', s: 'Where to find us', sAr: 'أماكن تواجدنا' },
   ];
 
-  // ألوان متكيفة بسلاسة بين الوضعين الداكن والفاتح
   const heroOverlay = darkMode 
     ? 'from-[#07132B]/95 via-[#07132B]/85 to-[#07132B]/50'
-    : 'from-slate-900/80 via-slate-900/60 to-slate-900/30'; // إشراق أكبر مع حفظ تباين النص
+    : 'from-slate-900/80 via-slate-900/60 to-slate-900/30';
 
-  const heroTitleColor = 'text-white'; // الكلمات العريضة كواليس فيديو تظل بيضاء لتباين قوي وممتاز
+  const heroTitleColor = 'text-white'; 
   const navBg = darkMode 
     ? 'border-white/15 bg-[#07132B]/90 text-white' 
     : 'border-slate-300 bg-slate-100/95 text-slate-900 shadow-md';
@@ -53,7 +52,6 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
         darkMode ? 'border-blue-900/40 bg-slate-950' : 'border-slate-300 bg-slate-200'
       }`}
     >
-      {/* خلفية الفيديو */}
       <motion.div
         className="absolute inset-0 z-0 scale-[1.12]"
         style={reduce ? undefined : { y: videoY }}
@@ -64,18 +62,18 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
           muted
           playsInline
           preload="auto"
-          poster="https://images.pexels.com/photos/236705/pexels-photo-236705.jpeg?auto=compress&cs=tinysrgb&w=600"
+          poster="/hero-poster.webp"
           className={`w-full h-full object-cover transition-all duration-500 ${darkMode ? 'brightness-[0.45]' : 'brightness-[0.6]'}`}
+          aria-hidden="true"
         >
-          <source src="/hero.mp4?v=2026" type="video/mp4" />
+          <source src="/hero.mp4" type="video/mp4" />
+          <track kind="captions" srcLang="ar" label="بدون صوت" default />
         </video>
       </motion.div>
 
-      {/* التدرج الملون فوق الفيديو */}
       <div className={`absolute inset-0 bg-gradient-to-r rtl:bg-gradient-to-l ${heroOverlay} z-10 transition-all duration-300`} />
       <Sparks />
 
-      {/* المحتوى الرئيسي */}
       <motion.div
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full pt-12 pb-12 text-center sm:text-start flex flex-col items-center sm:items-start"
         style={reduce ? undefined : { y: contentY, opacity: contentOpacity }}
@@ -88,7 +86,6 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
           {isAr ? 'شركة كيان لمنتجات الحديد' : 'KIAN IRON PRODUCTS COMPANY'}
         </motion.div>
 
-        {/* العنوان الرئيسي */}
         <h1 className={`mt-2 sm:mt-4 font-display font-black leading-[0.95] tracking-tight text-[3.8rem] sm:text-[6.5rem] lg:text-[9rem] drop-shadow-2xl ${heroTitleColor}`}>
           {isAr ? (
             <motion.span
@@ -100,19 +97,22 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
               كيانكو
             </motion.span>
           ) : (
-            <span dir="ltr" className="inline-flex justify-center sm:justify-start" aria-label="KIANKO">
-              {LETTERS.map((l, i) => (
-                <span key={i} aria-hidden="true" className="inline-block overflow-hidden pb-[0.08em]">
-                  <motion.span
-                    className="inline-block"
-                    initial={reduce ? false : { y: '110%' }}
-                    animate={{ y: 0 }}
-                    transition={{ duration: 0.85, delay: 0.25 + i * 0.07, ease: EASE }}
-                  >
-                    {l}
-                  </motion.span>
-                </span>
-              ))}
+            <span dir="ltr" className="inline-flex justify-center sm:justify-start relative">
+              <span className="sr-only">KIANKO</span>
+              <span aria-hidden="true" className="flex">
+                {LETTERS.map((l, i) => (
+                  <span key={i} className="inline-block overflow-hidden pb-[0.08em]">
+                    <motion.span
+                      className="inline-block"
+                      initial={reduce ? false : { y: '110%' }}
+                      animate={{ y: 0 }}
+                      transition={{ duration: 0.85, delay: 0.25 + i * 0.07, ease: EASE }}
+                    >
+                      {l}
+                    </motion.span>
+                  </span>
+                ))}
+              </span>
             </span>
           )}
         </h1>
@@ -134,7 +134,6 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
             : 'Precision Steel Fabrication, Plastering and Block Accessories, and Heavy Duty Cable Management Manufacturing.'}
         </motion.p>
 
-        {/* الأزرار */}
         <motion.div {...fade(1.25)} className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3.5 w-full sm:w-auto">
           <CtaLink to={ROUTES.products} themeColor={themeColor} darkMode={darkMode} className="w-full sm:w-auto justify-center">
             {isAr ? 'تصفح المنتجات' : 'Explore Products'}
@@ -145,32 +144,6 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
         </motion.div>
       </motion.div>
 
-      {/* مؤشر النزول (SCROLL DOWN) */}
-      <motion.div
-        {...fade(1.4)}
-        className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-2.5 pointer-events-none"
-      >
-        <span className="text-[11px] font-semibold text-slate-200 tracking-[0.3em] uppercase drop-shadow-md">
-          {isAr ? 'انزل للأسفل' : 'SCROLL DOWN'}
-        </span>
-        <div className="w-[22px] h-[38px] rounded-full border-2 border-white/40 flex justify-center p-1 backdrop-blur-sm bg-black/20">
-          <motion.div
-            className="w-1 h-2 rounded-full"
-            style={{ backgroundColor: themeColor }}
-            animate={{
-              y: [0, 16, 0],
-              opacity: [1, 0.4, 1],
-            }}
-            transition={{
-              duration: 1.6,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
-        </div>
-      </motion.div>
-
-      {/* شريط الكروت السفلية الثلاثة المتكيف كلياً */}
       <motion.nav
         {...fade(1.5)}
         aria-label={isAr ? 'روابط سريعة' : 'Quick links'}

@@ -46,14 +46,12 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
   const mapsLink = getMapsLink(active);
   const waNumber = digitsOnly(active.whatsapp);
 
-  // ألوان متكيفة حسب الثيم
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
-  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-700'; // تم تعزيز التباين
   const tabActiveBg = darkMode ? 'bg-white/10 text-white border-slate-300' : 'bg-slate-200 text-slate-900 border-slate-400';
   const tabInactiveBg = darkMode ? 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-sm';
   const detailBoxBg = darkMode ? 'bg-[#0B1B3A] border-blue-900/60 text-white' : 'bg-white border-slate-200 shadow-2xl text-slate-800';
 
-  // زر الخرائط المتكيف
   const mapBtnStyle = darkMode 
     ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20' 
     : 'bg-slate-200 border border-slate-300 text-slate-900 hover:bg-slate-300 font-bold';
@@ -79,7 +77,6 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* قائمة الفروع */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 content-start" role="tablist">
           {locations.map((l) => {
             const meta = TYPE[l.type] ?? TYPE.branch;
@@ -92,7 +89,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveId(l.id)}
-                className={`flex items-center gap-4 text-start p-4 rounded-2xl border-s-4 transition-all duration-300 cursor-pointer ${focusCls} ${
+                className={`flex items-center gap-4 text-start p-4 rounded-2xl border-s-4 transition-all duration-300 cursor-pointer min-h-[64px] ${focusCls} ${
                   isActive ? tabActiveBg : tabInactiveBg
                 }`}
                 style={{ borderColor: isActive ? themeColor : 'transparent' }}
@@ -115,7 +112,6 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
           })}
         </div>
 
-        {/* تفاصيل الفرع */}
         <div className={`lg:col-span-3 rounded-2xl overflow-hidden border shadow-2xl ${detailBoxBg}`}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -171,7 +167,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                   {active.phone && (
                     <li className="flex items-center gap-3.5">
                       <Phone className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <a href={telHref(active.phone)} dir="ltr" className={`font-bold hover:underline ${textTitle}`}>
+                      <a href={telHref(active.phone)} dir="ltr" className={`font-bold hover:underline min-h-[44px] flex items-center ${textTitle}`}>
                         {active.phone}
                       </a>
                     </li>
@@ -179,7 +175,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                   {active.email && (
                     <li className="flex items-center gap-3.5">
                       <Mail className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <a href={`mailto:${active.email}`} className={`hover:underline break-all ${textTitle}`}>
+                      <a href={`mailto:${active.email}`} className={`hover:underline break-all min-h-[44px] flex items-center ${textTitle}`}>
                         {active.email}
                       </a>
                     </li>
@@ -187,7 +183,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                   {(active.hours || active.hoursAr) && (
                     <li className="flex items-center gap-3.5">
                       <Clock className="w-5 h-5 shrink-0" style={{ color: themeColor }} />
-                      <span className={textTitle}>{pick(active.hours, active.hoursAr)}</span>
+                      <span className={`min-h-[44px] flex items-center ${textTitle}`}>{pick(active.hours, active.hoursAr)}</span>
                     </li>
                   )}
                 </ul>
@@ -208,7 +204,8 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                       href={`https://wa.me/${waNumber}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${actionBase} text-white bg-emerald-600 shadow-lg`}
+                      // ✅ تم تغيير اللون إلى green-700 لحل مشكلة التباين مع النص الأبيض
+                      className={`${actionBase} text-white bg-green-700 hover:bg-green-800 shadow-lg`}
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>{pick('WhatsApp', 'واتساب')}</span>

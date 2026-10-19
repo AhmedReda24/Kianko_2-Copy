@@ -29,23 +29,21 @@ const pillars = [
 export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = true }) {
   const reduce = useReducedMotion();
 
-  // ألوان متكيفة ديناميكياً مع الثيم
+  // تم تحسين التباين (Contrast) برفع درجة سطوع النصوص
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
-  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
+  const textDesc = darkMode ? 'text-slate-200' : 'text-slate-700';
   const cardBg = darkMode ? 'border-slate-800 bg-slate-900/60 text-white' : 'border-slate-200 bg-white shadow-md text-slate-900';
-  const cardTextDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
+  const cardTextDesc = darkMode ? 'text-slate-300' : 'text-slate-700';
   const factoryImgBg = darkMode ? 'border-blue-900/60 bg-[#07132B]' : 'border-slate-200 bg-slate-100 shadow-xl';
 
   return (
     <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 space-y-10 sm:space-y-14">
       
-      {/* عنوان القسم */}
       <div className="flex justify-center sm:justify-start">
         <SectionHeading themeColor={themeColor} darkMode={darkMode}>{isAr ? 'من نحن' : 'About Us'}</SectionHeading>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-        {/* حاوية صورة المصنع */}
         <motion.div
           className={`relative rounded-3xl overflow-hidden border group w-full aspect-[4/3] sm:aspect-auto sm:h-[400px] lg:h-[450px] ${factoryImgBg}`}
           initial={reduce ? false : { opacity: 0, y: 20 }}
@@ -53,15 +51,17 @@ export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = 
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
+          {/* تم إضافة الأبعاد الصريحة للصورة width و height */}
           <img
             src="/Image/factory-main.webp"
             alt="Kianko Factory"
+            width="800"
+            height="600"
             className="w-full h-full object-cover object-center brightness-90 group-hover:scale-105 transition-transform duration-700"
           />
           <div className={`absolute inset-0 bg-gradient-to-t ${darkMode ? 'from-[#07132B] via-transparent to-transparent opacity-80' : 'from-black/40 via-transparent to-transparent opacity-50'}`} />
         </motion.div>
 
-        {/* التفاصيل والوصف */}
         <div className="space-y-4 sm:space-y-6 text-center sm:text-start">
           <h3 className={`font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight ${textTitle}`}>
             KIANKO COMPANY
@@ -90,7 +90,6 @@ export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = 
         </div>
       </div>
 
-      {/* كروت الركائز الثلاث */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {pillars.map(({ icon: Icon, t, tAr, d, dAr }) => (
           <SpotlightCard
@@ -117,5 +116,5 @@ export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = 
         ))}
       </div>
     </section>
-  );
+  ); 
 }

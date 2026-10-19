@@ -29,7 +29,6 @@ const stats = [
 ];
 
 export default function StatsSection({ isAr, themeColor = '#C9252C', darkMode = true }) {
-  // تكييف حدود الكارد والخلفيات حسب الثيم
   const cardBorder = darkMode ? 'border-blue-900/65' : 'border-slate-300 shadow-xl';
   const overlayGradient = darkMode 
     ? 'bg-gradient-to-t from-[#061024] via-[#061024]/50 to-transparent' 
@@ -39,37 +38,45 @@ export default function StatsSection({ isAr, themeColor = '#C9252C', darkMode = 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="grid md:grid-cols-2 gap-6">
-        {stats.map((item) => (
-          <TiltCard
-            key={item.title}
-            className={`h-56 sm:h-64 rounded-2xl overflow-hidden border group shadow-2xl text-start ${cardBorder}`}
-          >
-            <img
-              src={item.img}
-              alt=""
-              loading="lazy"
-              className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
-                darkMode ? 'brightness-[0.55]' : 'brightness-[0.7]'
-              }`}
-            />
-            <div className={`absolute inset-0 ${overlayGradient}`} />
-            <div
-              className="absolute bottom-0 inset-x-0 h-1 origin-left rtl:origin-right scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10"
-              style={{ backgroundColor: themeColor }}
-            />
-            <div className="absolute bottom-6 start-6 end-6 z-10">
-              <h3 className="flex items-baseline gap-3 text-white">
-                <span className="font-display text-4xl sm:text-6xl font-black leading-none drop-shadow-md">
-                  <AnimatedCounter value={item.value} prefix={item.prefix} />
-                </span>
-                <span className="text-lg sm:text-2xl font-extrabold drop-shadow-md">{isAr ? item.titleAr : item.title}</span>
-              </h3>
-              <p className={`mt-1 sm:mt-2 text-xs sm:text-sm font-medium drop-shadow ${subtitleColor}`}>
-                {isAr ? item.subtitleAr : item.subtitle}
-              </p>
-            </div>
-          </TiltCard>
-        ))}
+        {stats.map((item, index) => {
+          // إعطاء أولوية التحميل لأول كارتين فقط لمنع تأخير الـ LCP
+          const isLCP = index < 2;
+
+          return (
+            <TiltCard
+              key={item.title}
+              className={`h-56 sm:h-64 rounded-2xl overflow-hidden border group shadow-2xl text-start ${cardBorder}`}
+            >
+              <img
+                src={item.img}
+                alt=""
+                width="600" // أبعاد صريحة لتحسين الـ CLS
+                height="400"
+                loading={isLCP ? "eager" : "lazy"} // إزالة Lazy من أول صورتين
+                fetchpriority={isLCP ? "high" : "auto"} // إعطاء أولوية قصوى
+                className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
+                  darkMode ? 'brightness-[0.55]' : 'brightness-[0.7]'
+                }`}
+              />
+              <div className={`absolute inset-0 ${overlayGradient}`} />
+              <div
+                className="absolute bottom-0 inset-x-0 h-1 origin-left rtl:origin-right scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10"
+                style={{ backgroundColor: themeColor }}
+              />
+              <div className="absolute bottom-6 start-6 end-6 z-10">
+                <h3 className="flex items-baseline gap-3 text-white">
+                  <span className="font-display text-4xl sm:text-6xl font-black leading-none drop-shadow-md">
+                    <AnimatedCounter value={item.value} prefix={item.prefix} />
+                  </span>
+                  <span className="text-lg sm:text-2xl font-extrabold drop-shadow-md">{isAr ? item.titleAr : item.title}</span>
+                </h3>
+                <p className={`mt-1 sm:mt-2 text-xs sm:text-sm font-medium drop-shadow ${subtitleColor}`}>
+                  {isAr ? item.subtitleAr : item.subtitle}
+                </p>
+              </div>
+            </TiltCard>
+          );
+        })}
       </div>
     </section>
   );

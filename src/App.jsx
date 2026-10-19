@@ -27,21 +27,30 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    // 1. إيقاف ذكاء المتصفح في استرجاع السكرول القديم
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
 
-    document.body.style.overflow = 'hidden';
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    // 2. الصعود لأعلى نقطة فوراً
+    window.scrollTo(0, 0);
 
-    const timer = setTimeout(() => {
-      document.body.style.overflow = '';
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }, 50);
+    // 3. السر هنا: تثبيت السكرول في الأعلى لمدة نصف ثانية (500ms)
+    // لتغطية فترة تحميل الصفحة الكسول (Lazy Loading) بالكامل
+    const lockScroll = setInterval(() => {
+      window.scrollTo(0, 0);
+    }, 20);
 
-    return () => clearTimeout(timer);
+    // 4. تحرير السكرول بعد اكتمال رسم الصفحة
+    const unlockTimer = setTimeout(() => {
+      clearInterval(lockScroll);
+    }, 500);
+
+    // تنظيف المؤقتات عند الانتقال لصفحة أخرى
+    return () => {
+      clearInterval(lockScroll);
+      clearTimeout(unlockTimer);
+    };
   }, [pathname]);
 
   return null;
@@ -49,7 +58,8 @@ function ScrollToTop() {
 
 function PageLoader({ themeColor }) {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-label="Loading">
+    // تم التعديل إلى min-h-screen
+    <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading">
       <div
         className="h-10 w-10 rounded-full border-4 border-white/10 animate-spin"
         style={{ borderTopColor: themeColor }}
@@ -138,7 +148,7 @@ export default function App() {
                 <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
                 <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
                 
-                <Route path={ROUTES.admin || '/admin'} element={<AdminDashboard themeColor={themeColor} />} />
+                <Route path="/kianko-secure-portal-9921" element={<AdminDashboard themeColor={themeColor} lang={lang} />} />
                 <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
               </Routes>
             </Suspense>

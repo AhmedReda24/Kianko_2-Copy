@@ -10,7 +10,7 @@ export const ROUTES = {
     products: '/products',
     contact: '/contact',
     locations: '/locations',
-    admin: '/admin', // 👈 إضافة مسار الأدمن هنا
+    admin: '/kianko-secure-portal-9921',
 };
 
 // [English, Arabic] — عنوان تبويب المتصفح لكل صفحة

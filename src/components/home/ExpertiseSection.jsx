@@ -19,7 +19,7 @@ const areas = [
   },
   {
     title: 'Blockworks Accessories', titleAr: 'إكسسورات المحارة',
-    text: 'Blockworks Accessories: Premium plaster beads and metal profiles for clean, durable, and precise wall and corner finishing.   ',
+    text: 'Premium plaster beads and metal profiles for clean, durable, and precise wall and corner finishing.',
     textAr: 'زوايا ومقاطع معدنية للمحارة لتشطيبات نظيفة وطويلة العمر للحوائط والأركان.',
     img: '/Image/plastering.webp',
   },
@@ -36,7 +36,6 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C', darkMod
 
   const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
   
-  // تصميم الكارد ليتناسب كلياً مع اللايت والدارك
   const cardStyle = darkMode 
     ? 'border-blue-900/60 bg-[#061024]' 
     : 'border-slate-300 bg-white shadow-xl';
@@ -60,6 +59,7 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C', darkMod
       <div className="flex flex-col lg:flex-row gap-3 lg:h-[460px]">
         {areas.map((a, i) => {
           const isActive = active === i;
+          const isLCP = i < 2; // أولوية لأول صورتين
           return (
             <Link
               key={a.title}
@@ -67,18 +67,21 @@ export default function ExpertiseSection({ isAr, themeColor = '#C9252C', darkMod
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               style={{ flexGrow: isActive ? 4 : 1 }}
+              aria-label={isAr ? `تصفح منتجات ${a.titleAr}` : `Explore ${a.title} products`}
               className={`group relative h-64 lg:h-auto lg:basis-0 min-w-0 overflow-hidden rounded-2xl border transition-[flex-grow] duration-500 ease-out cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${cardStyle}`}
             >
               <img
                 src={a.img}
                 alt=""
-                loading="lazy"
+                width="800"
+                height="600"
+                loading={isLCP ? "eager" : "lazy"} // إعطاء أولوية
+                fetchpriority={isLCP ? "high" : "auto"}
                 decoding="async"
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
                   isActive ? 'brightness-[0.7] scale-100' : 'brightness-[0.45] scale-110'
                 } max-lg:brightness-[0.6]`}
               />
-              {/* تدرج مرن حسب الثيم */}
               <div className={`absolute inset-0 bg-gradient-to-t ${
                 darkMode 
                   ? 'from-[#061024] via-[#061024]/40 to-transparent' 

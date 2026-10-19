@@ -4,8 +4,8 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/
 import { Menu, X, Globe, ChevronDown, Sun, Moon } from 'lucide-react';
 import { ROUTES } from '../routes';
 
-// استيراد الصورة كـ Module لتضمن عملها على Vercel والموبايل دائماً
-import logoImg from "../../assets/logo.png";
+// تم تعديل الامتداد لـ webp للأداء
+import logoImg from "../../assets/logo.webp";
 
 const pages = {
   home: { en: 'Home', ar: 'الرئيسية' },
@@ -49,7 +49,6 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
 
   const groupActive = group.some((id) => ROUTES[id] === pathname);
 
-  // ربط حالة الـ darkMode مباشرة مع الـ html element ليعمل الثيم على الموقع كله
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -81,7 +80,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
     <motion.span
       layoutId="nav-underline"
       aria-hidden="true"
-      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full"
+      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full pointer-events-none"
       style={{ backgroundColor: themeColor }}
       transition={{ type: 'spring', stiffness: 500, damping: 36 }}
     />
@@ -94,7 +93,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
       end={id === 'home'}
       style={({ isActive }) => ({ color: isActive ? themeColor : undefined })}
       className={({ isActive }) =>
-        `relative py-2 transition-colors cursor-pointer ${focusRing} ${
+        `relative py-2 px-1 transition-colors cursor-pointer ${focusRing} ${
           isActive
             ? ''
             : 'hover:opacity-90 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left rtl:after:origin-right after:scale-x-0 after:bg-current after:opacity-50 after:transition-transform after:duration-300 hover:after:scale-x-100'
@@ -124,17 +123,19 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-[height] duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
           
-          {/* Logo & Brand Title */}
-          <Link to={ROUTES.home} className={`flex items-center gap-2 sm:gap-3 group py-2 cursor-pointer shrink-0 ${focusRing}`} aria-label="KIANKO COMPANY">
+          <Link to={ROUTES.home} className={`flex items-center gap-2 sm:gap-3 group py-2 cursor-pointer shrink-0 ${focusRing}`} aria-label={isAr ? 'الرئيسية - شركة كيانكو' : 'Home - KIANKO COMPANY'}>
             
             <div className={`p-1 sm:p-1.5 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 transition-all duration-300 group-hover:scale-105 ${
               darkMode 
                 ? 'bg-slate-900/60 border border-slate-700/50 shadow-inner' 
                 : 'bg-slate-50 border border-slate-200/80 shadow-sm'
             }`}>
+              {/* تم إضافة الأبعاد صراحة */}
               <img 
                 src={logoImg} 
-                alt="KIANKO" 
+                alt={isAr ? "شعار شركة كيانكو" : "KIANKO Logo"}
+                width="150"
+                height="45" 
                 className={`w-auto object-contain rounded-lg transition-[height] duration-300 ${scrolled ? 'h-7 sm:h-9' : 'h-8 sm:h-11'}`} 
                 style={{
                   filter: `drop-shadow(0px 2px 6px rgba(201, 37, 44, 0.35))`
@@ -143,7 +144,8 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
             </div>
 
             <div className="text-start leading-tight">
-              <span className={`block font-black tracking-wider text-sm sm:text-xl transition-[font-size] duration-300 ${scrolled ? 'sm:text-xl' : 'sm:text-2xl'}`} style={{ color: themeColor }}>
+              {/* تم إضافة drop-shadow-md لتحسين التباين */}
+             <span className={`block font-black tracking-wider text-sm sm:text-xl drop-shadow-md transition-[font-size] duration-300 ${scrolled ? 'sm:text-xl' : 'sm:text-2xl'}`} style={{ color: themeColor }}>
                 KIANKO <span className={darkMode ? 'text-white' : 'text-slate-900'}>COMPANY</span>
               </span>
               <span className={`hidden sm:block text-[10px] text-slate-400 uppercase tracking-widest font-semibold transition-all duration-300 ${scrolled ? 'h-0 opacity-0 overflow-hidden' : 'h-4 opacity-100'}`}>
@@ -152,8 +154,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-4 text-xs font-bold">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4 text-xs font-bold">
             {before.map(desktopLink)}
 
             <div className="relative" ref={menuRef}>
@@ -162,11 +163,11 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                 onClick={() => setDropdownOpen((v) => !v)}
                 aria-expanded={dropdownOpen}
                 aria-haspopup="true"
-                className={`relative flex items-center gap-1 py-2 cursor-pointer hover:opacity-90 ${focusRing}`}
+                className={`relative flex items-center gap-1 py-2 px-1 cursor-pointer hover:opacity-90 ${focusRing}`}
                 style={{ color: groupActive ? themeColor : undefined }}
               >
                 <span>{isAr ? 'الشركة والجودة' : 'Company & Quality'}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 {groupActive && <Underline />}
               </button>
 
@@ -179,7 +180,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                         to={ROUTES[id]}
                         onClick={() => setDropdownOpen(false)}
                         style={({ isActive }) => ({ color: isActive ? themeColor : undefined })}
-                        className={`block text-start px-4 py-2 text-xs font-semibold cursor-pointer transition-all hover:ps-5 ${darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${focusRing}`}
+                        className={`block text-start px-4 py-3 text-xs font-semibold cursor-pointer transition-all hover:ps-5 ${darkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${focusRing}`}
                       >
                         {t(id)}
                       </NavLink>
@@ -191,14 +192,13 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
 
             {after.map(desktopLink)}
 
-            <div className="h-6 w-px bg-slate-400/40 mx-1" aria-hidden="true" />
+            <div className="h-6 w-px bg-slate-400/40 mx-1 pointer-events-none" />
 
-            {/* Mode Switcher */}
             <button
               type="button"
               onClick={() => setDarkMode(!darkMode)}
-              aria-label={isAr ? 'تبديل الوضع الداكن/الفاتح' : 'Toggle dark/light mode'}
-              className={`p-2 rounded-xl hover:scale-110 cursor-pointer transition-transform ${iconBtn} ${focusRing}`}
+              aria-label={darkMode ? (isAr ? 'تفعيل الوضع الفاتح' : 'Switch to light mode') : (isAr ? 'تفعيل الوضع الداكن' : 'Switch to dark mode')}
+              className={`p-2 rounded-xl hover:scale-110 cursor-pointer transition-transform min-h-[36px] min-w-[36px] flex items-center justify-center ${iconBtn} ${focusRing}`}
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
@@ -209,40 +209,38 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                   exit={{ rotate: 90, opacity: 0 }}
                   transition={{ duration: 0.15 }}
                 >
-                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {darkMode ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
                 </motion.span>
               </AnimatePresence>
             </button>
 
-            {/* Language Switcher */}
             <button
               type="button"
               onClick={() => setLang(isAr ? 'en' : 'ar')}
-              className={`flex items-center gap-1.5 text-xs font-bold text-white px-3.5 py-1.5 rounded-xl shadow-md cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all ${focusRing}`}
+              aria-label={isAr ? 'التغيير إلى اللغة الإنجليزية' : 'Switch to Arabic'}
+              className={`flex items-center justify-center gap-1.5 text-xs font-bold text-white px-3.5 py-2 rounded-xl shadow-md cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all min-h-[36px] ${focusRing}`}
               style={{ backgroundColor: themeColor }}
             >
-              <Globe className="w-3.5 h-3.5" />
+              <Globe className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{isAr ? 'English' : 'العربية'}</span>
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsOpen((v) => !v)}
-              className={`p-2 rounded-lg cursor-pointer ${focusRing}`}
-              aria-label={isAr ? 'فتح/إغلاق القائمة' : 'Toggle menu'}
+              className={`p-2 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${focusRing}`}
+              aria-label={isOpen ? (isAr ? 'إغلاق القائمة' : 'Close menu') : (isAr ? 'فتح القائمة' : 'Open menu')}
               aria-expanded={isOpen}
               aria-controls="mobile-menu"
             >
-              {isOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+              {isOpen ? <X className="w-7 h-7" aria-hidden="true" /> : <Menu className="w-7 h-7" aria-hidden="true" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -267,7 +265,7 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                     onClick={() => setIsOpen(false)}
                     style={({ isActive }) => ({ backgroundColor: isActive ? themeColor : undefined })}
                     className={({ isActive }) =>
-                      `text-start px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-colors flex items-center justify-between ${focusRing} ${
+                      `text-start px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-colors flex items-center justify-between min-h-[44px] ${focusRing} ${
                         isActive ? 'text-white shadow-md' : darkMode ? 'text-gray-300 hover:bg-slate-800/80 hover:text-white' : 'text-slate-700 hover:bg-slate-100'
                       }`
                     }
@@ -275,20 +273,21 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                     {({ isActive }) => (
                       <>
                         <span>{t(id)}</span>
-                        {isActive && <span className="w-2 h-2 rounded-full bg-white" />}
+                        {isActive && <span className="w-2 h-2 rounded-full bg-white" aria-hidden="true" />}
                       </>
                     )}
                   </NavLink>
                 ))}
               </div>
 
-              <div className={`pt-4 border-t flex items-center justify-between gap-3 ${darkMode ? 'border-blue-900/50' : 'border-slate-200'}`}>
+              <div className={`pt-4 border-t flex flex-col sm:flex-row items-stretch justify-between gap-3 ${darkMode ? 'border-blue-900/50' : 'border-slate-200'}`}>
                 <button
                   type="button"
                   onClick={() => setDarkMode(!darkMode)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${darkMode ? 'bg-slate-800' : 'bg-slate-100'} ${focusRing}`}
+                  aria-label={darkMode ? (isAr ? 'تفعيل الوضع الفاتح' : 'Switch to light mode') : (isAr ? 'تفعيل الوضع الداكن' : 'Switch to dark mode')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold cursor-pointer min-h-[44px] ${darkMode ? 'bg-slate-800' : 'bg-slate-100'} ${focusRing}`}
                 >
-                  {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+                  {darkMode ? <Sun className="w-4 h-4 text-amber-400" aria-hidden="true" /> : <Moon className="w-4 h-4 text-slate-700" aria-hidden="true" />}
                   <span>{darkMode ? (isAr ? 'الوضع الفاتح' : 'Light Mode') : isAr ? 'الوضع الداكن' : 'Dark Mode'}</span>
                 </button>
                 <button
@@ -297,10 +296,11 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                     setLang(isAr ? 'en' : 'ar');
                     setIsOpen(false);
                   }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-xs font-bold shadow cursor-pointer ${focusRing}`}
+                  aria-label={isAr ? 'التغيير إلى اللغة الإنجليزية' : 'Switch to Arabic'}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white text-xs font-bold shadow cursor-pointer min-h-[44px] ${focusRing}`}
                   style={{ backgroundColor: themeColor }}
                 >
-                  <Globe className="w-4 h-4" />
+                  <Globe className="w-4 h-4" aria-hidden="true" />
                   <span>{isAr ? 'English' : 'العربية'}</span>
                 </button>
               </div>

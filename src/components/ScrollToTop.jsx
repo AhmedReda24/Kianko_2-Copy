@@ -1,11 +1,35 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 
-// بيرجّع الصفحة لأولها كل ما المسار يتغيّر
 export default function ScrollToTop() {
   const { pathname } = useLocation();
+
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // 1. إيقاف ذكاء المتصفح في استرجاع السكرول القديم
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // 2. الصعود لأعلى نقطة فوراً
+    window.scrollTo(0, 0);
+
+    // 3. السر هنا: تثبيت السكرول في الأعلى لمدة نصف ثانية (500ms)
+    // لتغطية فترة تحميل الصفحة الكسول (Lazy Loading) بالكامل
+    const lockScroll = setInterval(() => {
+      window.scrollTo(0, 0);
+    }, 20);
+
+    // 4. تحرير السكرول بعد اكتمال رسم الصفحة
+    const unlockTimer = setTimeout(() => {
+      clearInterval(lockScroll);
+    }, 500);
+
+    // تنظيف المؤقتات عند الانتقال لصفحة أخرى
+    return () => {
+      clearInterval(lockScroll);
+      clearTimeout(unlockTimer);
+    };
   }, [pathname]);
+
   return null;
 }

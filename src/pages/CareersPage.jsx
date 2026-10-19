@@ -14,7 +14,7 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [jobId, setJobId] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | sending | sent | error
+  const [status, setStatus] = useState('idle');
 
   const selectedJob = jobs.find((j) => j.id === jobId);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -41,7 +41,7 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (form.website) return setStatus('sent'); // honeypot
+    if (form.website) return setStatus('sent');
     if (!file) return setFileError(pick('Please attach your CV.', 'من فضلك أرفق السيرة الذاتية.'));
     setStatus('sending');
     try {
@@ -56,7 +56,6 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
     }
   };
 
-  // الألوان الديناميكية المتكيفة بدقة مع الثيم
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
   const textDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
   const cardBg = darkMode ? 'bg-slate-900/80 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900 shadow-md';
@@ -102,7 +101,8 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
                 <button
                   type="button"
                   onClick={() => apply(job.id)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md shrink-0 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  aria-label={pick(`Apply for ${job.titleEn}`, `التقديم لوظيفة ${job.titleAr}`)}
+                  className="px-4 py-2 min-h-[44px] rounded-xl text-xs font-bold text-white shadow-md shrink-0 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                   style={{ backgroundColor: themeColor }}
                 >
                   {on ? pick('Selected', 'تم الاختيار') : pick('Apply Now', 'تقديم')}
@@ -121,7 +121,7 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               <p className={`text-sm font-semibold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                 {pick('Application received. We will contact you if there is a suitable role.', 'تم استلام طلبك، هنتواصل معاك لو فيه وظيفة مناسبة.')}
               </p>
-              <button type="button" onClick={() => setStatus('idle')} className={`text-sm font-bold underline underline-offset-4 hover:opacity-80 ${textTitle}`}>
+              <button type="button" onClick={() => setStatus('idle')} aria-label={pick('Submit another application', 'تقديم طلب تاني')} className={`text-sm font-bold underline min-h-[44px] px-2 underline-offset-4 hover:opacity-80 ${textTitle}`}>
                 {pick('Submit another application', 'تقديم طلب تاني')}
               </button>
             </div>
@@ -137,15 +137,15 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               {selectedJob && (
                 <p className={`flex items-center justify-between gap-3 text-xs border rounded-xl px-4 py-2 ${darkMode ? 'bg-white/5 border-white/10 text-slate-200' : 'bg-slate-100 border-slate-300 text-slate-800'}`}>
                   <span>{pick('Applying for:', 'التقديم على:')} <strong className={textTitle}>{pick(selectedJob.titleEn, selectedJob.titleAr)}</strong></span>
-                  <button type="button" onClick={() => setJobId('')} aria-label={pick('Clear selection', 'إلغاء الاختيار')} className="hover:opacity-75">
+                  <button type="button" onClick={() => setJobId('')} aria-label={pick('Clear selection', 'إلغاء الاختيار')} className="hover:opacity-75 min-h-[44px] px-2">
                     <X className="w-4 h-4" />
                   </button>
                 </p>
               )}
 
-              <input type="text" aria-label={pick('Full Name', 'الاسم بالكامل')} placeholder={pick('Full Name', 'الاسم بالكامل')} autoComplete="name" required minLength={2} maxLength={120} value={form.name} onChange={set('name')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
-              <input type="email" aria-label={pick('Email Address', 'البريد الإلكتروني')} placeholder={pick('Email Address', 'البريد الإلكتروني')} autoComplete="email" dir="ltr" required maxLength={200} value={form.email} onChange={set('email')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
-              <input type="tel" aria-label={pick('Phone Number', 'رقم الهاتف')} placeholder={pick('Phone Number', 'رقم الهاتف')} autoComplete="tel" dir="ltr" required minLength={5} maxLength={40} value={form.phone} onChange={set('phone')} className={`w-full px-4 py-3 rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
+              <input type="text" aria-label={pick('Full Name', 'الاسم بالكامل')} placeholder={pick('Full Name', 'الاسم بالكامل')} autoComplete="name" required minLength={2} maxLength={120} value={form.name} onChange={set('name')} className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
+              <input type="email" aria-label={pick('Email Address', 'البريد الإلكتروني')} placeholder={pick('Email Address', 'البريد الإلكتروني')} autoComplete="email" dir="ltr" required maxLength={200} value={form.email} onChange={set('email')} className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
+              <input type="tel" aria-label={pick('Phone Number', 'رقم الهاتف')} placeholder={pick('Phone Number', 'رقم الهاتف')} autoComplete="tel" dir="ltr" required minLength={5} maxLength={40} value={form.phone} onChange={set('phone')} className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`} />
 
               <label className={`block border-2 border-dashed rounded-2xl p-6 text-center space-y-2 cursor-pointer focus-within:border-white ${uploadBox}`}>
                 <Upload className="w-8 h-8 text-slate-400 mx-auto" />
@@ -166,7 +166,8 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold text-sm shadow-xl transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-wait focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                aria-label={status === 'sending' ? pick('Submitting…', 'جاري الإرسال…') : pick('Submit Application', 'إرسال الطلب')}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold text-sm shadow-xl transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-wait min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 style={{ backgroundColor: themeColor }}
               >
                 {status === 'sending' && <Loader2 className="w-5 h-5 animate-spin" />}
