@@ -1,15 +1,31 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ShieldCheck, Award, FileCheck, CheckCircle2, ZoomIn, X, Download, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 import { ROUTES } from '../routes';
+import { supabase } from '../lib/supabase'; // ربط بالسيرفر لجلب الأيزو الحقيقي
 
 export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
 
   const [selectedCert, setSelectedCert] = useState(null);
+  const [dbCertifications, setDbCertifications] = useState([]);
 
-  // المتغيرات المتكيفة مع الثيم (فاتح / داكن)
+  // جلب شهادات الأيزو والاعتمادات من جدول certifications وتصفية الأيزو فقط
+  useEffect(() => {
+    async function fetchCerts() {
+      const { data, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('category', 'iso'); // جلب الـ ISO فقط لصفحة الأيزو
+      if (!error && data) {
+        setDbCertifications(data);
+      }
+    }
+    fetchCerts();
+  }, []);
+
+  // المتغيرات المتكيفة مع الثيم
   const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white' : 'bg-white border-slate-200 text-slate-950 shadow-xl';
   const textTitle = darkMode ? 'text-white' : 'text-slate-950';
   const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
@@ -18,7 +34,8 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
   const subBoxBg = darkMode ? 'bg-slate-900/80 border-blue-900/40 text-white' : 'bg-slate-50 border-slate-200 text-slate-900';
   const modalBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/80' : 'bg-white text-slate-900 border-slate-300';
 
-  const accreditationsList = useMemo(() => [
+  // دمج الشهادات الثابتة مع ما تم إضافته من الداشبورد لتظهر فوراً
+  const defaultIsoList = [
     {
       id: 'iso-9001',
       code: 'ISO 9001:2015',
@@ -26,7 +43,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       titleAr: 'نظام إدارة الجودة العالمي',
       descEn: 'Certifies world-class quality management in rolling, punching, and steel fabrication.',
       descAr: 'اعتماد رسمي لنظام إدارة الجودة وضمان سلامة كافة عمليات التصنيع والتدلفين.',
-      img: '/Image/ISO-9001-2015.webp',
+      file_url: '/Image/ISO-9001-2015.webp',
       badgeEn: 'Verified Image',
       badgeAr: 'شهادة موثقة',
       hasImage: true,
@@ -38,7 +55,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       titleAr: 'نظام الإدارة البيئية',
       descEn: 'Verifies eco-friendly industrial operations, acid recycling, and zero-waste galvanization.',
       descAr: 'اعتماد الممارسات البيئية الآمنة وإعادة تدوير أحماض الجلفنة وتقليل الانبعاثات.',
-      img: '/Image/ISO-14001-2015.webp',
+      file_url: '/Image/ISO-14001-2015.webp',
       badgeEn: 'Verified Image',
       badgeAr: 'شهادة موثقة',
       hasImage: true,
@@ -50,89 +67,29 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
       titleAr: 'إدارة السلامة والصحة المهنية',
       descEn: 'Ensures strict workforce protection, safety protocols, and zero-harm operational standards.',
       descAr: 'اعتماد تطبيق أعلى معايير الحماية والتأمين للكوادر الفنية والعمال داخل المصانع.',
-      img: '/Image/ISO-45001-2018.webp',
+      file_url: '/Image/ISO-45001-2018.webp',
       badgeEn: 'Verified Image',
       badgeAr: 'شهادة موثقة',
       hasImage: true,
-    },
-    {
-      id: 'astm-a123',
-      code: 'ASTM A123 / A123M',
-      titleEn: 'Zinc Coating Standard Spec',
-      titleAr: 'المواصفة القياسية للجلفنة على الساخن',
-      descEn: 'Standard specification for zinc (hot-dip galvanized) coatings on iron and steel products.',
-      descAr: 'المواصفة الأمريكية المعتمدة لسمك وجودة طلاء الزنك للحديد والقطاعات الفولاذية.',
-      badgeEn: 'Standard Spec',
-      badgeAr: 'مواصفة عالمية',
-      hasImage: false,
-    },
-    {
-      id: 'nema-ve1',
-      code: 'NEMA VE 1 / CSA C22.2',
-      titleEn: 'Metal Cable Tray Systems Spec',
-      titleAr: 'معيار نيمـا لأنظمة حوامل الكابلات',
-      descEn: 'Performance, manufacturing, and testing standards for metallic cable tray installations.',
-      descAr: 'المعيار القياسي الدولي لتصنيع وااختبار قدرة تحميل حوامل وسلالم الكابلات المعدنية.',
-      badgeEn: 'NEMA Compliant',
-      badgeAr: 'مطابق لـ NEMA',
-      hasImage: false,
-    },
-    {
-      id: 'iec-61537',
-      code: 'IEC 61537 Standard',
-      titleEn: 'Cable Management Systems Code',
-      titleAr: 'كود الكهروميكانيك للسلالم والحوامل',
-      descEn: 'International electrotechnical standard for cable tray and cable ladder systems.',
-      descAr: 'الكود الدولي الفني المعتمد للتمديدات الكهروميكانيكية في المنشآت الصناعية.',
-      badgeEn: 'International Code',
-      badgeAr: 'كود دولي',
-      hasImage: false,
-    },
-    {
-      id: 'din-en-10346',
-      code: 'DIN EN 10346',
-      titleEn: 'Continuously Hot-Dip Coated Steel',
-      titleAr: 'مواصفة الصُلب المجلفن المستمر',
-      descEn: 'European standard for continuously hot-dip coated steel flat products for cold forming.',
-      descAr: 'المعيار الأوروبي لتوريد وفحص ألواح ولفائف الصلب المجلفن المخصص للتدلفين.',
-      badgeEn: 'Euro Standard',
-      badgeAr: 'معيار أوروبي',
-      hasImage: false,
-    },
-    {
-      id: 'bs-en-61537',
-      code: 'BS EN 61537',
-      titleEn: 'British Standard Cable Management',
-      titleAr: 'المواصفة البريطانية لحوامل الكابلات',
-      descEn: 'British standard specifying requirements and tests for cable tray systems.',
-      descAr: 'المواصفة البريطانية الخاصة باختبارات الأحمال ومقاومة التآكل لأنظمة الكابلات.',
-      badgeEn: 'BS Certified',
-      badgeAr: 'مطابق للمواصفة البريطانية',
-      hasImage: false,
-    },
-    {
-      id: 'osha-1910',
-      code: 'OSHA 1910 Standard',
-      titleEn: 'General Industry Safety Compliance',
-      titleAr: 'معايير أوشـا للسلامة الصناعية',
-      descEn: 'Occupational safety guidelines protecting facility workforce and industrial plant operations.',
-      descAr: 'التزام كامل بقواعد إدارة السلامة والصحة المهنية الأمريكية داخل المصنع.',
-      badgeEn: 'Safety Spec',
-      badgeAr: 'معيار السلامة',
-      hasImage: false,
-    },
-    {
-      id: 'sgs-inspection',
-      code: 'Third-Party Batch Testing',
-      titleEn: 'Mill Test & Batch Inspection',
-      titleAr: 'شهادات الفحص وااختبار الدفعات',
-      descEn: 'In-house physical tensile, yield, and coating thickness verification with third-party readiness.',
-      descAr: 'شهادات فحص فيزياء الصلب وسمك الطلاء لكل دفعة توريد مجهزة للاعتماد الاستشاري.',
-      badgeEn: 'Lab Verified',
-      badgeAr: 'مفحوص معملياً',
-      hasImage: false,
-    },
-  ], []);
+    }
+  ];
+
+  // دمج البيانات (لو في بيانات جديدة مضافة من الداشبورد بنوع iso تظهر تلقائياً)
+  const accreditationsList = [
+    ...defaultIsoList,
+    ...dbCertifications.map(c => ({
+      id: c.id,
+      code: c.code || 'ISO',
+      titleEn: c.title,
+      titleAr: c.title,
+      descEn: c.issuer || 'Official ISO certification document.',
+      descAr: c.issuer ? `جهة الإصدار: ${c.issuer}` : 'شهادة أيزو معتمدة وموثقة.',
+      file_url: c.file_url,
+      badgeEn: 'Verified ISO',
+      badgeAr: 'أيزو معتمد',
+      hasImage: Boolean(c.file_url)
+    }))
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-16 text-start">
@@ -173,7 +130,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
                   onClick={() => setSelectedCert(cert)}
                 >
                   <img
-                    src={cert.img}
+                    src={cert.file_url || cert.img}
                     alt={cert.code}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover/img:scale-105"
                   />
@@ -216,43 +173,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
         ))}
       </div>
 
-      {/* 3. In-House Quality Control Pillars */}
-      <div className={`rounded-3xl p-5 sm:p-10 space-y-6 sm:space-y-8 border ${subSectionBg}`}>
-        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
-          <div className="space-y-3 sm:space-y-4 text-center sm:text-start">
-            <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold inline-block border ${darkMode ? 'text-white bg-slate-800 border-blue-900/80' : 'text-slate-800 bg-slate-100 border-slate-300'}`}>
-              {pick('STRICT COMPLIANCE', 'الالتزام بالمواصفات')}
-            </span>
-            
-            <h2 className={`text-lg sm:text-2xl md:text-3xl font-extrabold leading-snug ${textTitle}`}>
-              {pick('Beyond ISO Certification Standards', 'ما بعد معايير شهادات الآيزو')}
-            </h2>
-
-            <p className={`text-xs sm:text-sm leading-relaxed max-w-prose mx-auto sm:mx-0 ${textDesc}`}>
-              {pick(
-                'Every steel profile and cable tray system undergoes physical tensile testing and coating thickness checks in our accredited testing lab before leaving the plant.',
-                'تخضع جميع قطاعات الصلب وأنظمة حوامل الكابلات لاختبارات إجهاد الشد والسمك في معمل الفحص المعتمد لدينا قبل الخروج للمواقع.'
-              )}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {[
-              { titleEn: 'ASTM A123 Galvanization Standard', titleAr: 'مطابقة مواصفات الجلفنة ASTM A123' },
-              { titleEn: 'NEMA VE-1 Cable Tray Specs', titleAr: 'معايير NEMA VE-1 لحوامل الكابلات' },
-              { titleEn: 'Tensile Strength Physical Testing', titleAr: 'اختبارات إجهاد الشد والتحمل الفولاذي' },
-              { titleEn: 'Digital Zinc Coating Thickness Test', titleAr: 'قياس سمك الزنك الرقمي بالميكرون' },
-            ].map((item, idx) => (
-              <div key={idx} className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border text-start ${subBoxBg}`}>
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className={`text-xs font-bold ${textTitle}`}>{pick(item.titleEn, item.titleAr)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 4. CTA Section */}
+      {/* 3. CTA Section */}
       <div className={`rounded-3xl p-6 sm:p-10 text-center space-y-5 sm:space-y-6 shadow-2xl border ${darkMode ? 'bg-gradient-to-r from-[#0A1832] via-[#0E2347] to-[#0A1832] border-blue-900/60' : 'bg-slate-100 border-slate-300'}`}>
         <h2 className={`text-lg sm:text-2xl md:text-3xl font-extrabold leading-snug ${textTitle}`}>
           {pick('Need Quality Certificates for Consultant Approval?', 'تحتاج صور الشهادات المعتمدة للتقديم للاستشاري؟')}
@@ -275,7 +196,7 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
         </div>
       </div>
 
-      {/* 5. Lightbox Modal */}
+      {/* 4. Lightbox Modal */}
       {selectedCert && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
           <div className={`relative rounded-3xl p-4 sm:p-6 max-w-2xl w-full space-y-3 sm:space-y-4 shadow-2xl border ${modalBg}`}>
@@ -293,12 +214,12 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
             </div>
             
             <div className="bg-white p-2 rounded-2xl max-h-[65vh] sm:max-h-[70vh] overflow-y-auto flex items-center justify-center">
-              <img src={selectedCert.img} alt={selectedCert.code} className="max-h-[60vh] sm:max-h-[65vh] object-contain rounded-xl" />
+              <img src={selectedCert.file_url || selectedCert.img} alt={selectedCert.code} className="max-h-[60vh] sm:max-h-[65vh] object-contain rounded-xl" />
             </div>
 
             <div className="flex justify-end pt-1 sm:pt-2">
               <a
-                href={selectedCert.img}
+                href={selectedCert.file_url || selectedCert.img}
                 download
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs text-white bg-slate-800 hover:bg-slate-700 transition-all border border-blue-900/80 w-full sm:w-auto justify-center"
               >

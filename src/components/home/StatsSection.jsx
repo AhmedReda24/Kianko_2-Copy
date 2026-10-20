@@ -39,7 +39,6 @@ export default function StatsSection({ isAr, themeColor = '#C9252C', darkMode = 
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="grid md:grid-cols-2 gap-6">
         {stats.map((item, index) => {
-          // إعطاء أولوية التحميل لأول كارتين فقط لمنع تأخير الـ LCP
           const isLCP = index < 2;
 
           return (
@@ -50,10 +49,10 @@ export default function StatsSection({ isAr, themeColor = '#C9252C', darkMode = 
               <img
                 src={item.img}
                 alt=""
-                width="600" // أبعاد صريحة لتحسين الـ CLS
+                width="600"
                 height="400"
-                loading={isLCP ? "eager" : "lazy"} // إزالة Lazy من أول صورتين
-                fetchpriority={isLCP ? "high" : "auto"} // إعطاء أولوية قصوى
+                loading={isLCP ? "eager" : "lazy"}
+                fetchpriority={isLCP ? "high" : "auto"}
                 className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
                   darkMode ? 'brightness-[0.55]' : 'brightness-[0.7]'
                 }`}

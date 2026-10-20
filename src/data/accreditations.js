@@ -20,7 +20,7 @@ export const accreditations = [{
         descAr: 'اعتماد التوريد والمواد لشركة نقل المياه الوطنية.',
         descEn: 'Official material approval for Water project.',
         file: `${BASE_URL}Approval-water.pdf`,
-        image: `${BASE_URL}Approval-Water.webp`
+        image: `${BASE_URL}Approval-water.webp`
     },
     {
         id: 'material-approval',
@@ -31,7 +31,7 @@ export const accreditations = [{
         descAr: 'شهادة الاعتماد وفحص الجودة للمواد والتصنيع.',
         descEn: 'Material approval and quality inspection certificate.',
         file: `${BASE_URL}Material-Approval.pdf`,
-        image: `${BASE_URL}Approval-Material.webp`
+        image: `${BASE_URL}Material-Approval.webp`
     },
     {
         id: 'astm-04',
@@ -42,7 +42,7 @@ export const accreditations = [{
         descAr: 'اعتماد المواد والبيانات الفنية لإكسسوارات المباني واللياسة.',
         descEn: 'Material submittal and data sheet for block & plastering accessories.',
         file: `${BASE_URL}Block-Plaster-Accessories.pdf`,
-        image: `${BASE_URL}Block-Plaster.webp`
+        image: `${BASE_URL}Block-Plaster-Accessories.webp`
     },
     {
         id: 'pqd-05',
@@ -108,7 +108,7 @@ export const accreditations = [{
         descAr: 'اعتماد التوريد لمشروع حديقة الملك سلمان بالرياض.',
         descEn: 'Official material submittal approval for King Salman Park project.',
         file: `${BASE_URL}Approval-King-Salman-Park.pdf`,
-        image: `${BASE_URL}Approval-King-Salman-park.webp`
+        image: `${BASE_URL}Approval-King-Salman-Park.webp`
     },
     {
         id: 'approval-new-murabba',
@@ -130,7 +130,7 @@ export const accreditations = [{
         descAr: 'اعتماد المواد والتوريد المعتمد لمشاريع برايم.',
         descEn: 'Official material approval for Prime projects.',
         file: `${BASE_URL}Approval-Prime.pdf`,
-        image: `${BASE_URL}Approval-prime.webp`
+        image: `${BASE_URL}Approval-Prime.webp`
     },
     {
         id: 'approval-red-sea',
@@ -152,6 +152,6 @@ export const accreditations = [{
         descAr: 'اعتماد المواد والبيانات الفنية الشاملة لإكسسوارات اللياسة.',
         descEn: 'Technical data and approval for plastering accessories.',
         file: `${BASE_URL}Plastering-Accessories-Moder.pdf`,
-        image: `${BASE_URL}Block-Plaster.webp`
+        image: `${BASE_URL}Plastering-Accessories-Moder.webp`
     }
 ];

@@ -27,26 +27,19 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // 1. إيقاف ذكاء المتصفح في استرجاع السكرول القديم
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-
-    // 2. الصعود لأعلى نقطة فوراً
     window.scrollTo(0, 0);
 
-    // 3. السر هنا: تثبيت السكرول في الأعلى لمدة نصف ثانية (500ms)
-    // لتغطية فترة تحميل الصفحة الكسول (Lazy Loading) بالكامل
     const lockScroll = setInterval(() => {
       window.scrollTo(0, 0);
     }, 20);
 
-    // 4. تحرير السكرول بعد اكتمال رسم الصفحة
     const unlockTimer = setTimeout(() => {
       clearInterval(lockScroll);
     }, 500);
 
-    // تنظيف المؤقتات عند الانتقال لصفحة أخرى
     return () => {
       clearInterval(lockScroll);
       clearTimeout(unlockTimer);
@@ -58,7 +51,6 @@ function ScrollToTop() {
 
 function PageLoader({ themeColor }) {
   return (
-    // تم التعديل إلى min-h-screen
     <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading">
       <div
         className="h-10 w-10 rounded-full border-4 border-white/10 animate-spin"
@@ -148,7 +140,7 @@ export default function App() {
                 <Route path={ROUTES.contact} element={<Contact {...pageProps} isAr={isAr} />} />
                 <Route path={ROUTES.locations} element={<LocationsPage {...pageProps} isAr={isAr} />} />
                 
-                <Route path="/kianko-secure-portal-9921" element={<AdminDashboard themeColor={themeColor} lang={lang} />} />
+                <Route path="/kianko-secure-portal-9921" element={<AdminDashboard themeColor={themeColor} lang={lang} darkMode={darkMode} />} />
                 <Route path="*" element={<NotFoundPage {...pageProps} isAr={isAr} />} />
               </Routes>
             </Suspense>

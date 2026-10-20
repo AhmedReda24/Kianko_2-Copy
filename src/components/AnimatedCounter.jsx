@@ -1,36 +1,48 @@
-import { useEffect, useRef } from 'react';
-import { animate, useInView, useReducedMotion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { useInView, useReducedMotion } from 'motion/react';
 
-const fmt = (n) => Math.round(n).toLocaleString('en-US');
-
-// عدّاد بيعدّ من 0 للرقم لما يظهر في الشاشة
-export default function AnimatedCounter({ value, prefix = '', suffix = '', duration = 2 }) {
+export default function AnimatedCounter({
+  value = 0,
+  prefix = '',
+  suffix = '',
+  duration = 1.6,
+  decimals = 0,
+  className = '',
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const inView = useInView(ref, { once: true, margin: '-40px' });
   const reduce = useReducedMotion();
+  const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
+    if (!inView) return undefined;
     if (reduce) {
-      node.textContent = `${prefix}${fmt(value)}${suffix}`;
-      return;
+      setDisplay(value);
+      return undefined;
     }
-    if (!inView) return;
-    const controls = animate(0, value, {
-      duration,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => {
-        node.textContent = `${prefix}${fmt(v)}${suffix}`;
-      },
-    });
-    return () => controls.stop();
-  }, [inView, reduce, value, prefix, suffix, duration]);
+    let raf;
+    const start = performance.now();
+    const ms = duration * 1000;
+    const tick = (now) => {
+      const p = Math.min((now - start) / ms, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Number((value * eased).toFixed(decimals)));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, value, duration, decimals, reduce]);
 
-  // dir="ltr" عشان علامة + ماتنقلش لآخر الرقم في العربي
+  const formatted = display.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+
   return (
-    <span ref={ref} dir="ltr" className="inline-block tabular-nums">
-      {prefix}0{suffix}
+    <span ref={ref} dir="ltr" className={`tabular-nums ${className}`}>
+      {prefix}
+      {formatted}
+      {suffix}
     </span>
   );
 }
