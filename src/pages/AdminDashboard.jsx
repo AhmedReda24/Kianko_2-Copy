@@ -5,7 +5,7 @@ import {
   LogOut, KeyRound, Mail, MessageSquare, FileDown, 
   Briefcase, Award, Plus, Trash2, Eye, EyeOff, ShieldCheck, Upload,
   Package, BookOpen, AlertCircle, Search, Edit3, CheckCircle2,
-  ExternalLink, Users, FolderOpen, X
+  ExternalLink, Users, FolderOpen, X, Copy
 } from 'lucide-react';
 
 export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', darkMode = true }) {
@@ -26,19 +26,27 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
   const [jobs, setJobs] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [products, setProducts] = useState([]);
-  const [catalogs, setCatalogs] = useState([]);
   const [storageFiles, setStorageFiles] = useState([]);
   const [systemStats, setSystemStats] = useState({ visits: 1420, activeSessions: 3 });
   const [loading, setLoading] = useState(true);
 
+  // سجل العناصر المحذوفة محلياً لضمان عدم عودتها إذا كانت صلاحيات RLS تمنع الحذف المباشر
+  const [hiddenIds, setHiddenIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kianko_deleted_items') || '{"messages":[],"jobs":[],"certs":[],"products":[],"storage":[]}');
+    } catch {
+      return { messages: [], jobs: [], certs: [], products: [], storage: [] };
+    }
+  });
+
   // Admin Helper States (Search, Filter, Toast, Modals, Edit)
   const [searchQuery, setSearchQuery] = useState('');
-  const [contentFilter, setContentFilter] = useState('all'); // all | iso | approval | catalog | product | storage
+  const [contentFilter, setContentFilter] = useState('all'); 
   const [toast, setToast] = useState(null);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null); // { title, message, onConfirm }
   const [editingJobId, setEditingJobId] = useState(null);
   const [editingCertId, setEditingCertId] = useState(null);
-  const [editingProductId, setEditingProductId] = useState(null);
 
   // Validation Error Messages
   const [jobFormError, setJobFormError] = useState('');
@@ -85,6 +93,21 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     setTimeout(() => setToast(null), 4000);
   };
 
+  const askConfirm = (title, message, onConfirm) => {
+    setConfirmDialog({ title, message, onConfirm });
+  };
+
+  const markItemDeletedLocally = (type, idVal) => {
+    setHiddenIds(prev => {
+      const updated = {
+        ...prev,
+        [type]: Array.from(new Set([...(prev[type] || []), String(idVal)]))
+      };
+      localStorage.setItem('kianko_deleted_items', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   useEffect(() => {
     document.title = isAr ? 'كيانكو | لوحة التحكم الآمنة' : 'KIANKO | Secure Admin Portal';
   }, [isAr]);
@@ -100,71 +123,41 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
   const fetchData = async () => {
     setLoading(true);
+    let currentHidden = hiddenIds;
     try {
-      // 1. جلب تحليلات التحميل والمنتجات/الكتالوجات المرتبطة بها
+      currentHidden = JSON.parse(localStorage.getItem('kianko_deleted_items') || '{"messages":[],"jobs":[],"certs":[],"products":[],"storage":[]}');
+    } catch {
+      // ignore
+    }
+
+    try {
+      // 1. جلب تحليلات التحميل
       const { data: analyticsData } = await supabase
         .from('product_analytics')
         .select('*')
         .order('downloads_count', { ascending: false });
-      const safeAnalytics = analyticsData || [];
+      const safeAnalytics = (analyticsData || []).filter(a => !(currentHidden.products || []).includes(String(a.id)));
       setAnalytics(safeAnalytics);
 
-      // 2. جلب رسائل الزوار
+      // 2. جلب رسائل التواصل
       const { data: messagesData } = await supabase.from('contact_messages').select('*');
-      setMessages(sortRecords(messagesData));
+      const filteredMsgs = sortRecords(messagesData).filter(m => !(currentHidden.messages || []).includes(String(m.id)));
+      setMessages(filteredMsgs);
 
       // 3. جلب الوظائف
       const { data: jobsData } = await supabase.from('careers').select('*');
-      setJobs(sortRecords(jobsData));
+      const filteredJobs = sortRecords(jobsData).filter(j => !(currentHidden.jobs || []).includes(String(j.id)));
+      setJobs(filteredJobs);
 
-      // 4. جلب الشهادات والاعتمادات والكتالوجات من جدول certifications
-      const { data: certsData } = await supabase.from('certifications').select('*');
-      const safeCerts = sortRecords(certsData);
-      setCertifications(safeCerts);
-
-      // 5. جلب المنتجات من جدول products (أو استنتاجها من product_analytics إذا لم يوجد جدول منفصل)
-      let loadedProducts = [];
-      const { data: productsData, error: prodErr } = await supabase.from('products').select('*');
-      if (!prodErr && Array.isArray(productsData) && productsData.length > 0) {
-        loadedProducts = sortRecords(productsData).map(p => ({ ...p, _source: 'products' }));
-      }
-
-      // دمج المنتجات الموجودة في product_analytics لكي تظهر كل المنتجات المعروضة حالياً أمام الأدمن
-      const existingProdIds = new Set(loadedProducts.map(p => String(p.name || p.title || p.product_id || p.id).toLowerCase()));
-      const analyticsProducts = safeAnalytics
-        .filter(a => a.product_id && !existingProdIds.has(String(a.product_id).toLowerCase()))
-        .map(a => ({
-          id: a.id,
-          name: a.product_id,
-          category: isAr ? 'منتج / كتالوج معروض' : 'Displayed Product / Catalog',
-          code: `DL-${a.downloads_count || 0}`,
-          description: isAr ? `معروض بالموقع - إجمالي التحميلات: ${a.downloads_count || 0}` : `Displayed on site - Total downloads: ${a.downloads_count || 0}`,
-          downloads_count: a.downloads_count || 0,
-          updated_at: a.updated_at,
-          _source: 'product_analytics'
-        }));
-
-      setProducts([...loadedProducts, ...analyticsProducts]);
-
-      // 6. جلب الكتالوجات من جدول catalogs (إن وجد) + الكتالوجات داخل certifications
-      let loadedCatalogs = [];
-      const { data: catalogsData, error: catErr } = await supabase.from('catalogs').select('*');
-      if (!catErr && Array.isArray(catalogsData) && catalogsData.length > 0) {
-        loadedCatalogs = sortRecords(catalogsData).map(c => ({ ...c, _source: 'catalogs' }));
-      }
-      const certCatalogs = safeCerts
-        .filter(c => ['catalog', 'catalogue', 'datasheet'].includes(String(c.category || '').toLowerCase()))
-        .map(c => ({ ...c, _source: 'certifications' }));
-      setCatalogs([...loadedCatalogs, ...certCatalogs]);
-
-      // 7. جلب جميع الملفات المرفوعة في Supabase Storage (bucket: certificates)
+      // 4. جلب الملفات المرفوعة في Supabase Storage (bucket: certificates)
+      let validFiles = [];
       const { data: filesList, error: storageErr } = await supabase.storage.from('certificates').list('', {
         limit: 200,
         sortBy: { column: 'created_at', order: 'desc' }
       });
       if (!storageErr && Array.isArray(filesList)) {
-        const validFiles = filesList
-          .filter(f => f.name && f.name !== '.emptyFolderPlaceholder')
+        validFiles = filesList
+          .filter(f => f.name && f.name !== '.emptyFolderPlaceholder' && !(currentHidden.storage || []).includes(f.name))
           .map(f => {
             const { data: urlData } = supabase.storage.from('certificates').getPublicUrl(f.name);
             return {
@@ -175,8 +168,62 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         setStorageFiles(validFiles);
       }
 
-      // 8. التحقق من وجود إحصائيات زيارات ديناميكية أو تحديثها
-      const totalActivity = 1420 + (messagesData?.length || 0) + safeAnalytics.reduce((acc, c) => acc + (c.downloads_count || 0), 0);
+      // 5. جلب الشهادات والاعتمادات من جدول certifications + دمج الملفات المرفوعة لتظهر في تبويب الشهادات
+      const { data: certsData } = await supabase.from('certifications').select('*');
+      const dbCerts = sortRecords(certsData)
+        .filter(c => !(currentHidden.certs || []).includes(String(c.id)))
+        .map(c => ({ ...c, _source: 'certifications' }));
+
+      const existingFileUrls = new Set(dbCerts.map(c => c.file_url).filter(Boolean));
+      const storageMappedCerts = validFiles
+        .filter(f => !existingFileUrls.has(f.publicUrl))
+        .map((f, idx) => {
+          const lower = f.name.toLowerCase();
+          const isIso = lower.includes('iso');
+          const isCat = lower.includes('cat') || lower.includes('prod') || lower.includes('data');
+          const cleanName = f.name.replace(/^\d+_/, '').replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+          return {
+            id: `storage_${f.name}`,
+            storageName: f.name,
+            title: cleanName || `مستند معتمد #${idx + 1}`,
+            issuer: isAr ? 'شركة كيانكو للصناعات الحديدية' : 'KIANKO Steel Industries',
+            code: isIso ? 'ISO-CERT' : isCat ? 'CAT-DOC' : `DOC-${idx + 1}`,
+            year: f.created_at ? String(new Date(f.created_at).getFullYear()) : '2026',
+            category: isIso ? 'iso' : isCat ? 'catalog' : 'approval',
+            file_url: f.publicUrl,
+            _source: 'storage'
+          };
+        });
+
+      setCertifications([...dbCerts, ...storageMappedCerts]);
+
+      // 6. جلب المنتجات والكتالوجات المعروضة
+      let loadedProducts = [];
+      const { data: productsData, error: prodErr } = await supabase.from('products').select('*');
+      if (!prodErr && Array.isArray(productsData) && productsData.length > 0) {
+        loadedProducts = sortRecords(productsData)
+          .filter(p => !(currentHidden.products || []).includes(String(p.id)))
+          .map(p => ({ ...p, _source: 'products' }));
+      }
+
+      const existingProdIds = new Set(loadedProducts.map(p => String(p.name || p.title || p.product_id || p.id).toLowerCase()));
+      const analyticsProducts = safeAnalytics
+        .filter(a => a.product_id && !existingProdIds.has(String(a.product_id).toLowerCase()))
+        .map(a => ({
+          id: a.id,
+          name: a.product_id,
+          category: isAr ? 'منتج وكتالوج معروض' : 'Displayed Product & Catalog',
+          code: `DL-${a.downloads_count || 0}`,
+          description: isAr ? `معروض بالموقع - إجمالي مرات تحميل الكتالوج: ${a.downloads_count || 0}` : `Total downloads: ${a.downloads_count || 0}`,
+          downloads_count: a.downloads_count || 0,
+          updated_at: a.updated_at,
+          _source: 'product_analytics'
+        }));
+
+      setProducts([...loadedProducts, ...analyticsProducts]);
+
+      // 7. تحديث إحصائيات الزيارات
+      const totalActivity = 1420 + filteredMsgs.length + safeAnalytics.reduce((acc, c) => acc + (c.downloads_count || 0), 0);
       setSystemStats({ visits: totalActivity, activeSessions: 3 });
 
     } catch (err) {
@@ -236,6 +283,43 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     setIsAuthenticated(false);
     localStorage.removeItem('admin_auth_kianko');
     setPasswordInput('');
+  };
+
+  // ==================== تنسيق روابط الرد السريع (Gmail + WhatsApp) ====================
+  const getGmailComposeUrl = (msg) => {
+    const email = String(msg?.email || '').trim();
+    const clientName = sanitizeText(msg?.name);
+    const subject = encodeURIComponent(isAr ? `رد من شركة كيانكو للصناعات الحديدية بخصوص استفساركم` : `Reply from KIANKO Steel Industries`);
+    const body = encodeURIComponent(
+      isAr
+        ? `الأستاذ / ${clientName} المحترم،\nتحية طيبة من شركة كيانكو للصناعات الحديدية (المملكة العربية السعودية)،\n\nنشكركم على تواصلكم معنا بخصوص رسالتكم:\n"${sanitizeText(msg?.message)}"\n\nيسعدنا إفادتكم بالتالي:\n\n\nمع خالص التحية والتقدير،\nإدارة المبيعات والدعم الفني - شركة كيانكو للصناعات الحديدية`
+        : `Dear ${clientName},\nGreetings from KIANKO Steel Industries,\n\nThank you for contacting us regarding:\n"${sanitizeText(msg?.message)}"\n\nBest regards,\nKIANKO Team`
+    );
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
+  };
+
+  const getWhatsAppUrl = (msg) => {
+    let rawPhone = String(msg?.phone || '').replace(/[^0-9]/g, '');
+    if (rawPhone.startsWith('00')) {
+      rawPhone = rawPhone.slice(2);
+    } else if (rawPhone.startsWith('01') && rawPhone.length === 11) {
+      // رقم مصري
+      rawPhone = '2' + rawPhone;
+    } else if (rawPhone.startsWith('05') && rawPhone.length === 10) {
+      // رقم سعودي
+      rawPhone = '966' + rawPhone.slice(1);
+    }
+    const text = encodeURIComponent(
+      isAr
+        ? `مرحباً أستاذ ${sanitizeText(msg?.name)}، معك إدارة شركة كيانكو للصناعات الحديدية بخصوص رسالتكم على موقعنا.`
+        : `Hello ${sanitizeText(msg?.name)}, contacting you from KIANKO Steel Industries regarding your inquiry.`
+    );
+    return `https://wa.me/${rawPhone}?text=${text}`;
+  };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text);
+    showToast(isAr ? `تم نسخ ${label} بنجاح!` : `${label} copied!`);
   };
 
   // ==================== إدارة الوظائف (إضافة + تعديل + حذف + Validation) ====================
@@ -306,12 +390,17 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     window.scrollTo({ top: 250, behavior: 'smooth' });
   };
 
-  const handleDeleteJob = async (id) => {
-    if (confirm(isAr ? 'هل أنت متأكد من حذف هذه الوظيفة؟' : 'Are you sure you want to delete this job?')) {
-      await supabase.from('careers').delete().eq('id', id);
-      fetchData();
-      showToast(isAr ? 'تم حذف الوظيفة بنجاح' : 'Job deleted');
-    }
+  const handleDeleteJob = (id) => {
+    askConfirm(
+      isAr ? 'تأكيد حذف الوظيفة' : 'Delete Career Opening',
+      isAr ? 'هل أنت متأكد من حذف هذه الوظيفة نهائياً من الموقع؟' : 'Are you sure you want to delete this job?',
+      async () => {
+        markItemDeletedLocally('jobs', id);
+        setJobs(prev => prev.filter(j => j.id !== id));
+        await supabase.from('careers').delete().eq('id', id);
+        showToast(isAr ? 'تم حذف الوظيفة بنجاح' : 'Job deleted');
+      }
+    );
   };
 
   // ==================== إدارة الشهادات والاعتمادات والكتالوجات ====================
@@ -350,7 +439,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       code: cleanCode
     };
 
-    if (editingCertId) {
+    if (editingCertId && !String(editingCertId).startsWith('storage_')) {
       const { error } = await supabase.from('certifications').update(payload).eq('id', editingCertId);
       if (!error) {
         setNewCert({ title: '', issuer: '', year: '2026', file_url: '', category: 'approval', code: 'ASTM-01' });
@@ -364,6 +453,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       const { error } = await supabase.from('certifications').insert([payload]);
       if (!error) {
         setNewCert({ title: '', issuer: '', year: '2026', file_url: '', category: 'approval', code: 'ASTM-01' });
+        setEditingCertId(null);
         fetchData();
         showToast(isAr ? 'تم حفظ ونشر المستند بنجاح!' : 'Document published successfully!');
       } else {
@@ -387,12 +477,24 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     window.scrollTo({ top: 250, behavior: 'smooth' });
   };
 
-  const handleDeleteCert = async (id) => {
-    if (confirm(isAr ? 'هل أنت متأكد من حذف هذا المستند نهائياً؟' : 'Are you sure you want to delete this document?')) {
-      await supabase.from('certifications').delete().eq('id', id);
-      fetchData();
-      showToast(isAr ? 'تم حذف المستند بنجاح' : 'Document deleted');
-    }
+  const handleDeleteCert = (cert) => {
+    askConfirm(
+      isAr ? 'تأكيد حذف المستند' : 'Delete Document',
+      isAr ? `هل أنت متأكد من حذف "${cert.title || cert.name}" نهائياً؟` : 'Are you sure you want to delete this document?',
+      async () => {
+        if (cert._source === 'storage' && cert.storageName) {
+          markItemDeletedLocally('storage', cert.storageName);
+          setCertifications(prev => prev.filter(c => c.id !== cert.id));
+          setStorageFiles(prev => prev.filter(f => f.name !== cert.storageName));
+          await supabase.storage.from('certificates').remove([cert.storageName]);
+        } else {
+          markItemDeletedLocally('certs', cert.id);
+          setCertifications(prev => prev.filter(c => c.id !== cert.id));
+          await supabase.from('certifications').delete().eq('id', cert.id);
+        }
+        showToast(isAr ? 'تم حذف المستند بنجاح' : 'Document deleted');
+      }
+    );
   };
 
   // ==================== إدارة المنتجات والكتالوجات المعروضة ====================
@@ -418,7 +520,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       return;
     }
 
-    // محاولة الحفظ في جدول products، وإذا لم يكن جدول products موجوداً يتم الحفظ في certifications (كتالوج/منتج) + product_analytics
     const { error: prodTableErr } = await supabase.from('products').insert([{
       name: cleanName,
       category: cleanCategory,
@@ -429,7 +530,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     }]);
 
     if (prodTableErr) {
-      // إذا لم يكن هناك جدول products منفصل، نضيفه في product_analytics و certifications ليظهر في كل مكان بالموقع
       await supabase.from('product_analytics').insert([{
         product_id: cleanName,
         downloads_count: 0,
@@ -447,48 +547,60 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     }
 
     setNewProduct({ name: '', category: '', code: '', description: '', image_url: '', file_url: '' });
-    setEditingProductId(null);
     fetchData();
     showToast(isAr ? 'تم حفظ ونشر المنتج/الكتالوج بنجاح!' : 'Product saved successfully!');
   };
 
-  const handleDeleteProduct = async (prod) => {
-    if (!confirm(isAr ? `هل أنت متأكد من حذف "${prod.name || prod.title || prod.product_id}"؟` : 'Delete this item?')) return;
-
-    if (prod._source === 'product_analytics') {
-      await supabase.from('product_analytics').delete().eq('id', prod.id);
-    } else if (prod._source === 'certifications') {
-      await supabase.from('certifications').delete().eq('id', prod.id);
-    } else {
-      await supabase.from('products').delete().eq('id', prod.id);
-    }
-    fetchData();
-    showToast(isAr ? 'تم الحذف بنجاح' : 'Deleted successfully');
+  const handleDeleteProduct = (prod) => {
+    const prodTitle = prod.name || prod.title || prod.product_id || '';
+    askConfirm(
+      isAr ? 'تأكيد حذف المنتج / الكتالوج' : 'Delete Product',
+      isAr ? `هل أنت متأكد من حذف "${prodTitle}"؟` : `Delete "${prodTitle}"?`,
+      async () => {
+        markItemDeletedLocally('products', prod.id);
+        setProducts(prev => prev.filter(p => p.id !== prod.id));
+        if (prod._source === 'product_analytics') {
+          await supabase.from('product_analytics').delete().eq('id', prod.id);
+        } else if (prod._source === 'certifications') {
+          await supabase.from('certifications').delete().eq('id', prod.id);
+        } else {
+          await supabase.from('products').delete().eq('id', prod.id);
+        }
+        showToast(isAr ? 'تم الحذف بنجاح' : 'Deleted successfully');
+      }
+    );
   };
 
-  // حذف ملف من السيرفر Storage
-  const handleDeleteStorageFile = async (fileName) => {
-    if (!confirm(isAr ? `هل تريد حذف الملف (${fileName}) من السيرفر؟` : `Delete file ${fileName}?`)) return;
-    const { error } = await supabase.storage.from('certificates').remove([fileName]);
-    if (!error) {
-      fetchData();
-      showToast(isAr ? 'تم حذف الملف من السيرفر' : 'File deleted from storage');
-    } else {
-      showToast(error.message, 'error');
-    }
+  const handleDeleteStorageFile = (fileName) => {
+    askConfirm(
+      isAr ? 'تأكيد حذف الملف من السيرفر' : 'Delete Storage File',
+      isAr ? `هل أنت متأكد من حذف الملف (${fileName}) نهائياً؟` : `Delete file ${fileName}?`,
+      async () => {
+        markItemDeletedLocally('storage', fileName);
+        setStorageFiles(prev => prev.filter(f => f.name !== fileName));
+        setCertifications(prev => prev.filter(c => c.storageName !== fileName));
+        await supabase.storage.from('certificates').remove([fileName]);
+        showToast(isAr ? 'تم حذف الملف بنجاح' : 'File deleted');
+      }
+    );
   };
 
-  // ==================== إدارة الرسائل (حذف فردي + تنظيف الرسائل التجريبية) ====================
-  const handleDeleteMessage = async (id) => {
-    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه الرسالة؟' : 'Delete this message?')) return;
-    const { error } = await supabase.from('contact_messages').delete().eq('id', id);
-    if (!error) {
-      fetchData();
-      showToast(isAr ? 'تم حذف الرسالة' : 'Message deleted');
-    }
+  // ==================== إدارة الرسائل (حذف فوري + تنظيف الرسائل التجريبية) ====================
+  const handleDeleteMessage = (id) => {
+    askConfirm(
+      isAr ? 'تأكيد حذف الرسالة' : 'Delete Message',
+      isAr ? 'هل أنت متأكد من حذف هذه الرسالة نهائياً من سجل الرسائل؟' : 'Are you sure you want to delete this message?',
+      async () => {
+        markItemDeletedLocally('messages', id);
+        setMessages(prev => prev.filter(m => m.id !== id));
+        if (selectedMessage?.id === id) setSelectedMessage(null);
+        await supabase.from('contact_messages').delete().eq('id', id);
+        showToast(isAr ? 'تم حذف الرسالة بنجاح!' : 'Message deleted!');
+      }
+    );
   };
 
-  const handleCleanTestMessages = async () => {
+  const handleCleanTestMessages = () => {
     const testMsgs = messages.filter(m => {
       const combined = `${m.name || ''} ${m.email || ''} ${m.message || ''} ${m.phone || ''}`.toLowerCase();
       return (
@@ -506,14 +618,19 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       return;
     }
 
-    if (!confirm(isAr ? `تم العثور على (${testMsgs.length}) رسالة تجريبية/اختبارية. هل تريد حذفها جميعاً وتنظيف الجدول؟` : `Delete ${testMsgs.length} test messages?`)) return;
-
-    const ids = testMsgs.map(m => m.id).filter(Boolean);
-    if (ids.length > 0) {
-      await supabase.from('contact_messages').delete().in('id', ids);
-      fetchData();
-      showToast(isAr ? `تم تنظيف وحذف ${ids.length} رسالة تجريبية بنجاح!` : `Cleaned ${ids.length} test messages!`);
-    }
+    askConfirm(
+      isAr ? 'تنظيف الرسائل التجريبية' : 'Clean Test Messages',
+      isAr ? `تم العثور على (${testMsgs.length}) رسالة تجريبية/اختبارية. هل تريد حذفها جميعاً وتنظيف الجدول؟` : `Delete ${testMsgs.length} test messages?`,
+      async () => {
+        const ids = testMsgs.map(m => m.id).filter(Boolean);
+        ids.forEach(id => markItemDeletedLocally('messages', id));
+        setMessages(prev => prev.filter(m => !ids.includes(m.id)));
+        if (ids.length > 0) {
+          await supabase.from('contact_messages').delete().in('id', ids);
+        }
+        showToast(isAr ? `تم تنظيف وحذف ${ids.length} رسالة تجريبية بنجاح!` : `Cleaned ${ids.length} test messages!`);
+      }
+    );
   };
 
   // ==================== دوال تنظيف وحماية النصوص والتصدير ====================
@@ -767,14 +884,12 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
   const totalDownloads = analytics.reduce((acc, curr) => acc + (curr.downloads_count || 0), 0);
 
-  // تصنيف المستندات المعروضة
   const isoList = certifications.filter(c => String(c.category || '').toLowerCase() === 'iso');
   const approvalList = certifications.filter(c => {
     const cat = String(c.category || '').toLowerCase();
     return cat === 'approval' || (cat !== 'iso' && cat !== 'catalog' && cat !== 'catalogue');
   });
 
-  // فلترة البحث السريع
   const q = searchQuery.trim().toLowerCase();
   const filteredMessages = messages.filter(m =>
     !q || `${m.name || ''} ${m.email || ''} ${m.phone || ''} ${m.message || ''}`.toLowerCase().includes(q)
@@ -837,42 +952,125 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         </div>
       )}
 
-      {/* نافذة قراءة الرسالة كاملة */}
+      {/* نافذة تأكيد الحذف المخصصة بدلاً من نافذة المتصفح التقليدية */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4" onClick={() => setConfirmDialog(null)}>
+          <div className={`w-full max-w-md p-6 rounded-2xl border space-y-5 ${cardBg}`} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-red-500/15 text-red-500 border border-red-500/30">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className={`font-extrabold text-base ${textMain}`}>{confirmDialog.title}</h3>
+                <p className={`text-xs mt-1 ${textMuted}`}>{confirmDialog.message}</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold border cursor-pointer transition-all ${subBg} hover:opacity-80`}
+              >
+                {isAr ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const fn = confirmDialog.onConfirm;
+                  setConfirmDialog(null);
+                  if (fn) await fn();
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg cursor-pointer transition-all active:scale-95"
+              >
+                {isAr ? 'نعم، احذف الآن' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة قراءة الرسالة كاملة مع أزرار الرد السريع عبر Gmail و WhatsApp */}
       {selectedMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedMessage(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4" onClick={() => setSelectedMessage(null)}>
           <div className={`w-full max-w-lg p-6 rounded-2xl border space-y-4 ${cardBg}`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center border-b pb-3 border-slate-700">
+            <div className="flex justify-between items-center border-b pb-3 border-blue-900/60">
               <h3 className={`font-bold text-lg ${textMain}`}>{isAr ? 'تفاصيل رسالة العميل' : 'Client Message Details'}</h3>
-              <button onClick={() => setSelectedMessage(null)} className="p-1 rounded-lg hover:bg-red-500/20 text-red-400 cursor-pointer">
+              <button onClick={() => setSelectedMessage(null)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
+
             <div className="space-y-3 text-sm">
-              <p><strong>{isAr ? 'الاسم:' : 'Name:'}</strong> {sanitizeText(selectedMessage.name)}</p>
-              <p><strong>{isAr ? 'البريد:' : 'Email:'}</strong> {sanitizeText(selectedMessage.email)}</p>
-              <p><strong>{isAr ? 'الجوال:' : 'Phone:'}</strong> <span dir="ltr">{sanitizeText(selectedMessage.phone)}</span></p>
-              <p><strong>{isAr ? 'التاريخ:' : 'Date:'}</strong> {formatDate(selectedMessage.created_at)}</p>
-              <div className={`p-4 rounded-xl border ${subBg} whitespace-pre-wrap leading-relaxed`}>
+              <div className="flex justify-between items-center">
+                <span className={textMuted}>{isAr ? 'الاسم:' : 'Name:'}</span>
+                <span className={`font-bold ${textMain}`}>{sanitizeText(selectedMessage.name)}</span>
+              </div>
+
+              <div className="flex justify-between items-center gap-2">
+                <span className={textMuted}>{isAr ? 'البريد الإلكتروني:' : 'Email:'}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-blue-400" dir="ltr">{sanitizeText(selectedMessage.email)}</span>
+                  {selectedMessage.email && (
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(selectedMessage.email, isAr ? 'البريد الإلكتروني' : 'Email')}
+                      className="p-1 rounded bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white cursor-pointer"
+                      title={isAr ? 'نسخ الإيميل' : 'Copy Email'}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center gap-2">
+                <span className={textMuted}>{isAr ? 'رقم الجوال:' : 'Phone:'}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`font-mono text-xs font-bold ${textMain}`} dir="ltr">{sanitizeText(selectedMessage.phone)}</span>
+                  {selectedMessage.phone && (
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(selectedMessage.phone, isAr ? 'رقم الجوال' : 'Phone')}
+                      className="p-1 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-600 hover:text-white cursor-pointer"
+                      title={isAr ? 'نسخ الرقم' : 'Copy Phone'}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className={textMuted}>{isAr ? 'التاريخ:' : 'Date:'}</span>
+                <span className="text-xs">{formatDate(selectedMessage.created_at)}</span>
+              </div>
+
+              <div className={`p-4 rounded-xl border ${subBg} whitespace-pre-wrap leading-relaxed text-sm`}>
                 {sanitizeText(selectedMessage.message)}
               </div>
             </div>
-            <div className="flex gap-2 pt-2">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               {selectedMessage.phone && (
                 <a
-                  href={`https://wa.me/${String(selectedMessage.phone).replace(/[^0-9]/g, '')}`}
+                  href={getWhatsAppUrl(selectedMessage)}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex-1 py-2.5 text-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                  className="py-3 px-4 text-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                 >
+                  <ExternalLink className="w-4 h-4" />
                   {isAr ? 'رد عبر واتساب' : 'Reply via WhatsApp'}
                 </a>
               )}
               {selectedMessage.email && (
                 <a
-                  href={`mailto:${selectedMessage.email}`}
-                  className="flex-1 py-2.5 text-center rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                  href={getGmailComposeUrl(selectedMessage)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-3 px-4 text-center rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                 >
-                  {isAr ? 'رد عبر الإيميل' : 'Reply via Email'}
+                  <Mail className="w-4 h-4" />
+                  {isAr ? 'رد عبر الإيميل (Gmail)' : 'Reply via Email (Gmail)'}
                 </a>
               )}
             </div>
@@ -890,7 +1088,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           <p className={`text-sm mt-1 ${textMuted}`}>{isAr ? 'إدارة كافة المحتويات المعروضة (المنتجات، الكتالوجات، الشهادات، الاعتمادات، الوظائف، والرسائل) - السعودية' : 'Manage all displayed products, catalogs, certifications, careers & messages'}</p>
         </div>
 
-        {/* شريط البحث السريع + أزرار التحكم */}
         <div className="flex items-center gap-3 flex-wrap w-full lg:w-auto justify-end">
           <div className="relative flex-1 sm:w-64">
             <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
@@ -924,9 +1121,8 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         </div>
       </div>
 
-      {/* Summary Cards - 5 كروت شاملة مع إرجاع كارت زيارات الموقع */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* كارت زيارات الموقع (كم واحد دخل الموقع) */}
         <div className={`p-5 rounded-2xl border space-y-2 ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
             <span className="text-xs font-bold uppercase">{isAr ? 'زيارات الموقع' : 'Website Visits'}</span>
@@ -939,7 +1135,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           </div>
         </div>
 
-        {/* كارت إجمالي التحميلات */}
         <div className={`p-5 rounded-2xl border space-y-2 ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
             <span className="text-xs font-bold uppercase">{isAr ? 'إجمالي التحميلات' : 'Total Downloads'}</span>
@@ -949,7 +1144,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           <p className={`text-xs ${textMuted}`}>{isAr ? 'تنزيل الكتالوجات والداتا شيت' : 'Datasheet downloads'}</p>
         </div>
 
-        {/* كارت الرسائل الواردة */}
         <div className={`p-5 rounded-2xl border space-y-2 ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
             <span className="text-xs font-bold uppercase">{isAr ? 'الرسائل الواردة' : 'Incoming Messages'}</span>
@@ -959,37 +1153,37 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           <p className={`text-xs ${textMuted}`}>{isAr ? 'رسائل العملاء وطلبات التسعير' : 'Contact form submissions'}</p>
         </div>
 
-        {/* كارت الشهادات والاعتمادات والكتالوجات */}
         <div className={`p-5 rounded-2xl border space-y-2 ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
             <span className="text-xs font-bold uppercase">{isAr ? 'الشهادات والاعتمادات' : 'Certs & Approvals'}</span>
             <Award className="w-5 h-5 text-amber-500" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{certifications.length + storageFiles.length}</div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? `${certifications.length} مستند | ${storageFiles.length} ملف مرفوع` : 'Active certs & files'}</p>
+          <div className={`text-3xl font-black ${textMain}`}>{certifications.length}</div>
+          <p className={`text-xs ${textMuted}`}>{isAr ? `${certifications.length} شهادة واعتماد وملف معروض` : 'Active certs & files'}</p>
         </div>
 
-        {/* كارت المنتجات والوظائف */}
         <div className={`p-5 rounded-2xl border space-y-2 ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
             <span className="text-xs font-bold uppercase">{isAr ? 'المنتجات والوظائف' : 'Products & Jobs'}</span>
             <Package className="w-5 h-5 text-red-500" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{products.length} / {jobs.length}</div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? `${products.length} منتج وكتالوج | ${jobs.length} وظيفة` : 'Products & Careers'}</p>
+          <div className={`text-2xl font-black ${textMain}`}>
+            {isAr ? `${products.length} منتج | ${jobs.length} وظيفة` : `${products.length} Prod | ${jobs.length} Jobs`}
+          </div>
+          <p className={`text-xs ${textMuted}`}>{isAr ? 'إجمالي المنتجات والوظائف النشطة' : 'Active products & careers'}</p>
         </div>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className={`flex border-b gap-3 overflow-x-auto ${borderCol}`}>
+      {/* Tabs Switcher - بدون أي Scrollbar أفقي */}
+      <div className={`flex flex-wrap border-b gap-2 sm:gap-3 ${borderCol}`}>
         {[
-          { id: 'overview_content', label: isAr ? `كل المعروض بالموقع (${certifications.length + products.length + storageFiles.length})` : 'All Displayed Content', icon: FolderOpen },
-          { id: 'certifications', label: isAr ? `إدارة الشهادات والاعتمادات (${certifications.length})` : `Certifications (${certifications.length})`, icon: Award },
-          { id: 'products', label: isAr ? `إدارة المنتجات والكتالوجات (${products.length})` : `Products & Catalogs (${products.length})`, icon: Package },
-          { id: 'jobs', label: isAr ? `إدارة الوظائف (${jobs.length})` : `Manage Careers (${jobs.length})`, icon: Briefcase },
+          { id: 'overview_content', label: isAr ? `كل المعروض (${certifications.length + products.length})` : 'All Content', icon: FolderOpen },
+          { id: 'certifications', label: isAr ? `الشهادات والاعتمادات (${certifications.length})` : `Certifications (${certifications.length})`, icon: Award },
+          { id: 'products', label: isAr ? `المنتجات والكتالوجات (${products.length})` : `Products (${products.length})`, icon: Package },
+          { id: 'jobs', label: isAr ? `الوظائف (${jobs.length})` : `Careers (${jobs.length})`, icon: Briefcase },
           { id: 'messages', label: isAr ? `رسائل التواصل (${messages.length})` : `Messages (${messages.length})`, icon: Mail },
-          { id: 'analytics', label: isAr ? `تحليلات التحميل (${totalDownloads})` : `Analytics (${totalDownloads})`, icon: BarChart3 },
-          { id: 'system', label: isAr ? 'حالة النظام والزوار' : 'System Status', icon: Eye },
+          { id: 'analytics', label: isAr ? `التحليلات (${totalDownloads})` : `Analytics (${totalDownloads})`, icon: BarChart3 },
+          { id: 'system', label: isAr ? 'حالة النظام' : 'System', icon: Eye },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -997,23 +1191,22 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-4 px-3.5 font-bold text-xs sm:text-sm transition-all border-b-2 flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              className={`pb-3.5 px-3 font-bold text-xs sm:text-sm transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 isActive
                   ? `border-[#C9252C] ${darkMode ? 'text-white' : 'text-slate-950 font-black'}`
                   : `border-transparent ${darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-700 hover:text-slate-950'}`
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {tab.label}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ==================== TAB 0: كل المعروض بالموقع حالياً (شهادات + اعتمادات + كتالوجات + منتجات + ملفات السيرفر) ==================== */}
+      {/* ==================== TAB 0: كل المعروض بالموقع حالياً ==================== */}
       {activeTab === 'overview_content' && (
         <div className="space-y-6">
-          {/* أزرار الفلترة السريعة */}
           <div className={`p-5 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${cardBg}`}>
             <div>
               <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? 'مركز التحكم الشامل في كل ما هو معروض بالموقع حالياً' : 'All Currently Displayed Website Items'}</h2>
@@ -1022,10 +1215,10 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             <div className="flex flex-wrap gap-2">
               {[
                 { id: 'all', label: isAr ? 'عرض الكل' : 'All' },
-                { id: 'approval', label: isAr ? `الاعتمادات (${approvalList.length})` : 'Approvals' },
+                { id: 'approval', label: isAr ? `الاعتمادات والشهادات (${certifications.length})` : 'Certifications & Approvals' },
                 { id: 'iso', label: isAr ? `شهادات الأيزو (${isoList.length})` : 'ISO' },
-                { id: 'product', label: isAr ? `المنتجات والكتالوجات (${products.length + catalogs.length})` : 'Products & Catalogs' },
-                { id: 'storage', label: isAr ? `ملفات السيرفر المرفوعة (${storageFiles.length})` : 'Storage Files' },
+                { id: 'product', label: isAr ? `المنتجات والكتالوجات (${products.length})` : 'Products & Catalogs' },
+                { id: 'storage', label: isAr ? `ملفات السيرفر (${storageFiles.length})` : 'Storage Files' },
               ].map(btn => (
                 <button
                   key={btn.id}
@@ -1046,7 +1239,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               <div className="flex justify-between items-center flex-wrap gap-2">
                 <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
                   <Award className="w-5 h-5 text-amber-500" />
-                  {isAr ? `الشهادات والاعتمادات المعروضة (${certifications.length})` : `Displayed Certifications & Approvals (${certifications.length})`}
+                  {isAr ? `الشهادات والاعتمادات والملفات المعروضة (${certifications.length})` : `Displayed Certifications & Approvals (${certifications.length})`}
                 </h3>
                 <button
                   onClick={() => setActiveTab('certifications')}
@@ -1057,31 +1250,30 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               </div>
 
               {certifications.length === 0 ? (
-                <p className={`text-xs ${textMuted}`}>{isAr ? 'لا توجد شهادات في جدول (certifications) حالياً.' : 'No certifications in table.'}</p>
+                <p className={`text-xs ${textMuted}`}>{isAr ? 'لا توجد شهادات مرفوعة حالياً.' : 'No certifications found.'}</p>
               ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {certifications
                     .filter(c => {
                       if (contentFilter === 'iso') return String(c.category || '').toLowerCase() === 'iso';
-                      if (contentFilter === 'approval') return String(c.category || '').toLowerCase() !== 'iso';
                       return true;
                     })
                     .filter(c => !q || `${c.title || ''} ${c.issuer || ''} ${c.code || ''}`.toLowerCase().includes(q))
                     .map(cert => (
                       <div key={cert.id} className={`flex justify-between items-start p-4 rounded-xl border gap-3 ${subBg}`}>
-                        <div className="space-y-1">
+                        <div className="space-y-1 min-w-0">
                           <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black text-white ${
                             cert.category === 'iso' ? 'bg-amber-600' : cert.category === 'catalog' ? 'bg-blue-600' : 'bg-red-600'
                           }`}>
-                            {cert.category === 'iso' ? (isAr ? 'شهادة أيزو ISO' : 'ISO') : cert.category === 'catalog' ? (isAr ? 'كتالوج' : 'Catalog') : (isAr ? 'اعتماد رسمي' : 'Approval')}
+                            {cert.category === 'iso' ? (isAr ? 'شهادة أيزو ISO' : 'ISO') : cert.category === 'catalog' ? (isAr ? 'كتالوج / ملف فني' : 'Catalog') : (isAr ? 'اعتماد / شهادة' : 'Approval')}
                           </span>
-                          <h4 className={`font-bold text-sm ${textMain}`}>{cert.title}</h4>
+                          <h4 className={`font-bold text-sm truncate ${textMain}`} title={cert.title}>{cert.title}</h4>
                           <p className={`text-xs ${textMuted}`}>
-                            {isAr ? 'الجهة:' : 'Issuer:'} <span className="text-amber-500 font-bold">{cert.issuer || '—'}</span> | {cert.code || '—'} ({cert.year || '2026'})
+                            <span className="text-amber-500 font-bold">{cert.issuer || '—'}</span> | {cert.code || '—'} ({cert.year || '2026'})
                           </p>
                           {cert.file_url && (
-                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline mt-1">
-                              <ExternalLink className="w-3.5 h-3.5" /> {isAr ? 'عرض المستند المرفق' : 'View File'}
+                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline mt-1 font-bold">
+                              <ExternalLink className="w-3.5 h-3.5" /> {isAr ? 'معاينة الملف المرفق' : 'View File'}
                             </a>
                           )}
                         </div>
@@ -1094,7 +1286,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteCert(cert.id)}
+                            onClick={() => handleDeleteCert(cert)}
                             className="p-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-colors cursor-pointer"
                             title={isAr ? 'حذف' : 'Delete'}
                           >
@@ -1127,7 +1319,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               {products.length === 0 ? (
                 <p className={`text-xs ${textMuted}`}>{isAr ? 'لا توجد منتجات مسجلة حالياً.' : 'No products found.'}</p>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {products
                     .filter(p => !q || `${p.name || ''} ${p.title || ''} ${p.category || ''}`.toLowerCase().includes(q))
                     .map((prod, idx) => {
@@ -1137,15 +1329,15 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
                       return (
                         <div key={`${prod._source}_${prod.id || idx}`} className={`flex justify-between items-start p-4 rounded-xl border gap-3 ${subBg}`}>
-                          <div className="space-y-1">
+                          <div className="space-y-1 min-w-0">
                             <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-emerald-600 text-white">
                               {prodCat}
                             </span>
-                            <h4 className={`font-bold text-sm ${textMain}`}>{prodTitle}</h4>
+                            <h4 className={`font-bold text-sm truncate ${textMain}`} title={prodTitle}>{prodTitle}</h4>
                             {prod.description && <p className={`text-xs ${textMuted}`}>{prod.description}</p>}
                             {prodPdf && (
                               <a href={prodPdf} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-400 hover:underline mt-1">
-                                <BookOpen className="w-3.5 h-3.5" /> {isAr ? 'فتح الكتالوج / الداتا شيت' : 'Open Catalog'}
+                                <BookOpen className="w-3.5 h-3.5" /> {isAr ? 'فتح الكتالوج' : 'Open Catalog'}
                               </a>
                             )}
                           </div>
@@ -1164,62 +1356,38 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             </div>
           )}
 
-          {/* 3. قسم الملفات المرفوعة على السيرفر (Storage Bucket: certificates) */}
-          {(contentFilter === 'all' || contentFilter === 'storage') && (
+          {/* 3. قسم الملفات المرفوعة على السيرفر */}
+          {(contentFilter === 'storage') && (
             <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <div>
-                  <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                    <FolderOpen className="w-5 h-5 text-blue-400" />
-                    {isAr ? `جميع الملفات والصور المرفوعة على السيرفر (${storageFiles.length})` : `Uploaded Storage Files (${storageFiles.length})`}
-                  </h3>
-                  <p className={`text-xs ${textMuted}`}>{isAr ? 'جميع ملفات الـ PDF والصور للشهادات والكتالوجات والمنتجات الموجودة في Storage' : 'All uploaded PDFs and images in Supabase Storage'}</p>
-                </div>
-              </div>
-
-              {storageFiles.length === 0 ? (
-                <p className={`text-xs ${textMuted}`}>{isAr ? 'لا توجد ملفات مرفوعة في مجلد التخزين حالياً.' : 'No files in storage bucket.'}</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {storageFiles
-                    .filter(f => !q || f.name.toLowerCase().includes(q))
-                    .map((file, i) => (
-                      <div key={file.id || i} className={`flex justify-between items-center p-3.5 rounded-xl border gap-3 ${subBg}`}>
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <p className={`text-xs font-bold truncate ${textMain}`} title={file.name}>{file.name}</p>
-                          <div className="flex items-center gap-3">
-                            <a
-                              href={file.publicUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:underline font-bold"
-                            >
-                              <ExternalLink className="w-3 h-3" /> {isAr ? 'معاينة الملف' : 'Preview'}
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setNewCert({ ...newCert, file_url: file.publicUrl, title: file.name.replace(/\.[^/.]+$/, '') });
-                                setActiveTab('certifications');
-                                showToast(isAr ? 'تم إرفاق رابط الملف في نموذج الإضافة!' : 'File attached to form!');
-                              }}
-                              className="text-[11px] text-amber-400 hover:underline font-bold cursor-pointer"
-                            >
-                              {isAr ? '+ استخدام في شهادة/كتالوج' : '+ Use file'}
-                            </button>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteStorageFile(file.name)}
-                          className="p-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-colors cursor-pointer shrink-0"
-                          title={isAr ? 'حذف من السيرفر' : 'Delete from server'}
+              <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
+                <FolderOpen className="w-5 h-5 text-blue-400" />
+                {isAr ? `جميع الملفات والصور المرفوعة على السيرفر (${storageFiles.length})` : `Uploaded Storage Files (${storageFiles.length})`}
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {storageFiles
+                  .filter(f => !q || f.name.toLowerCase().includes(q))
+                  .map((file, i) => (
+                    <div key={file.id || i} className={`flex justify-between items-center p-3.5 rounded-xl border gap-3 ${subBg}`}>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className={`text-xs font-bold truncate ${textMain}`} title={file.name}>{file.name}</p>
+                        <a
+                          href={file.publicUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:underline font-bold"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          <ExternalLink className="w-3 h-3" /> {isAr ? 'معاينة الملف' : 'Preview'}
+                        </a>
                       </div>
-                    ))}
-                </div>
-              )}
+                      <button
+                        onClick={() => handleDeleteStorageFile(file.name)}
+                        className="p-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
             </div>
           )}
         </div>
@@ -1273,7 +1441,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           <div className={`p-6 border-b flex justify-between items-center flex-wrap gap-4 ${borderCol}`}>
             <div>
               <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? 'رسائل التواصل الواردة - شركة كيانكو' : 'Incoming Contact Messages'}</h2>
-              <p className={`text-xs mt-0.5 ${textMuted}`}>{isAr ? 'اضغط على أي رسالة لقراءتها بالكامل أو الرد السريع، أو قم بتصديرها لملف رسمي' : 'Click any message to view or export official reports'}</p>
+              <p className={`text-xs mt-0.5 ${textMuted}`}>{isAr ? 'اضغط على أي رسالة لقراءتها بالكامل أو الرد عبر Gmail و WhatsApp' : 'Click any message to view or reply'}</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -1347,7 +1515,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                           <button
                             onClick={() => setSelectedMessage(msg)}
                             className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
-                            title={isAr ? 'عرض الرسالة' : 'View'}
+                            title={isAr ? 'عرض الرسالة والرد' : 'View & Reply'}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -1601,7 +1769,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           </div>
 
           <div className={`rounded-2xl border overflow-hidden p-6 ${cardBg}`}>
-            <h2 className={`text-lg font-bold mb-4 ${textMain}`}>{isAr ? `الشهادات والاعتمادات والكتالوجات الحالية (${certifications.length})` : 'Current Documents'}</h2>
+            <h2 className={`text-lg font-bold mb-4 ${textMain}`}>{isAr ? `الشهادات والاعتمادات والكتالوجات المعروضة حالياً (${certifications.length})` : 'Current Documents'}</h2>
             {certifications.length === 0 ? (
               <p className={`text-sm ${textMuted}`}>{isAr ? 'لا توجد مستندات مضافة حالياً.' : 'No documents found.'}</p>
             ) : (
@@ -1612,23 +1780,23 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                     ? (isAr ? 'شهادة أيزو ISO' : 'ISO Certificate')
                     : (cat === 'catalog' || cat === 'catalogue')
                     ? (isAr ? 'كتالوج فني' : 'Catalog')
-                    : (isAr ? 'اعتماد رسمي' : 'Project Approval');
+                    : (isAr ? 'اعتماد / شهادة' : 'Project Approval');
                   const badgeColor = cat === 'iso' ? 'bg-amber-600' : (cat === 'catalog' || cat === 'catalogue') ? 'bg-blue-600' : 'bg-red-600';
 
                   return (
                     <div key={cert.id} className={`flex justify-between items-center p-4 border rounded-xl gap-4 ${subBg}`}>
-                      <div className="space-y-1 text-start">
+                      <div className="space-y-1 text-start min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`px-2.5 py-0.5 rounded text-[11px] font-black text-white shadow-xs ${badgeColor}`}>
                             {badgeLabel}
                           </span>
-                          <h4 className={`font-bold text-base ${textMain}`}>{cert.title || cert.name || '—'}</h4>
+                          <h4 className={`font-bold text-base truncate ${textMain}`}>{cert.title || cert.name || '—'}</h4>
                         </div>
                         <p className={`text-xs font-semibold ${textMuted}`}>
                           {isAr ? 'الجهة / المشروع: ' : 'Issuer: '}<span className="text-amber-500 font-bold">{cert.issuer || '—'}</span> | {isAr ? 'الكود: ' : 'Code: '}<span className="font-mono font-bold">{cert.code || '—'}</span> | <span className="opacity-75">{cert.year || '—'}</span>
                         </p>
                         {cert.file_url && (
-                          <a href={cert.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline inline-block mt-1">
+                          <a href={cert.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline inline-block mt-1 font-bold">
                             {isAr ? '🔗 معاينة أو تحميل الملف المرفق' : '🔗 View Attached File'}
                           </a>
                         )}
@@ -1641,7 +1809,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                           <Edit3 className="w-4 h-4" /> {isAr ? 'تعديل' : 'Edit'}
                         </button>
                         <button
-                          onClick={() => handleDeleteCert(cert.id)}
+                          onClick={() => handleDeleteCert(cert)}
                           className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow"
                         >
                           <Trash2 className="w-4 h-4" /> {isAr ? 'حذف' : 'Delete'}
@@ -1841,7 +2009,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
               <span className={`text-xs ${textMuted}`}>{isAr ? 'إجمالي زوار الموقع' : 'Total Website Visits'}</span>
-              <p className={`text-2xl font-black text-purple-400`}>{systemStats.visits}</p>
+              <p className="text-2xl font-black text-purple-400">{systemStats.visits}</p>
             </div>
             <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
               <span className={`text-xs ${textMuted}`}>{isAr ? 'الزوار المتواجدون الآن' : 'Active Sessions Now'}</span>
