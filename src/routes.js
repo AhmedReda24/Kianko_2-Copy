@@ -13,7 +13,6 @@ export const ROUTES = {
     admin: '/kianko-secure-portal-9921',
 };
 
-// [English, Arabic] — عنوان تبويب المتصفح لكل صفحة
 export const PAGE_TITLES = {
     home: ['KIANKO | Steel Fabrication & Cable Management', 'كيانكو | تصنيع الحديد وأنظمة الكابلات'],
     story: ['Our Story | KIANKO', 'قصتنا | كيانكو'],
@@ -26,7 +25,7 @@ export const PAGE_TITLES = {
     products: ['Products | KIANKO', 'المنتجات | كيانكو'],
     contact: ['Contact Us | KIANKO', 'تواصل معنا | كيانكو'],
     locations: ['Our Locations | KIANKO', 'فروعنا ومكاتبنا | كيانكو'],
-    admin: ['Admin Dashboard | KIANKO', 'لوحة التحكم | كيانكو'], // 👈 إضافة عنوان الأدمن هنا
+    admin: ['Admin Dashboard | KIANKO', 'لوحة التحكم | كيانكو'],
     notFound: ['Page not found | KIANKO', 'الصفحة غير موجودة | كيانكو'],
 };
 

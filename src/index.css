@@ -4,9 +4,6 @@
    KIANKO GLOBAL UI FIXES & CLEAN POINTERS
    ========================================================================== */
 
-
-/* إجبار مؤشر اليد الشامل لكافة العناصر القابلة للنقر */
-
 button,
 a,
 select,
@@ -17,15 +14,9 @@ input[type="button"],
     cursor: pointer !important;
 }
 
-
-/* تحسين السكرول بار والانسيابية */
-
 html {
     scroll-behavior: smooth;
 }
-
-
-/* تحسين المقروئية والتباين في Light Mode */
 
 body {
     transition: background-color 0.3s ease, color 0.3s ease;

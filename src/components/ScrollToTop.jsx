@@ -13,8 +13,6 @@ export default function ScrollToTop() {
     // 2. الصعود لأعلى نقطة فوراً
     window.scrollTo(0, 0);
 
-    // 3. السر هنا: تثبيت السكرول في الأعلى لمدة نصف ثانية (500ms)
-    // لتغطية فترة تحميل الصفحة الكسول (Lazy Loading) بالكامل
     const lockScroll = setInterval(() => {
       window.scrollTo(0, 0);
     }, 20);

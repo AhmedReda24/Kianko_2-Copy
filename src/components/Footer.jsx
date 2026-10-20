@@ -27,7 +27,6 @@ export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode =
           <div className="space-y-4 sm:col-span-2 md:col-span-1">
             <Link to={ROUTES.home} className="flex items-center gap-2 sm:gap-3 group py-2">
               <div 
-                // ✅ نسخ كلاسات الناف بار حرفياً (مسافات، إطار، دوران، وتأثيرات الخلفية للدارك واللايت)
                 className={`p-1 sm:p-1.5 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 transition-all duration-300 group-hover:scale-105 ${
                   darkMode 
                     ? 'bg-slate-900/60 border border-slate-700/50 shadow-inner' 
@@ -39,7 +38,6 @@ export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode =
                   alt={isAr ? "شعار شركة كيانكو" : "Kianko Logo"}
                   width="150"
                   height="45"
-                  // ✅ نسخ كلاسات الصورة حرفياً وتطبيق نفس الظل الأحمر (Red Drop-shadow)
                   className="h-8 sm:h-11 w-auto object-contain rounded-lg" 
                   style={{
                     filter: `drop-shadow(0px 2px 6px rgba(201, 37, 44, 0.35))`

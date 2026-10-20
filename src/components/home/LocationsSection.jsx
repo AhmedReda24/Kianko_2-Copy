@@ -47,7 +47,7 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
   const waNumber = digitsOnly(active.whatsapp);
 
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
-  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-700'; // تم تعزيز التباين
+  const textDesc = darkMode ? 'text-slate-300' : 'text-slate-700'; 
   const tabActiveBg = darkMode ? 'bg-white/10 text-white border-slate-300' : 'bg-slate-200 text-slate-900 border-slate-400';
   const tabInactiveBg = darkMode ? 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-sm';
   const detailBoxBg = darkMode ? 'bg-[#0B1B3A] border-blue-900/60 text-white' : 'bg-white border-slate-200 shadow-2xl text-slate-800';
@@ -204,7 +204,6 @@ export default function LocationsSection({ isAr, themeColor, asPage = false, dar
                       href={`https://wa.me/${waNumber}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      // ✅ تم تغيير اللون إلى green-700 لحل مشكلة التباين مع النص الأبيض
                       className={`${actionBase} text-white bg-green-700 hover:bg-green-800 shadow-lg`}
                     >
                       <MessageCircle className="w-4 h-4" />

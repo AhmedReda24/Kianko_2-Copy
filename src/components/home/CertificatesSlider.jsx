@@ -40,7 +40,7 @@ export default function CertificatesSlider({ isAr, themeColor = '#C9252C', darkM
       descEn: item.descEn,
       descAr: item.descAr,
       img: item.file ? item.file.replace(/\.pdf$/i, '.webp') : '/Image/ISO-9001-2015.webp',
-      file: item.file // ملف الـ PDF الأصلي
+      file: item.file 
     }));
 
     // 2. مستندات قاعدة البيانات المضافة من لوحة التحكم
@@ -52,7 +52,7 @@ export default function CertificatesSlider({ isAr, themeColor = '#C9252C', darkM
       descEn: item.issuer ? `Issuer/Project: ${item.issuer}` : 'Official project approval submittal.',
       descAr: item.issuer ? `الجهة / المشروع: ${item.issuer}` : 'اعتماد رسمي وموثق للمشروع.',
       img: item.file_url ? item.file_url.replace(/\.pdf$/i, '.webp') : '/Image/ISO-9001-2015.webp',
-      file: item.file_url // رابط ملف الـ PDF أو الصورة
+      file: item.file_url
     }));
 
     // 3. شهادات الأيزو الثابتة الأساسية

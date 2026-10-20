@@ -76,7 +76,6 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C', dark
     },
   ];
 
-  // كلاسات الألوان الصريحة لضمان توافق التباين 100%
   const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-slate-100 border-slate-300';
   const innerCardBg = darkMode ? 'bg-[#061022] border-blue-900/40' : 'bg-white border-slate-200';
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';

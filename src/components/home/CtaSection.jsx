@@ -3,10 +3,8 @@ import { ROUTES } from '../../routes';
 import CtaLink from '../ui/CtaLink';
 
 export default function CtaSection({ isAr, themeColor = '#C9252C', darkMode = true }) {
-  // تثبيت رقم سعودي رسمي ومتسق مع بيانات فروع السعودية
+ 
   const phone = '+966 50 557 0663';
-
-  // تباين الحدود والخلفيات حسب الثيم للـ Cta Box
   const borderCls = darkMode ? 'border border-blue-900/60' : 'border border-slate-300 shadow-xl';
 
   return (

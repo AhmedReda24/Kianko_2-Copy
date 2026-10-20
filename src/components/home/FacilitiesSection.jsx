@@ -29,7 +29,7 @@ export default function FacilitiesSection({ isAr, themeColor = '#C9252C', darkMo
             src="/Image/factory-main.webp"
             alt="Kianko Facility"
             loading="lazy"
-            width="600" // ✅ تحديد الأبعاد لتحسين الأداء
+            width="600" 
             height="400"
             className="relative z-10 ms-6 sm:ms-11 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2.75rem)] h-52 sm:h-64 object-cover brightness-90 rounded-2xl shadow-xl"
           />
@@ -49,7 +49,6 @@ export default function FacilitiesSection({ isAr, themeColor = '#C9252C', darkMo
 
           <Link
             to={ROUTES.contact}
-            // ✅ تم إضافة drop-shadow-md وزيادة التباين لتحسين Visibility
             className={`absolute z-10 bottom-6 end-[2%] flex flex-col items-center gap-2 text-xs font-bold tracking-widest uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white drop-shadow-md ${darkMode ? 'text-red-400' : 'text-red-600'}`}
             style={{ color: darkMode ? '#FF4D4D' : themeColor }} // تعديل اللون ليكون ساطعاً أكثر في Dark Mode
           >

@@ -11,9 +11,7 @@ import { projects as localProjects } from '../data/projects';
 // كاش بسيط لتخزين البيانات ومنع التكرار
 const cache = new Map();
 
-/**
- * بيرجّع البيانات المحلية كـ Fallback فوري، بينما يحاول جلب البيانات المحدثة من Supabase
- */
+
 function useRemote(key, fetcher, fallback) {
     const [data, setData] = useState(() => (cache.get(key) !== undefined ? cache.get(key) : fallback));
 
@@ -41,7 +39,6 @@ export const useLocations = () => useRemote('locations', api.fetchLocations, loc
 export const useProducts = () => useRemote('products', api.fetchProducts, localProducts);
 export const useAccreditations = () => useRemote('accreditations', api.fetchAccreditations, localAccreditations);
 
-// تم جعل الشهادات تعتمد على البيانات المحلية (accreditations.js) مباشرة لمنع خطأ عمود sort_order في Supabase
 export const useCertificates = () => localCertificates;
 
 export const useJobs = () => useRemote('jobs', api.fetchJobs, localJobs);

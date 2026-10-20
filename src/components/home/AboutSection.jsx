@@ -29,7 +29,6 @@ const pillars = [
 export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = true }) {
   const reduce = useReducedMotion();
 
-  // تم تحسين التباين (Contrast) برفع درجة سطوع النصوص
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
   const textDesc = darkMode ? 'text-slate-200' : 'text-slate-700';
   const cardBg = darkMode ? 'border-slate-800 bg-slate-900/60 text-white' : 'border-slate-200 bg-white shadow-md text-slate-900';
@@ -51,7 +50,7 @@ export default function AboutSection({ isAr, themeColor = '#C9252C', darkMode = 
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* تم إضافة الأبعاد الصريحة للصورة width و height */}
+          
           <img
             src="/Image/factory-main.webp"
             alt="Kianko Factory"

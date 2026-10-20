@@ -5,7 +5,7 @@
       <iframe
         src={`${cert.file || item.file}#page=1&view=FitH&toolbar=0&navpanes=0`}
         title={cert.name || item.name}
-        loading="lazy" // ✅ تمت إضافتها لتحسين الأداء بشكل جذري
+        loading="lazy"
         className="w-full h-full pointer-events-none scale-105"
       />
     </div>
@@ -31,7 +31,6 @@
       target="_blank"
       rel="noreferrer"
       download
-      // ✅ تمت إضافة min-h-[44px] وتوسيط المحتوى لحل مشكلة الـ Accessibility
       className="w-full flex items-center justify-center min-h-[44px] rounded-xl bg-slate-100 text-slate-800 hover:bg-[#0A1832] hover:text-white transition-all text-xs font-semibold"
     >
       {lang === 'ar' ? 'تحميل المستند' : 'Download Certificate'}

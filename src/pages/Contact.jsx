@@ -122,7 +122,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
     }
   };
 
-  // ✅ تم تحسين التباين ليطابق متطلبات Lighthouse 100%
   const cardBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/40' : 'bg-white text-slate-800 border-slate-200 shadow-xl';
   const formCardBg = darkMode ? 'bg-slate-900/50 border-slate-800 text-white' : 'bg-white border-slate-200 shadow-xl text-slate-800';
   const inputBg = darkMode ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-500';
@@ -169,7 +168,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
                     <a
                       href={telHref(l.phone)}
                       dir="ltr"
-                      // ✅ تم تكبير مساحة النقر للرقم
                       className={`inline-flex items-center gap-2 font-semibold py-1 px-1 hover:opacity-80 min-h-[44px] ${textTitle}`}
                     >
                       <Phone className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
@@ -190,7 +188,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
                 </div>
                 <div className="min-w-0">
                   <h3 className={`font-bold py-1 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{pick('Email Address', 'البريد الإلكتروني')}</h3>
-                  {/* ✅ تم تكبير مساحة النقر للإيميل */}
                   <a href={`mailto:${em}`} className={`inline-block py-1 px-1 mt-1 hover:opacity-80 break-all min-h-[44px] ${textDesc}`}>
                     {em}
                   </a>
@@ -202,7 +199,6 @@ export default function Contact({ lang = 'en', themeColor = '#C9252C', darkMode 
           <div className={`border-t pt-6 ${darkMode ? 'border-blue-900' : 'border-slate-200'}`}>
             <Link
               to={ROUTES.locations}
-              // ✅ تم تكبير مساحة النقر للرابط السفلي
               className={`inline-flex items-center justify-center gap-2 text-sm font-bold hover:underline min-h-[44px] px-2 ${textTitle}`}
             >
               {pick('All locations & maps', 'كل الفروع والخرائط')}

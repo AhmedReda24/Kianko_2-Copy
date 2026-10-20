@@ -38,7 +38,6 @@ export default function MenaReachSection({ isAr, themeColor = '#C9252C', darkMod
           </p>
         </div>
 
-        {/* شبكة الكروت: موبايل 1 عمود (أفقي) — تابلت 2×2 — لاب 4 أعمدة */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           {highlights.map((h) => {
             const Icon = h.icon;

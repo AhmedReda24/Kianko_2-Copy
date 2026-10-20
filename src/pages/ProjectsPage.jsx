@@ -5,8 +5,6 @@ import { ROUTES } from '../routes';
 export default function ProjectsPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const projects = useProjects();
-
-  // الألوان المتكيفة مع الثيم
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';
   const textDesc = darkMode ? 'text-slate-400' : 'text-slate-600';
   const emptyBox = darkMode ? 'border-dashed border-blue-900/70 text-slate-300' : 'border-dashed border-slate-300 text-slate-700 bg-white shadow-md';

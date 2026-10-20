@@ -62,7 +62,6 @@ export default function FaqSection({ isAr, themeColor = '#e11d48', darkMode = tr
         </p>
       </div>
 
-      {/* قائمة الكروت - متجاوبة ومزودة بأنيميشن انسيابي سلس */}
       <div className="w-full max-w-5xl mx-auto space-y-3.5 sm:space-y-4">
         {faqs.map((faq, idx) => {
           const isOpen = openIndex === idx;

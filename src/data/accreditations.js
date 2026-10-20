@@ -9,7 +9,7 @@ export const accreditations = [{
         descAr: 'اعتماد التوريد والمواد الرسمي الخاص بمشروع سيفن (SEVEN).',
         descEn: 'Official material submittal approval for Seven project.',
         file: `${BASE_URL}Approval-Seven.pdf`,
-        image: `${BASE_URL}Approval-Seven.webp` // 👈 ربط صورة الشهادة المباشرة
+        image: `${BASE_URL}Approval-Seven.webp`
     },
     {
         id: 'approval-02',

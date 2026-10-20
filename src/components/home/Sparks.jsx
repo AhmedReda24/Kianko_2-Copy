@@ -1,6 +1,4 @@
 import { motion, useReducedMotion } from 'motion/react';
-
-// شرارات حديد بتطلع من أسفل الهيرو (قيم ثابتة محسوبة، من غير عشوائية أثناء الريندر)
 const sparks = Array.from({ length: 16 }, (_, i) => ({
   left: (i * 53 + 17) % 100,
   size: 2 + ((i * 7) % 4),
@@ -25,7 +23,7 @@ export default function Sparks() {
             width: s.size, 
             height: s.size, 
             boxShadow: '0 0 8px 2px rgba(251,191,36,0.55)',
-            willChange: 'transform, opacity' // السطر ده هينقل الانيميشن لكرت الشاشة فوراً
+            willChange: 'transform, opacity'
           }}
           initial={{ y: 0, x: 0, opacity: 0 }}
           animate={{ y: -s.rise, x: s.drift, opacity: [0, 1, 0] }}

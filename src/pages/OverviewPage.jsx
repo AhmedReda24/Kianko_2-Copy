@@ -153,7 +153,6 @@ export default function OverviewPage({ lang = 'en', themeColor = '#C9252C', dark
             className={`group rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 ${cardBg}`}
           >
             <div>
-              {/* حاوية الصورة */}
               <div className={`relative overflow-hidden h-44 sm:h-52 ${innerCardBg}`}>
                 <img
                   src={card.img}

@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/
 import { Menu, X, Globe, ChevronDown, Sun, Moon } from 'lucide-react';
 import { ROUTES } from '../routes';
 
-// تم تعديل الامتداد لـ webp للأداء
 import logoImg from "../../assets/logo.webp";
 
 const pages = {
@@ -130,7 +129,6 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
                 ? 'bg-slate-900/60 border border-slate-700/50 shadow-inner' 
                 : 'bg-slate-50 border border-slate-200/80 shadow-sm'
             }`}>
-              {/* تم إضافة الأبعاد صراحة */}
               <img 
                 src={logoImg} 
                 alt={isAr ? "شعار شركة كيانكو" : "KIANKO Logo"}
@@ -144,7 +142,6 @@ export default function Navbar({ lang, setLang, darkMode, setDarkMode, themeColo
             </div>
 
             <div className="text-start leading-tight">
-              {/* تم إضافة drop-shadow-md لتحسين التباين */}
              <span className={`block font-black tracking-wider text-sm sm:text-xl drop-shadow-md transition-[font-size] duration-300 ${scrolled ? 'sm:text-xl' : 'sm:text-2xl'}`} style={{ color: themeColor }}>
                 KIANKO <span className={darkMode ? 'text-white' : 'text-slate-900'}>COMPANY</span>
               </span>

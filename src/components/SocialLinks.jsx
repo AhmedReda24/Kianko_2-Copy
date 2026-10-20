@@ -1,6 +1,5 @@
 import { social } from '../config/social';
 
-// lucide-react v1 شال أيقونات البراندات، فالأيقونات هنا SVG مباشر.
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
 
 const items = [
@@ -48,9 +47,7 @@ const items = [
   },
 ];
 
-// ✅ استقبال darkMode كـ Prop لضبط الألوان بناءً على حالة الموقع
 export default function SocialLinks({ themeColor = '#C9252C', isAr = false, darkMode = true }) {
-  // تحديد ألوان الأيقونات بناءً على الوضع الداكن أو الفاتح
   const baseColors = darkMode 
     ? 'border-white/15 bg-white/5 text-slate-200 hover:text-white' 
     : 'border-slate-300 bg-slate-200 text-slate-600 hover:text-white';
@@ -64,7 +61,6 @@ export default function SocialLinks({ themeColor = '#C9252C', isAr = false, dark
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            // ✅ زيادة حجم الدائرة إلى h-11 w-11 (44px) لتتوافق مع معايير مساحة اللمس 100% في Lighthouse
             className={`grid place-items-center h-11 w-11 rounded-full border transition-colors duration-300 hover:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white shadow-sm ${baseColors}`}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColor)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}

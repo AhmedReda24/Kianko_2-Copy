@@ -45,8 +45,6 @@ export default function Products({ lang = 'en', themeColor = '#C9252C', darkMode
   const rawProducts = useProducts();
   const [category, setCategory] = useState('all');
   const [query, setQuery] = useState('');
-
-  // تحكم صريح بالألوان حسب الثيم
   const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-white border-slate-200';
   const innerImgBg = darkMode ? 'bg-[#061022]' : 'bg-slate-100';
   const textTitle = darkMode ? 'text-white' : 'text-slate-900';

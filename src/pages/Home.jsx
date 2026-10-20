@@ -12,7 +12,6 @@ import MenaReachSection from '../components/home/MenaReachSection';
 export default function Home({ lang, themeColor, darkMode = true }) {
   const isAr = lang === 'ar';
 
-  // خلفية الصفحة العامة المتكيبة مع الثيم
   const pageBg = darkMode ? 'bg-[#050C1E] text-slate-100' : 'bg-white text-slate-900';
 
   return (

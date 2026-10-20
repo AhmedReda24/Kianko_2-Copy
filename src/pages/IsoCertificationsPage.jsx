@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShieldCheck, Award, FileCheck, CheckCircle2, ZoomIn, X, Download, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 import { ROUTES } from '../routes';
-import { supabase } from '../lib/supabase'; // ربط بالسيرفر لجلب الأيزو الحقيقي
-
+import { supabase } from '../lib/supabase';
 export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
@@ -11,13 +10,12 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
   const [selectedCert, setSelectedCert] = useState(null);
   const [dbCertifications, setDbCertifications] = useState([]);
 
-  // جلب شهادات الأيزو والاعتمادات من جدول certifications وتصفية الأيزو فقط
   useEffect(() => {
     async function fetchCerts() {
       const { data, error } = await supabase
         .from('certifications')
         .select('*')
-        .eq('category', 'iso'); // جلب الـ ISO فقط لصفحة الأيزو
+        .eq('category', 'iso');
       if (!error && data) {
         setDbCertifications(data);
       }
@@ -25,7 +23,6 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
     fetchCerts();
   }, []);
 
-  // المتغيرات المتكيفة مع الثيم
   const cardBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white' : 'bg-white border-slate-200 text-slate-950 shadow-xl';
   const textTitle = darkMode ? 'text-white' : 'text-slate-950';
   const textDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
@@ -33,8 +30,6 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
   const subSectionBg = darkMode ? 'bg-[#0A1832] border-blue-900/60' : 'bg-white border-slate-200 shadow-2xl';
   const subBoxBg = darkMode ? 'bg-slate-900/80 border-blue-900/40 text-white' : 'bg-slate-50 border-slate-200 text-slate-900';
   const modalBg = darkMode ? 'bg-[#0A1832] text-white border-blue-900/80' : 'bg-white text-slate-900 border-slate-300';
-
-  // دمج الشهادات الثابتة مع ما تم إضافته من الداشبورد لتظهر فوراً
   const defaultIsoList = [
     {
       id: 'iso-9001',
@@ -74,7 +69,6 @@ export default function IsoCertificationsPage({ lang = 'en', themeColor = '#C925
     }
   ];
 
-  // دمج البيانات (لو في بيانات جديدة مضافة من الداشبورد بنوع iso تظهر تلقائياً)
   const accreditationsList = [
     ...defaultIsoList,
     ...dbCertifications.map(c => ({
