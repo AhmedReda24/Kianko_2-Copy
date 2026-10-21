@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 
 export default function SectionHeading({ children, themeColor = '#C9252C', as: Tag = 'h2', className = '', darkMode = true }) {
-  // لون العنوان يتغير بذكاء حسب الثيم (أسود غامق في اللايت، وأبيض في الدارك)
   const textColor = darkMode ? 'text-white' : 'text-slate-900';
 
   return (

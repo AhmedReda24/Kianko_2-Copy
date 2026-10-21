@@ -84,9 +84,9 @@ export default function Footer({ lang = 'en', themeColor = '#C9252C', darkMode =
             <h4 className={`font-black text-sm sm:text-base mb-3 px-1 ${
               darkMode ? 'text-white' : 'text-black'
             }`}>
-              {isAr ? 'الجودة والحوكمة' : 'Compliance'}
+              {isAr ? 'الجودة والاعتمادات' : 'Compliance'}
             </h4>
-            <Link to={ROUTES.quality} className={linkCls} onMouseEnter={(e) => e.target.style.color = themeColor} onMouseLeave={(e) => e.target.style.color = ''}>{isAr ? 'الحوكمة والجودة' : 'Governance & Quality'}</Link>
+            <Link to={ROUTES.quality} className={linkCls} onMouseEnter={(e) => e.target.style.color = themeColor} onMouseLeave={(e) => e.target.style.color = ''}>{isAr ? 'الجودة والاعتمادات' : 'Quality and Accreditations'}</Link>
             <Link to={ROUTES.iso} className={linkCls} onMouseEnter={(e) => e.target.style.color = themeColor} onMouseLeave={(e) => e.target.style.color = ''}>{isAr ? 'شهادات الأيزو' : 'ISO Certifications'}</Link>
             <Link to={ROUTES.careers} className={linkCls} onMouseEnter={(e) => e.target.style.color = themeColor} onMouseLeave={(e) => e.target.style.color = ''}>{isAr ? 'الوظائف' : 'Careers'}</Link>
           </nav>

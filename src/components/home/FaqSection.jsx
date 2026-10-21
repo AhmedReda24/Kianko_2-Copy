@@ -7,8 +7,8 @@ const faqs = [
   {
     qEn: 'What types of steel products does KIANKO specialize in?',
     qAr: 'ما هي المنتجات الرئيسية التي تتخصص فيها كيانكو؟',
-    aEn: 'We specialize in heavy-duty Cable Management Systems, Rebar Rolling, Plaster Profiles, and Hot-Dip Galvanizing tailored for major infrastructure projects.',
-    aAr: 'نتخصص في تصنيع أنظمة إدارة الكابلات الثقيلة، تدلفين حديد التسليح، مقاطع المحارة والمباني، وتوفير خدمات الجلفنة على الساخن للمشاريع الكبرى.',
+    aEn: 'We specialize in heavy-duty Cable Management Systems, Plaster Profiles, and Hot-Dip Galvanizing tailored for major infrastructure projects.',
+    aAr: 'نتخصص في تصنيع أنظمة إدارة الكابلات الثقيلة، مقاطع المحارة والمباني، وتوفير خدمات الجلفنة على الساخن للمشاريع الكبرى.',
   },
   {
     qEn: 'Are KIANKO products certified to international quality standards?',
@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     qEn: 'What is the standard delivery timeframe across the MENA region?',
-    qAr: 'ما هي مدد التوريد والشحن للمشاريع داخل وخارج الدولة؟',
+    qAr: 'ما هي مدة التوريد والشحن للمشاريع داخل وخارج الدولة؟',
     aEn: 'Delivery schedules depend on order volume, but our strategic distribution hubs in Egypt and KSA ensure rapid dispatch for urgent project timelines.',
     aAr: 'تعتمد المواعيد على حجم الطلب، ولكن بفضل شبكة فروعنا ومصانعنا نضمن أسرع معدلات توريد للمشاريع الإقليمية.',
   },

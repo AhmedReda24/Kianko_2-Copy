@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 
-// كارت بيميل ثلاثي الأبعاد مع حركة الماوس + لمعة زجاجية
 export default function TiltCard({ children, className = '', max = 7 }) {
   const reduce = useReducedMotion();
   const ref = useRef(null);

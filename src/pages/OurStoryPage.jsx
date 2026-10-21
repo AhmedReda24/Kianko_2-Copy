@@ -160,7 +160,7 @@ export default function OurStoryPage({ lang = 'en', themeColor = '#C9252C', dark
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-4">
         {[
           { target: 3, suffix: '+', labelEn: 'Years of Experience', labelAr: 'سنوات من الخبرة الريادية' },
-          { target: 500, suffix: '+', labelEn: 'Major Projects Delivered', labelAr: 'مشروع قومي وصناعي منجز' },
+          { target: 14, suffix: '+', labelEn: 'Major Projects Delivered', labelAr: 'مشروع قومي وصناعي منجز' },
           { target: 100, suffix: '%+', labelEn: 'Quality Compliance', labelAr: 'مطابقة تامة للمواصفات العالمية' },
           { target: 118, suffix: '+', labelEn: 'Export The Governorates', labelAr: 'محافظات تصل إليها منتجاتنا' },
         ].map((stat, i) => (

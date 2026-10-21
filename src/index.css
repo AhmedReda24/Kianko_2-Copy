@@ -21,3 +21,10 @@ html {
 body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+html {
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    overflow-anchor: none;
+    /* يمنع المتصفح من القفز التلقائي عند تغير ارتفاع أي عنصر */
+}

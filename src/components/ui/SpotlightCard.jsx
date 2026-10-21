@@ -1,11 +1,10 @@
 import { useRef } from 'react';
 
-// كارت بيطلع عليه إضاءة بتتبع الماوس (من غير re-render: بنحدّث متغيرات CSS بس)
 export default function SpotlightCard({
   as: Tag = 'div',
   className = '',
   color = 'rgba(255,255,255,0.10)',
-  darkMode, // 👈 استخراج darkMode هنا يمنع تمريره للـ DOM
+  darkMode,
   children,
   ...rest
 }) {

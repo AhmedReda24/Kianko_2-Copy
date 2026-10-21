@@ -10,14 +10,13 @@ const variants = {
   glass: 'text-white border border-white/40 bg-white/5 backdrop-blur-sm hover:bg-white/15',
 };
 
-// زر بلمعة بتعدّي عليه عند الهوفر وسهم بيتحرك
 export default function CtaLink({ 
   to, 
   href, 
   themeColor, 
   variant = 'primary', 
   arrow = true, 
-  darkMode, // 👈 استخراج darkMode هنا يمنع وصوله لعناصر الـ DOM التحتية
+  darkMode,
   className = '', 
   children, 
   ...rest 

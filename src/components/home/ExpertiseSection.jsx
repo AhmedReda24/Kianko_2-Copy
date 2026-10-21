@@ -8,13 +8,13 @@ const areas = [
   {
     title: 'Cable Management', titleAr: 'أنظمة إدارة الكابلات',
     text: 'Heavy-duty cable trays, ladders and accessories, fabricated to project specifications.',
-    textAr: 'حوامل وسلالم كابلات ثقيلة وملحقاتها، مصنّعة حسب مواصفات كل مشروع.',
+    textAr: 'حوامل وسلالم كابلات ثقيلة، مصنّعة حسب مواصفات كل مشروع.',
     img: '/Image/expertise-cable-management.webp',
   },
   {
-    title: 'Plastering', titleAr: 'إكسسوارات المحارة وبناء الطوب',
-    text: 'Essential metal accessories and mesh profiles for solid plastering finishing.',
-    textAr: 'شبكات أساسية لتشطيبات المحارة وأعمال بناء الطوب بدقة.',
+    title: 'Plastering', titleAr: 'بناء الطوب',
+    text: 'Essential metal mesh profiles for solid plastering finishing.',
+    textAr: 'شبكات أساسية في أعمال بناء الطوب بدقة.',
     img: '/Image/expertise-plastering-accessories.webp',
   },
   {
