@@ -26,7 +26,7 @@ export default function HeroSection({ isAr, themeColor = '#C9252C', darkMode = t
   const LETTERS = 'KIANKO'.split('');
 
   const quickLinks = [
-    { to: ROUTES.products, icon: Layers, t: 'Our Solutions', tAr: 'منتجاتنا', s: 'Cable trays, rebar, profiles', sAr: 'حوامل كابلات، حديد تسليح، مقاطع' },
+    { to: ROUTES.products, icon: Layers, t: 'Our Solutions', tAr: 'منتجاتنا', s: 'Cable trays, Plastering and Block Accessories', sAr: 'حوامل كابلات، والمقاطع المعدنية بأعلى جودة' },
     { to: ROUTES.iso, icon: Award, t: 'Accreditations', tAr: 'الاعتمادات', s: 'Certified quality', sAr: 'جودة معتمدة' },
     { to: ROUTES.locations, icon: MapPin, t: 'Branches & Office', tAr: 'الفروع والمكتب', s: 'Where to find us', sAr: 'أماكن تواجدنا' },
   ];

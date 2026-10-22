@@ -1,15 +1,229 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Upload, CheckCircle2, AlertCircle, Loader2, X, MapPin, Briefcase } from 'lucide-react';
+import { motion } from 'motion/react';
+import {
+  Upload, CheckCircle2, AlertCircle, Loader2, X,
+  MapPin, Briefcase, ShieldCheck, FileText
+} from 'lucide-react';
 import { useJobs } from '../hooks/useContent';
 import SpotlightCard from '../components/ui/SpotlightCard';
 import { submitJobApplication, CV_MAX_BYTES, CV_TYPES } from '../lib/api';
 import { supabase } from '../lib/supabase';
+
+// ثوابت الحماية وتحجيم المرسل (Rate Limiting)
+const COOLDOWN_MS = 15 * 60 * 1000; // 15 دقيقة بين كل طلب توظيف وآخر
+const MAX_DAILY_APPLICATIONS = 3; // أقصى عدد طلبات توظيف في اليوم الواحد
+const MIN_FILL_TIME_MS = 3000; // 3 ثوانٍ كحد أدنى لمنع الإرسال الآلي (Bots)
+const MIN_CV_BYTES = 2048; // 2 كيلوبايت كحد أدنى لمنع الملفات الفارغة الوهمية
+
+const BLOCKED_WORDS = [
+  'test', 'testing', 'tester', 'asdf', 'qwerty', 'admin', 'root', 'null', 'undefined',
+  'script', 'alert', 'onload', 'onerror', 'svg', 'iframe', 'javascript', 'eval',
+  'تجربه', 'تجربة', 'تيست', 'تست', 'وهمي', 'فحص', 'هاك', 'هكر'
+];
+
+// 1. دالة تطهير فورية تمنع ثغرات XSS أثناء الكتابة وقبل الإرسال
+function sanitizePlainText(input = '', maxLen = 150) {
+  if (!input) return '';
+  return String(input)
+    .replace(/<[^>]*>?/gm, '') // إزالة أي وسوم HTML نهائياً
+    .replace(/[<>{}[\]\\^`~;$]/g, '') // منع الرموز البرمجية الخطرة
+    .replace(/javascript\s*:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/[\u0000-\u001F\u007F]/g, '')
+    .slice(0, maxLen);
+}
+
+// 2. دالة تطهير اسم ملف السيرة الذاتية من أي أكواد XSS أو امتدادات مزدوجة خبيثة
+function sanitizeFileName(fileName = '') {
+  const clean = sanitizePlainText(fileName, 100).replace(/[^a-zA-Z0-9\u0621-\u064A._-]/g, '_');
+  return clean || 'resume.pdf';
+}
+
+// 3. دالة ذكية لكشف الكلمات العشوائية مثل "Moggjff" أو الحروف المكررة مثل "aaaa"
+function isGibberishOrFakeText(text = '') {
+  const clean = text.trim().toLowerCase();
+  if (!clean) return true;
+
+  // منع تكرار نفس الحرف 3 مرات متتالية أو أكثر
+  if (/(.)\1{2,}/i.test(clean)) return true;
+
+  const words = clean.split(/\s+/);
+  for (const w of words) {
+    if (BLOCKED_WORDS.includes(w)) return true;
+    const isLatin = /^[a-z]+$/i.test(w);
+    if (isLatin && w.length >= 4) {
+      if (!/[aeiouy]/i.test(w)) return true; // كلمة بدون أي حرف متحرك
+      if (/[bcdfghjklmnpqrstvwxz]{5,}/i.test(w)) return true; // 5 حروف ساكنة متتالية
+    }
+  }
+
+  return false;
+}
+
+// 4. دالة التحقق الصارمة من بيانات المتقدم للوظيفة
+function validateCareerForm({ name, email, phone }, file, isAr = true) {
+  const errors = [];
+
+  const cleanName = sanitizePlainText(name, 60).trim().replace(/\s+/g, ' ');
+  const cleanEmail = sanitizePlainText(email, 100).trim().toLowerCase();
+  const cleanPhone = sanitizePlainText(phone, 20).trim().replace(/[\s()-]/g, '');
+
+  // أ) التحقق من الاسم الثنائي أو الثلاثي الحقيقي
+  const nameWords = cleanName.split(' ').filter((w) => w.length >= 2);
+  const nameRegex = /^[\u0621-\u064Aa-zA-Z\s]{5,60}$/;
+  if (
+    !cleanName ||
+    nameWords.length < 2 ||
+    !nameRegex.test(cleanName) ||
+    isGibberishOrFakeText(cleanName)
+  ) {
+    errors.push(
+      isAr
+        ? 'يرجى كتابة الاسم الثنائي أو الثلاثي الحقيقي بالكامل (لا يُقبل اسم مفرد أو حروف عشوائية مثل test).'
+        : 'Please enter your real full name (first and last name, at least two words without random characters).'
+    );
+  }
+
+  // ب) التحقق الصارم من البريد الإلكتروني
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/;
+  const [localPart = '', domainPart = ''] = cleanEmail.split('@');
+  const domainName = domainPart.split('.')[0] || '';
+  const isFakeEmail =
+    localPart.length < 3 ||
+    /^(.)\1+$/i.test(localPart) ||
+    /^(test|testing|admin|user|abc|abcd|123|1234|qwe|asdf|none|null|fake)$/i.test(localPart) ||
+    /^(test|example|invalid|localhost|temp|tempmail|mailinator)$/i.test(domainName);
+
+  if (!cleanEmail || !emailRegex.test(cleanEmail) || isFakeEmail) {
+    errors.push(
+      isAr
+        ? 'يرجى إدخال بريد إلكتروني رسمي أو شخصي صحيح (لا تُقبل الإيميلات التجريبية أو الوهمية).'
+        : 'Please enter a valid, real email address (test or fake emails are not accepted).'
+    );
+  }
+
+  // ج) التحقق الصارم من رقم الجوال
+  const digitsOnly = cleanPhone.replace(/\D/g, '');
+  const isSaudiMobile = /^(05\d{8}|9665\d{8})$/.test(digitsOnly);
+  const isEgyptMobile = /^(01[0125]\d{8}|201[0125]\d{8})$/.test(digitsOnly);
+  const isGccOrIntlMobile = /^[1-9]\d{9,13}$/.test(digitsOnly);
+  const hasRepeatedDigits = /(\d)\1{4,}/.test(digitsOnly) || /012345|123456|654321/.test(digitsOnly);
+
+  if (
+    !cleanPhone ||
+    hasRepeatedDigits ||
+    !(isSaudiMobile || isEgyptMobile || isGccOrIntlMobile)
+  ) {
+    errors.push(
+      isAr
+        ? 'يرجى إدخال رقم جوال صحيح وفعّال (مثال للسعودية: 05XXXXXXXX أو +9665XXXXXXXX).'
+        : 'Please enter a valid mobile number (e.g. Saudi mobile: 05XXXXXXXX or +9665XXXXXXXX).'
+    );
+  }
+
+  // د) التحقق الأمني من ملف السيرة الذاتية (CV)
+  if (!file) {
+    errors.push(
+      isAr
+        ? 'يرجى إرفاق ملف السيرة الذاتية (بصيغة PDF أو Word) قبل الإرسال.'
+        : 'Please attach your CV (PDF or Word document) before submitting.'
+    );
+  } else {
+    const allowedExtRegex = /\.(pdf|doc|docx)$/i;
+    const dangerousDoubleExt = /\.(exe|js|html|htm|svg|php|sh|bat|cmd)\./i;
+    if (
+      !CV_TYPES.includes(file.type) ||
+      !allowedExtRegex.test(file.name) ||
+      dangerousDoubleExt.test(file.name)
+    ) {
+      errors.push(
+        isAr
+          ? 'صيغة الملف غير مدعومة أو غير آمنة. يرجى رفع ملف PDF أو Word فقط.'
+          : 'Unsupported or unsafe file format. Please upload a PDF or Word file only.'
+      );
+    } else if (file.size < MIN_CV_BYTES) {
+      errors.push(
+        isAr
+          ? 'الملف المرفق صغير جداً أو فارغ. يرجى رفع سيرة ذاتية صالحة.'
+          : 'The attached file is empty or too small. Please upload a valid CV.'
+      );
+    } else if (file.size > CV_MAX_BYTES) {
+      errors.push(
+        isAr
+          ? 'حجم الملف يتجاوز الحد الأقصى المسموح به (5 ميجابايت).'
+          : 'File size exceeds the maximum allowed limit (5 MB).'
+      );
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    cleanData: {
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+    },
+  };
+}
+
+// 5. فحص وتسجيل تحجيم المرسل (Rate Limit) لمنع إغراق طلبات التوظيف
+function checkCareerRateLimit(isAr) {
+  try {
+    const now = Date.now();
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const rawLog = JSON.parse(localStorage.getItem('kianko_career_rate_limit') || '{}');
+
+    if (rawLog.lastSentAt && now - rawLog.lastSentAt < COOLDOWN_MS) {
+      const remainingMins = Math.ceil((COOLDOWN_MS - (now - rawLog.lastSentAt)) / 60000);
+      return {
+        allowed: false,
+        reason: isAr
+          ? `لقد قمت بإرسال طلب توظيف مؤخراً. يرجى الانتظار ${remainingMins} دقيقة قبل إرسال طلب آخر.`
+          : `You recently submitted an application. Please wait ${remainingMins} minute(s) before applying again.`,
+      };
+    }
+
+    const countToday = rawLog.date === todayStr ? (rawLog.count || 0) : 0;
+    if (countToday >= MAX_DAILY_APPLICATIONS) {
+      return {
+        allowed: false,
+        reason: isAr
+          ? 'لقد وصلت للحد الأقصى المسموح به من طلبات التوظيف اليومية. سيقوم فريق الموارد البشرية بمراجعة طلبك.'
+          : 'You have reached the maximum daily limit of job applications. Our HR team will review your submission.',
+      };
+    }
+
+    return { allowed: true };
+  } catch {
+    return { allowed: true };
+  }
+}
+
+function recordCareerSubmission() {
+  try {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const rawLog = JSON.parse(localStorage.getItem('kianko_career_rate_limit') || '{}');
+    const prevCount = rawLog.date === todayStr ? (rawLog.count || 0) : 0;
+    localStorage.setItem(
+      'kianko_career_rate_limit',
+      JSON.stringify({
+        date: todayStr,
+        count: prevCount + 1,
+        lastSentAt: Date.now(),
+      })
+    );
+  } catch {
+    // ignore storage errors
+  }
+}
 
 export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkMode = true }) {
   const isAr = lang === 'ar';
   const pick = (en, ar) => (isAr ? ar : en);
   const staticJobs = useJobs();
   const formRef = useRef(null);
+  const mountTimeRef = useRef(Date.now());
 
   const [dbJobs, setDbJobs] = useState([]);
   const [deletedJobIds, setDeletedJobIds] = useState([]);
@@ -36,7 +250,7 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
     }
   }, [isAr]);
 
-  // جلب الوظائف المضافة من لوحة التحكم (Supabase) واستبعاد الوظائف الفارغة أو المحذوفة
+  // جلب الوظائف المضافة من لوحة التحكم (Supabase) مع تطهير النصوص واستبعاد المحذوفات
   useEffect(() => {
     const fetchCareersFromDB = async () => {
       let hidden = [];
@@ -56,15 +270,15 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
 
         if (!error && Array.isArray(data)) {
           const validDbJobs = data
-            .filter((j) => j.title && String(j.title).trim().length >= 2)
+            .filter((j) => j.title && sanitizePlainText(j.title, 100).trim().length >= 3)
             .map((j) => ({
               id: `db_${j.id}`,
               rawId: String(j.id),
-              titleEn: j.title_en || j.title,
-              titleAr: j.title,
-              dept: j.department || pick('Engineering & Operations', 'الهندسة والتشغيل'),
-              location: j.location || pick('Riyadh / Jeddah, KSA', 'الرياض / جدة - السعودية'),
-              description: j.description || '',
+              titleEn: sanitizePlainText(j.title_en || j.title, 100),
+              titleAr: sanitizePlainText(j.title, 100),
+              dept: sanitizePlainText(j.department, 80) || pick('Engineering & Operations', 'الهندسة والتشغيل'),
+              location: sanitizePlainText(j.location, 80) || pick('Riyadh / Jeddah, KSA', 'الرياض / جدة - السعودية'),
+              description: sanitizePlainText(j.description, 300) || '',
             }));
           setDbJobs(validDbJobs);
         }
@@ -76,17 +290,16 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
     fetchCareersFromDB();
   }, [isAr]);
 
-  // دمج وظائف الداتا بيز مع الوظائف الأساسية مع فلترة أي وظيفة محذوفة
   const jobs = useMemo(() => {
     const formattedStatic = (staticJobs || [])
       .filter((j) => !deletedJobIds.includes(String(j.id)))
       .map((j) => ({
         ...j,
-        titleEn: j.titleEn || j.title || 'Engineer',
-        titleAr: j.titleAr || j.title || 'مهندس',
-        dept: j.dept || j.department || '',
-        location: j.location || pick('Riyadh / Jeddah', 'الرياض / جدة'),
-        description: j.description || '',
+        titleEn: sanitizePlainText(j.titleEn || j.title || 'Engineer', 100),
+        titleAr: sanitizePlainText(j.titleAr || j.title || 'مهندس', 100),
+        dept: sanitizePlainText(j.dept || j.department || '', 80),
+        location: sanitizePlainText(j.location || pick('Riyadh / Jeddah', 'الرياض / جدة'), 80),
+        description: sanitizePlainText(j.description || '', 300),
       }));
 
     const activeDbJobs = dbJobs.filter(
@@ -97,22 +310,52 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
   }, [dbJobs, staticJobs, deletedJobIds, isAr]);
 
   const selectedJob = jobs.find((j) => j.id === jobId);
-  const set = (k) => (e) => {
-    setForm({ ...form, [k]: e.target.value });
+
+  // تطهير المدخلات لحظياً أثناء الكتابة لمنع إدخال أي كود XSS
+  const set = (k, maxLen = 100) => (e) => {
+    let val = sanitizePlainText(e.target.value, maxLen);
+    if (k === 'phone') {
+      val = val.replace(/[^0-9+\s-]/g, '');
+    }
+    setForm({ ...form, [k]: val });
     if (fileError) setFileError('');
+    if (status === 'error') setStatus('idle');
   };
 
   const onFile = (e) => {
     const f = e.target.files?.[0];
     setFileError('');
     if (!f) return setFile(null);
-    if (!CV_TYPES.includes(f.type)) {
+
+    const allowedExtRegex = /\.(pdf|doc|docx)$/i;
+    const dangerousDoubleExt = /\.(exe|js|html|htm|svg|php|sh|bat|cmd)\./i;
+
+    if (!CV_TYPES.includes(f.type) || !allowedExtRegex.test(f.name) || dangerousDoubleExt.test(f.name)) {
       setFile(null);
-      return setFileError(pick('Please upload a PDF or Word file.', 'يرجى رفع ملف بصيغة PDF أو Word فقط.'));
+      return setFileError(
+        pick(
+          'Unsupported or unsafe file format. Please upload a PDF or Word file only.',
+          'صيغة الملف غير مدعومة أو غير آمنة. يرجى رفع ملف PDF أو Word فقط.'
+        )
+      );
+    }
+    if (f.size < MIN_CV_BYTES) {
+      setFile(null);
+      return setFileError(
+        pick(
+          'The attached file is empty or too small. Please upload a valid CV.',
+          'الملف المرفق صغير جداً أو فارغ. يرجى رفع سيرة ذاتية صالحة.'
+        )
+      );
     }
     if (f.size > CV_MAX_BYTES) {
       setFile(null);
-      return setFileError(pick('File is larger than 5 MB.', 'حجم الملف يتجاوز الحد الأقصى المسموح به (5 ميجابايت).'));
+      return setFileError(
+        pick(
+          'File is larger than 5 MB.',
+          'حجم الملف يتجاوز الحد الأقصى المسموح به (5 ميجابايت).'
+        )
+      );
     }
     setFile(f);
   };
@@ -124,61 +367,61 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (form.website) return setStatus('sent');
+    setFileError('');
 
-    // Validation صارم لمنع المسافات الفارغة
-    const cleanName = form.name.trim();
-    const cleanEmail = form.email.trim();
-    const cleanPhone = form.phone.trim();
+    // 1. فحص مصيدة البوتات (Honeypot + سرعة الملء)
+    if (form.website || Date.now() - mountTimeRef.current < MIN_FILL_TIME_MS) {
+      return setStatus('sent');
+    }
 
-    if (cleanName.length < 3) {
-      return setFileError(pick('Please enter your full name (at least 3 characters).', 'يرجى إدخال الاسم بالكامل بشكل صحيح (3 أحرف على الأقل).'));
+    // 2. فحص تحجيم المرسل (Rate Limit)
+    const rateCheck = checkCareerRateLimit(isAr);
+    if (!rateCheck.allowed) {
+      return setFileError(rateCheck.reason);
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      return setFileError(pick('Please enter a valid email address.', 'يرجى إدخال بريد إلكتروني صحيح.'));
+
+    // 3. التحقق الصارم من الاسم الثنائي والإيميل والجوال وملف السيرة الذاتية
+    const validation = validateCareerForm(form, file, isAr);
+    if (!validation.isValid) {
+      return setFileError(validation.errors[0]);
     }
-    if (cleanPhone.replace(/[^0-9]/g, '').length < 8) {
-      return setFileError(pick('Please enter a valid phone number.', 'يرجى إدخال رقم جوال صحيح.'));
-    }
-    if (!file) {
-      return setFileError(pick('Please attach your CV.', 'يرجى إرفاق ملف السيرة الذاتية (CV) قبل الإرسال.'));
-    }
+
+    const { name: cleanName, email: cleanEmail, phone: cleanPhone } = validation.cleanData;
+    const safeCvFileName = sanitizeFileName(file.name);
 
     setStatus('sending');
-    setFileError('');
 
     try {
       const jobTitleText = selectedJob
-        ? pick(selectedJob.titleEn, selectedJob.titleAr)
-        : pick('General Application', 'تقديم عام');
+        ? sanitizePlainText(pick(selectedJob.titleEn, selectedJob.titleAr), 100)
+        : pick('General Engineering Application', 'تقديم عام للوظائف الهندسية');
 
-      // 1. رفع ملف السيرة الذاتية إلى Supabase Storage وتسجيل الطلب في رسائل الداش بورد ليظهر للأدمن فوراً
+      // رفع السيرة الذاتية باسم مطهر تماماً إلى Supabase Storage
       let cvPublicUrl = '';
       try {
-        const safeFileName = `cv_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const { error: uploadErr } = await supabase.storage.from('certificates').upload(safeFileName, file);
+        const storagePath = `cv_${Date.now()}_${safeCvFileName}`;
+        const { error: uploadErr } = await supabase.storage.from('certificates').upload(storagePath, file);
         if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('certificates').getPublicUrl(safeFileName);
+          const { data: urlData } = supabase.storage.from('certificates').getPublicUrl(storagePath);
           cvPublicUrl = urlData?.publicUrl || '';
         }
       } catch {
-        // المتابعة حتى لو كان الـ bucket مقفلاً
+        // المتابعة بأمان حتى لو كان التخزين مقفلاً
       }
 
       const applicationSummary = isAr
-        ? `[طلب توظيف: ${jobTitleText}]${cvPublicUrl ? ` | رابط السيرة الذاتية: ${cvPublicUrl}` : ` | المرفق: ${file.name}`}`
-        : `[Job Application: ${jobTitleText}]${cvPublicUrl ? ` | CV Link: ${cvPublicUrl}` : ` | Attached: ${file.name}`}`;
+        ? `[طلب توظيف: ${jobTitleText}]${cvPublicUrl ? ` | رابط السيرة الذاتية: ${cvPublicUrl}` : ` | المرفق: ${safeCvFileName}`}`
+        : `[Job Application: ${jobTitleText}]${cvPublicUrl ? ` | CV Link: ${cvPublicUrl}` : ` | Attached: ${safeCvFileName}`}`;
 
       await supabase.from('contact_messages').insert([
         {
           name: cleanName,
           email: cleanEmail,
           phone: cleanPhone,
-          message: applicationSummary,
+          message: sanitizePlainText(applicationSummary, 380),
         },
       ]);
 
-      // 2. استدعاء دالة الـ API الأساسية أيضاً
       try {
         await submitJobApplication({
           name: cleanName,
@@ -190,9 +433,10 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
           lang,
         });
       } catch {
-        // تم حفظ الطلب بالفعل في قاعدة البيانات
+        // تم الحفظ بنجاح في قاعدة البيانات
       }
 
+      recordCareerSubmission();
       setForm({ name: '', email: '', phone: '', website: '' });
       setFile(null);
       setJobId('');
@@ -211,38 +455,53 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
   
   const formBg = darkMode ? 'bg-[#0A1832] border-blue-900/60 text-white' : 'bg-white border-slate-300 text-slate-900 shadow-2xl';
   const inputBg = darkMode 
-    ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus:border-slate-500' 
-    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-slate-400';
+    ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus:border-red-500' 
+    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-red-500';
   const uploadBox = darkMode 
-    ? 'border-slate-700 bg-slate-900/50 hover:border-slate-500 text-slate-300' 
-    : 'border-slate-300 bg-slate-50 hover:border-slate-400 text-slate-700';
+    ? 'border-slate-700 bg-slate-900/50 hover:border-red-500/60 text-slate-300' 
+    : 'border-slate-300 bg-slate-50 hover:border-red-500/60 text-slate-700';
 
   return (
     <div
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12 text-start"
+      dir={isAr ? 'rtl' : 'ltr'}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-12 text-start overflow-x-hidden"
       style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : undefined }}
     >
-      <div className="text-center space-y-3">
-        <h1 className={`text-4xl sm:text-5xl font-black ${textTitle}`}>
-          {pick('Careers at KIANKO STEEL', 'انضم لفرق كيانكو الهندسية')}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="text-center space-y-3"
+      >
+        <h1 className={`text-3xl sm:text-5xl font-black ${textTitle}`}>
+          {pick('Careers at', 'انضم لفرق')}{' '}
+          <span style={{ color: themeColor }}>{pick('KIANKO STEEL', 'كيانكو الهندسية')}</span>
         </h1>
-        <p className={`text-base ${textDesc}`}>
+        <p className={`text-sm sm:text-base max-w-2xl mx-auto ${textDesc}`}>
           {pick(
             'Shape the future of heavy industrial engineering with our team in Saudi Arabia.',
-            'نبحث دائماً عن الكفاءات الهندسية والفنية المتميزة للانضمام إلى فريق عملنا في المملكة العربية السعودية.'
+            'نبحث دائماً عن الكفاءات الهندسية والفنية المتميزة للانضمام إلى فريق عمل شركة كيانكو للصناعات الحديدية في المملكة العربية السعودية.'
           )}
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid lg:grid-cols-2 gap-12 items-start">
-        <div className="space-y-4">
-          <h2 className={`text-2xl font-bold mb-6 ${textTitle}`}>
+      <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-start">
+        {/* قائمة الوظائف المتاحة */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.08 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="space-y-4"
+        >
+          <h2 className={`text-xl sm:text-2xl font-bold mb-6 ${textTitle}`}>
             {pick(`Open Positions (${jobs.length})`, `الوظائف المتاحة حالياً (${jobs.length})`)}
           </h2>
 
           {jobs.length === 0 ? (
             <div className={`p-8 rounded-2xl border text-center ${cardBg}`}>
-              <p className={`text-sm ${textDesc}`}>
+              <p className={`text-sm leading-relaxed ${textDesc}`}>
                 {pick(
                   'No open positions at the moment. You can still send your resume for future opportunities.',
                   'لا توجد وظائف شاغرة معلنة حالياً، يمكنك إرسال سيرتك الذاتية عبر النموذج للتواصل معك عند توفر شواغر تناسب تخصصك.'
@@ -256,27 +515,27 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
                 <SpotlightCard
                   key={job.id}
                   darkMode={darkMode}
-                  className={`${cardBg} p-6 rounded-2xl border flex justify-between items-start sm:items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 ${
+                  className={`${cardBg} p-5 sm:p-6 rounded-2xl border flex justify-between items-start sm:items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 ${
                     on 
                       ? (darkMode ? 'border-red-500/70 ring-1 ring-red-500/30' : 'border-red-500 shadow-lg') 
                       : (darkMode ? 'border-slate-800 hover:border-slate-700' : 'border-slate-200 hover:border-slate-300')
                   }`}
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <h3 className={`font-bold text-base sm:text-lg ${jobTitleColor}`}>
                       {pick(job.titleEn, job.titleAr)}
                     </h3>
                     <div className={`flex flex-wrap items-center gap-3 text-xs ${jobDeptColor}`}>
                       {job.dept && (
                         <span className="inline-flex items-center gap-1 font-semibold">
-                          <Briefcase className="w-3.5 h-3.5 text-red-500" />
-                          {job.dept}
+                          <Briefcase className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                          <span>{job.dept}</span>
                         </span>
                       )}
                       {job.location && (
                         <span className="inline-flex items-center gap-1 font-semibold">
-                          <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                          {job.location}
+                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>{job.location}</span>
                         </span>
                       )}
                     </div>
@@ -299,11 +558,19 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               );
             })
           )}
-        </div>
+        </motion.div>
 
-        <div ref={formRef} className={`p-8 rounded-3xl border shadow-2xl space-y-6 scroll-mt-28 ${formBg}`}>
+        {/* نموذج إرسال السيرة الذاتية المؤمّن */}
+        <motion.div
+          ref={formRef}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.08 }}
+          transition={{ duration: 0.45, delay: 0.08, ease: 'easeOut' }}
+          className={`p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-6 scroll-mt-28 ${formBg}`}
+        >
           <h2 className={`text-xl font-bold ${textTitle}`}>
-            {pick('Send Your Resume', 'إرسال السيرة الذاتية مباشرة')}
+            {pick('Send Your Resume (CV)', 'إرسال السيرة الذاتية مباشرة')}
           </h2>
 
           {status === 'sent' ? (
@@ -311,7 +578,7 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
               <p className={`text-sm font-bold leading-relaxed ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                 {pick(
-                  'Your application has been received successfully. Our HR team will contact you soon.',
+                  'Your application has been received successfully. Our HR team at KIANKO will contact you soon.',
                   'تم استلام طلب التوظيف وسيرتك الذاتية بنجاح. سيتواصل معك فريق الموارد البشرية بشركة كيانكو قريباً.'
                 )}
               </p>
@@ -325,11 +592,12 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
               </button>
             </div>
           ) : (
-            <form className="space-y-4" onSubmit={onSubmit}>
+            <form className="space-y-4" onSubmit={onSubmit} noValidate>
+              {/* حقل مصيدة البوتات المخفي */}
               <div className="hidden" aria-hidden="true">
                 <label>
                   Website
-                  <input type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={set('website')} />
+                  <input type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={set('website', 50)} />
                 </label>
               </div>
 
@@ -350,52 +618,90 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
                 </p>
               )}
 
-              <input
-                type="text"
-                aria-label={pick('Full Name', 'الاسم بالكامل')}
-                placeholder={pick('Full Name', 'الاسم بالكامل')}
-                autoComplete="name"
-                required
-                minLength={3}
-                maxLength={120}
-                value={form.name}
-                onChange={set('name')}
-                className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`}
-              />
-              <input
-                type="email"
-                aria-label={pick('Email Address', 'البريد الإلكتروني')}
-                placeholder={pick('Email Address', 'البريد الإلكتروني')}
-                autoComplete="email"
-                dir="ltr"
-                required
-                maxLength={200}
-                value={form.email}
-                onChange={set('email')}
-                className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`}
-              />
-              <input
-                type="tel"
-                aria-label={pick('Phone Number', 'رقم الجوال (مثال: 05XXXXXXXX)')}
-                placeholder={pick('Phone Number (e.g. +966 5X XXX XXXX)', 'رقم الجوال (مثال: 05XXXXXXXX)')}
-                autoComplete="tel"
-                dir="ltr"
-                required
-                minLength={8}
-                maxLength={40}
-                value={form.phone}
-                onChange={set('phone')}
-                className={`w-full px-4 py-3 min-h-[44px] rounded-xl border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${inputBg}`}
-              />
+              <div className="space-y-1.5">
+                <label htmlFor="cv-name" className="text-xs font-bold block opacity-90">
+                  {pick('Full Name (First & Last Name) *', 'الاسم الثنائي أو الثلاثي بالكامل *')}
+                </label>
+                <input
+                  id="cv-name"
+                  type="text"
+                  placeholder={pick('e.g. Ahmed Al-Salem', 'مثال: أحمد محمد السالم')}
+                  autoComplete="name"
+                  required
+                  minLength={5}
+                  maxLength={60}
+                  value={form.name}
+                  onChange={set('name', 60)}
+                  className={`w-full px-4 py-3 min-h-[48px] rounded-xl border text-base sm:text-sm focus:outline-none transition-colors ${inputBg}`}
+                />
+              </div>
 
-              <label className={`block border-2 border-dashed rounded-2xl p-6 text-center space-y-2 cursor-pointer transition-colors focus-within:border-white ${uploadBox}`}>
-                <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                <span className="block text-xs font-medium">
-                  {file ? `✓ ${file.name}` : pick('Click to upload your CV (PDF or DOCX, max 5 MB)', 'اضغط لرفع السيرة الذاتية (PDF أو Word، بحد أقصى 5 ميجابايت)')}
-                </span>
-                <input type="file" accept=".pdf,.doc,.docx" className="sr-only" onChange={onFile} />
-              </label>
-              {fileError && <p role="alert" className="text-xs text-red-500 font-semibold">{fileError}</p>}
+              <div className="space-y-1.5">
+                <label htmlFor="cv-email" className="text-xs font-bold block opacity-90">
+                  {pick('Active Email Address *', 'البريد الإلكتروني الرسمي / الفعّال *')}
+                </label>
+                <input
+                  id="cv-email"
+                  type="email"
+                  placeholder="name@domain.com"
+                  autoComplete="email"
+                  dir="ltr"
+                  required
+                  maxLength={100}
+                  value={form.email}
+                  onChange={set('email', 100)}
+                  className={`w-full px-4 py-3 min-h-[48px] rounded-xl border text-base sm:text-sm focus:outline-none transition-colors ${inputBg}`}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="cv-phone" className="text-xs font-bold block opacity-90">
+                  {pick('Mobile Number *', 'رقم الجوال الفعلي *')}
+                </label>
+                <input
+                  id="cv-phone"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="05XXXXXXXX / +9665XXXXXXXX"
+                  autoComplete="tel"
+                  dir="ltr"
+                  required
+                  minLength={10}
+                  maxLength={16}
+                  value={form.phone}
+                  onChange={set('phone', 16)}
+                  className={`w-full px-4 py-3 min-h-[48px] rounded-xl border text-base sm:text-sm focus:outline-none transition-colors ${inputBg}`}
+                />
+              </div>
+
+              <div className="space-y-1.5 pt-1">
+                <label className="text-xs font-bold block opacity-90">
+                  {pick('Attach Resume / CV (PDF or Word) *', 'إرفاق السيرة الذاتية (PDF أو Word) *')}
+                </label>
+                <label className={`block border-2 border-dashed rounded-2xl p-6 text-center space-y-2 cursor-pointer transition-colors ${uploadBox}`}>
+                  {file ? (
+                    <FileText className="w-8 h-8 text-emerald-400 mx-auto" />
+                  ) : (
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                  )}
+                  <span className="block text-xs font-bold break-all">
+                    {file
+                      ? `✓ ${sanitizeFileName(file.name)}`
+                      : pick(
+                          'Click to upload your CV (PDF or DOCX, max 5 MB)',
+                          'اضغط لرفع السيرة الذاتية (PDF أو Word، بحد أقصى 5 ميجابايت)'
+                        )}
+                  </span>
+                  <input type="file" accept=".pdf,.doc,.docx" className="sr-only" onChange={onFile} />
+                </label>
+              </div>
+
+              {fileError && (
+                <p role="alert" className="flex items-start gap-2 text-xs text-red-300 bg-red-950/50 border border-red-800 rounded-xl p-3 font-semibold leading-relaxed">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                  <span>{fileError}</span>
+                </p>
+              )}
 
               {status === 'error' && (
                 <p role="alert" className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900 rounded-xl p-3">
@@ -408,15 +714,17 @@ export default function CareersPage({ lang = 'en', themeColor = '#C9252C', darkM
                 type="submit"
                 disabled={status === 'sending'}
                 aria-label={status === 'sending' ? pick('Submitting…', 'جاري الإرسال…') : pick('Submit Application', 'إرسال طلب التوظيف')}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold text-sm shadow-xl transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-wait min-h-[44px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold text-sm shadow-xl transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-60 disabled:cursor-wait min-h-[48px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 style={{ backgroundColor: themeColor }}
               >
                 {status === 'sending' && <Loader2 className="w-5 h-5 animate-spin" />}
-                <span>{status === 'sending' ? pick('Submitting…', 'جاري الإرسال…') : pick('Submit Application', 'إرسال طلب التوظيف')}</span>
+                <span>{status === 'sending' ? pick('Submitting…', 'جاري الإرسال…') : pick('Submit Official Application', 'إرسال طلب التوظيف الآن')}</span>
               </button>
+
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 text-center pt-1"> </p>
             </form>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

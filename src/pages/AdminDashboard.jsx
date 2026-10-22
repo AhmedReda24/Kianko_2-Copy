@@ -637,52 +637,57 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
   }, [searchQuery, msgsPerPage]);
 
   // تتبع المتواجدين الآن بشكل آمن
+ // تتبع المتواجدين الآن بدون تحذير WebSocket في وضع React StrictMode
   useEffect(() => {
     let channelInstance = null;
-    try {
-      const visitorId = sessionStorage.getItem('kianko_visitor_session_id') || `user_${Date.now()}`;
-      sessionStorage.setItem('kianko_visitor_session_id', visitorId);
+    let isMounted = true;
 
-      const existingChannels = supabase.getChannels ? supabase.getChannels() : [];
-      existingChannels.forEach((ch) => {
-        if (ch.topic && ch.topic.includes('kianko_live_room')) {
-          supabase.removeChannel(ch);
-        }
-      });
+    const timer = setTimeout(() => {
+      if (!isMounted) return;
+      try {
+        const visitorId =
+          sessionStorage.getItem('kianko_visitor_session_id') || `user_${Date.now()}`;
+        sessionStorage.setItem('kianko_visitor_session_id', visitorId);
 
-      channelInstance = supabase.channel('kianko_live_room', {
-        config: { presence: { key: visitorId } },
-      });
-
-      const syncUsersCount = () => {
-        try {
-          const state = channelInstance.presenceState();
-          const count = Object.keys(state || {}).length;
-          setLiveOnlineUsers(Math.max(1, count));
-        } catch {
-          setLiveOnlineUsers(1);
-        }
-      };
-
-      channelInstance
-        .on('presence', { event: 'sync' }, syncUsersCount)
-        .on('presence', { event: 'join' }, syncUsersCount)
-        .on('presence', { event: 'leave' }, syncUsersCount)
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            try {
-              await channelInstance.track({ user_id: visitorId, online_at: new Date().toISOString() });
-            } catch {
-              // ignore
-            }
-          }
+        channelInstance = supabase.channel('kianko_live_room', {
+          config: { presence: { key: visitorId } },
         });
-    } catch {
-      setLiveOnlineUsers(1);
-    }
+
+        const syncUsersCount = () => {
+          try {
+            const state = channelInstance.presenceState();
+            const count = Object.keys(state || {}).length;
+            if (isMounted) setLiveOnlineUsers(Math.max(1, count));
+          } catch {
+            if (isMounted) setLiveOnlineUsers(1);
+          }
+        };
+
+        channelInstance
+          .on('presence', { event: 'sync' }, syncUsersCount)
+          .on('presence', { event: 'join' }, syncUsersCount)
+          .on('presence', { event: 'leave' }, syncUsersCount)
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED' && isMounted) {
+              try {
+                await channelInstance.track({
+                  user_id: visitorId,
+                  online_at: new Date().toISOString(),
+                });
+              } catch {
+                // ignore
+              }
+            }
+          });
+      } catch {
+        if (isMounted) setLiveOnlineUsers(1);
+      }
+    }, 400);
 
     return () => {
-      if (channelInstance) {
+      isMounted = false;
+      clearTimeout(timer);
+      if (channelInstance && channelInstance.state === 'joined') {
         try {
           supabase.removeChannel(channelInstance);
         } catch {

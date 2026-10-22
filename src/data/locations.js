@@ -1,8 +1,8 @@
 export const locations = [{
-        id: 'Head_Office',
+        id: 'Head Office',
         type: 'Office',
         typeAr: 'المكتب الرئيسي',
-        name: 'Head_Office',
+        name: 'Head Office',
         nameAr: 'المكتب الرئيسي',
         city: 'Jeddah, Saudi Arabia',
         cityAr: 'الرياض، المملكة العربية السعودية',
