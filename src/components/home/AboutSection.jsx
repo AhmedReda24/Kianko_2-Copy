@@ -78,11 +78,8 @@ export default function AboutSection({ isAr, lang, themeColor = '#C9252C', darkM
     ? 'border-blue-900/60 bg-[#0A1832]/90 text-white shadow-xl'
     : 'border-slate-200 bg-white shadow-lg text-slate-900';
   const cardTextDesc = darkMode ? 'text-slate-300' : 'text-slate-600';
-  const factoryImgBg = darkMode
-    ? 'bg-[#07132B]'
-    : 'bg-slate-900 shadow-xl';
   const badgeOverlayBg = darkMode
-    ? 'bg-[#061024]/90 border-blue-800/70 text-white'
+    ? 'bg-[#061024]/92 border-blue-800/70 text-white'
     : 'bg-white/95 border-slate-200 text-slate-900';
 
   return (
@@ -102,14 +99,21 @@ export default function AboutSection({ isAr, lang, themeColor = '#C9252C', darkM
       {/* الشبكة الرئيسية: صورة المصنع + النص التعريفي */}
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         
-        {/* 1. صورة المصنع مع معالجة منع الخط الأبيض عند الـ Hover */}
+        {/* 1. حاوية الصورة مثبتة على dir="ltr" لمنع خطأ المتصفح في الـ RTL مع تمديد الصورة خارج الحواف */}
         <motion.div
-          className={`relative isolate rounded-3xl overflow-hidden group w-full aspect-[4/3] sm:aspect-auto sm:h-[400px] lg:h-[460px] shadow-2xl transform-gpu ${factoryImgBg}`}
+          dir="ltr"
+          className={`relative isolate rounded-3xl overflow-hidden group w-full aspect-[4/3] sm:aspect-auto sm:h-[400px] lg:h-[460px] shadow-2xl select-none ${
+            darkMode ? 'bg-[#07132B]' : 'bg-slate-900'
+          }`}
+          style={{
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+          }}
           initial={reduce ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
+          {/* الصورة ممتدة بـ 12px خارج الإطار من جميع الجهات حتى يستحيل ظهور أي خط أبيض على الحافة */}
           <img
             src="/Image/factory-main.webp"
             alt={pick('KIANKO Steel Industries Factory', 'مصنع شركة كيانكو للصناعات الحديدية')}
@@ -120,27 +124,32 @@ export default function AboutSection({ isAr, lang, themeColor = '#C9252C', darkM
               e.currentTarget.onerror = null;
               e.currentTarget.src = '/Image/ladder.webp';
             }}
-            className="block w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.07] transition-transform duration-700 ease-out will-change-transform backface-hidden"
+            className="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)] max-w-none object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           />
 
-          {/* طبقة التعتيم والتدرج اللوني فوق الصورة */}
+          {/* طبقة التدرج اللوني فوق الصورة */}
           <div
-            className={`pointer-events-none absolute inset-0 z-10 bg-gradient-to-t ${
+            className={`pointer-events-none absolute -inset-1 z-10 bg-gradient-to-t ${
               darkMode
-                ? 'bg-black/10 from-[#050E22] via-[#050E22]/30 to-transparent opacity-90'
-                : 'bg-black/5 from-slate-950/75 via-transparent to-transparent opacity-80'
+                ? 'from-[#050E22] via-[#050E22]/30 to-transparent opacity-90'
+                : 'from-slate-950/75 via-transparent to-transparent opacity-80'
             }`}
           />
 
-          {/* إطار داخلي فوق حواف الصورة يمنع ظهور أي خط أبيض (Subpixel Seam) */}
+          {/* طوق داخلي (Inset Shield) يغلق حواف الزوايا الدائرية بالكامل */}
           <div
             className={`pointer-events-none absolute inset-0 z-20 rounded-3xl border-2 ${
-              darkMode ? 'border-blue-900/70' : 'border-slate-300/80'
+              darkMode
+                ? 'border-blue-900/80 shadow-[inset_0_0_0_2px_#07132B]'
+                : 'border-slate-300 shadow-[inset_0_0_0_2px_#0f172a]'
             }`}
           />
 
-          {/* شارة علوية فوق الصورة */}
-          <div className="absolute top-4 start-4 z-20">
+          {/* شارة الأيزو العلوية (تتحول تلقائياً يميناً في العربي ويساراً في الإنجليزي) */}
+          <div
+            dir={isArabic ? 'rtl' : 'ltr'}
+            className={`absolute top-4 z-30 ${isArabic ? 'right-4' : 'left-4'}`}
+          >
             <span
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-lg"
               style={{ backgroundColor: themeColor }}
@@ -150,8 +159,11 @@ export default function AboutSection({ isAr, lang, themeColor = '#C9252C', darkM
             </span>
           </div>
 
-          {/* شريط سفلي عائم فوق الصورة يوضح الطاقة الإنتاجية
-          <div className="absolute bottom-4 inset-x-4 z-20">
+          {/* شريط الطاقة الإنتاجية السفلي
+          <div
+            dir={isArabic ? 'rtl' : 'ltr'}
+            className="absolute bottom-4 inset-x-4 z-30"
+          >
             <div className={`p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md flex items-center justify-between gap-3 shadow-xl ${badgeOverlayBg}`}>
               <div className="flex items-center gap-3 min-w-0">
                 <div
