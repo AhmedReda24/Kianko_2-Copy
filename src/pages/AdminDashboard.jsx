@@ -296,7 +296,6 @@ const DEFAULT_ISO_CERTIFICATES = [
   }
 ];
 
-// قاموس ترجمة ذكي لجميع الاعتمادات والشهادات المخزنة بالإنجليزية لتحويلها للعربية تلقائياً في الوضع العربي
 const CERT_TRANSLATIONS_MAP = [
   {
     match: 'material approval',
@@ -412,13 +411,11 @@ const CERT_TRANSLATIONS_MAP = [
   }
 ];
 
-// دالة مساعدة لإرجاع العنوان والوصف المترجم لأي شهادة أو اعتماد حسب اللغة الحالية
 const resolveCertText = (cert, isAr) => {
   const rawTitle = String(cert.title || cert.name || cert.titleEn || cert.titleAr || '').trim();
   const rawIssuer = String(cert.issuer || cert.desc || cert.descEn || cert.descAr || '').trim();
   const lowerTitle = rawTitle.toLowerCase();
 
-  // 1. إذا كان الكائن يحتوي مسبقاً على النصوص العربية والإنجليزية بشكل منفصل
   if (cert.title_ar && cert.title_en) {
     return {
       title: isAr ? cert.title_ar : cert.title_en,
@@ -426,7 +423,6 @@ const resolveCertText = (cert, isAr) => {
     };
   }
 
-  // 2. البحث في قاموس الاعتمادات المعروفة لترجمتها تلقائياً
   const matchedEntry = CERT_TRANSLATIONS_MAP.find((item) => lowerTitle.includes(item.match));
   if (matchedEntry) {
     return {
@@ -435,7 +431,6 @@ const resolveCertText = (cert, isAr) => {
     };
   }
 
-  // 3. ترجمة ذكية لأي شهادة أو اعتماد جديد يحتوي على كلمات إنجليزية شائعة عند العرض بالعربية
   if (isAr) {
     const translatedTitle = rawTitle
       .replace(/Official Approval/gi, 'اعتماد رسمي')
@@ -463,7 +458,6 @@ const resolveCertText = (cert, isAr) => {
   };
 };
 
-// دالة مساعدة لإرجاع نصوص المنتج حسب اللغة الحالية (عربي / إنجليزي)
 const resolveProductText = (prod, isAr) => {
   const catRaw = String(prod.category_ar || prod.category || '');
   const isBuilding = catRaw.includes('مباني') || catRaw.includes('محارة') || catRaw.toLowerCase().includes('building');
@@ -636,8 +630,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     setCurrentMsgPage(1);
   }, [searchQuery, msgsPerPage]);
 
-  // تتبع المتواجدين الآن بشكل آمن
- // تتبع المتواجدين الآن بدون تحذير WebSocket في وضع React StrictMode
+  // تتبع المتواجدين الآن بشكل آمن بدون تحذيرات WebSocket في React StrictMode
   useEffect(() => {
     let channelInstance = null;
     let isMounted = true;
@@ -645,8 +638,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     const timer = setTimeout(() => {
       if (!isMounted) return;
       try {
-        const visitorId =
-          sessionStorage.getItem('kianko_visitor_session_id') || `user_${Date.now()}`;
+        const visitorId = sessionStorage.getItem('kianko_visitor_session_id') || `user_${Date.now()}`;
         sessionStorage.setItem('kianko_visitor_session_id', visitorId);
 
         channelInstance = supabase.channel('kianko_live_room', {
@@ -670,10 +662,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED' && isMounted) {
               try {
-                await channelInstance.track({
-                  user_id: visitorId,
-                  online_at: new Date().toISOString(),
-                });
+                await channelInstance.track({ user_id: visitorId, online_at: new Date().toISOString() });
               } catch {
                 // ignore
               }
@@ -716,7 +705,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     }
 
     try {
-      // 1. جلب كافة الملفات المرفوعة في Supabase Storage
       let allStorageFiles = [];
       const bucketsToScan = ['certificates', 'datasheets', 'catalogs', 'products'];
       for (const bucketName of bucketsToScan) {
@@ -742,10 +730,8 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       allStorageFiles.forEach(f => {
         if (!uniqueStorageMap.has(f.name)) uniqueStorageMap.set(f.name, f);
       });
-      const validFiles = Array.from(uniqueStorageMap.values());
-      setStorageFiles(validFiles);
+      setStorageFiles(Array.from(uniqueStorageMap.values()));
 
-      // 2. جلب تحليلات التحميل للـ 6 كتالوجات
       const { data: analyticsData } = await supabase
         .from('product_analytics')
         .select('*')
@@ -779,7 +765,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       setAnalytics(mergedAnalytics);
 
-      // بناء قائمة الـ 6 كتالوجات الفنية (تحتفظ بالاسمين العربي والإنجليزي معاً)
       const builtCatalogs = DEFAULT_KIANKO_CATALOGS
         .filter(catItem => !(currentHidden.products || []).includes(catItem.product_id))
         .map(catItem => {
@@ -801,12 +786,10 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         });
       setCatalogs(builtCatalogs);
 
-      // 3. جلب رسائل التواصل
       const { data: messagesData } = await supabase.from('contact_messages').select('*');
       const filteredMsgs = sortRecords(messagesData).filter(m => !(currentHidden.messages || []).includes(String(m.id)));
       setMessages(filteredMsgs);
 
-      // تحديث عداد الزيارات الفعلي
       const realDownloadsSum = dbAnalytics.reduce((acc, c) => acc + (c.downloads_count || 0), 0);
       const savedResetOffset = localStorage.getItem('kianko_visits_reset_mode');
       if (savedResetOffset === 'reset') {
@@ -818,7 +801,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         localStorage.setItem('kianko_real_visits_count', String(calculatedRealVisits));
       }
 
-      // 4. جلب الوظائف (باللغتين العربية والإنجليزية)
       const { data: jobsData } = await supabase.from('careers').select('*');
       const dbJobsFormatted = sortRecords(jobsData)
         .filter(j => !(currentHidden.jobs || []).includes(String(j.id)))
@@ -852,11 +834,9 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       setJobs([...dbJobsFormatted, ...staticJobsFormatted]);
 
-      // 5. جلب جدول certifications وفصل (الشهادات والاعتمادات) عن (المنتجات)
       const { data: certsData } = await supabase.from('certifications').select('*');
       const allCertRows = sortRecords(certsData);
 
-      // أ) استخراج المنتجات المضافة من الأدمن
       const productsFromCertsTable = allCertRows
         .filter(c => {
           const cat = String(c.category || '').toLowerCase();
@@ -895,7 +875,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           };
         });
 
-      // ب) الشهادات والاعتمادات مع حفظ النصوص باللغتين العربية والإنجليزية
       const pureDbCerts = allCertRows
         .filter(c => {
           const cat = String(c.category || '').toLowerCase();
@@ -927,7 +906,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       setCertifications([...pureDbCerts, ...activeDefaultIso, ...activeLocalApprovals]);
 
-      // 6. بناء قائمة المنتجات الكاملة باللغتين العربية والإنجليزية
       let dbProductsTable = [];
       const { data: productsData, error: prodErr } = await supabase.from('products').select('*');
       if (!prodErr && Array.isArray(productsData) && productsData.length > 0) {
@@ -1046,7 +1024,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     setPasswordInput('');
   };
 
-  // ==================== تنسيق روابط الرد السريع (Gmail + WhatsApp) ====================
   const getGmailComposeUrl = (msg) => {
     const email = String(msg?.email || '').trim();
     const clientName = sanitizeText(msg?.name);
@@ -1092,7 +1069,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     const cleanDesc = newJob.description.trim();
 
     if (cleanTitle.length < 3) {
-      setJobFormError(isAr ? 'يرجى إدخال مسمى وظيفي صحيح (3 أحرف على الأقل، ولا تُقبل المسافات الفارغة).' : 'Job title must be at least 3 characters.');
+      setJobFormError(isAr ? 'يرجى إدخال مسمى وظيفي صحيح (3 أحرف على الأقل).' : 'Job title must be at least 3 characters.');
       return;
     }
     if (cleanDept.length < 2) {
@@ -1100,7 +1077,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
       return;
     }
     if (cleanLoc.length < 2) {
-      setJobFormError(isAr ? 'يرجى إدخال المدينة/المكان بشكل صحيح مثل: الرياض أو جدة (حرفين على الأقل).' : 'Location must be at least 2 characters.');
+      setJobFormError(isAr ? 'يرجى إدخال المدينة/المكان بشكل صحيح مثل: الرياض أو جدة.' : 'Location must be at least 2 characters.');
       return;
     }
     if (cleanDesc.length < 10) {
@@ -1121,7 +1098,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         setNewJob({ title: '', department: '', location: '', description: '' });
         setEditingJobId(null);
         fetchData();
-        showToast(isAr ? 'تم تحديث بيانات الوظيفة في قسم الوظائف بنجاح!' : 'Job updated successfully!');
+        showToast(isAr ? 'تم تحديث بيانات الوظيفة بنجاح!' : 'Job updated successfully!');
       } else {
         showToast(isAr ? `خطأ أثناء التحديث: ${error.message}` : 'Error updating job', 'error');
       }
@@ -1147,7 +1124,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     });
     setJobFormError('');
     setActiveTab('jobs');
-    window.scrollTo({ top: 250, behavior: 'smooth' });
+    window.scrollTo({ top: 200, behavior: 'smooth' });
   };
 
   const handleDeleteJob = (id) => {
@@ -1163,7 +1140,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     );
   };
 
-  // ==================== 2. إدارة الشهادات (ISO) والاعتمادات (Approvals) ====================
+  // ==================== 2. إدارة الشهادات والاعتمادات ====================
   const handleAddOrUpdateCert = async (e) => {
     e.preventDefault();
     setCertFormError('');
@@ -1238,7 +1215,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     });
     setCertFormError('');
     setActiveTab('certifications');
-    window.scrollTo({ top: 250, behavior: 'smooth' });
+    window.scrollTo({ top: 200, behavior: 'smooth' });
   };
 
   const handleDeleteCert = (cert) => {
@@ -1397,7 +1374,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     );
   };
 
-  // ==================== دوال تنظيف وحماية النصوص والتصدير ====================
   const sanitizeText = (text) => {
     if (text === null || text === undefined) return '—';
     const cleaned = String(text).trim();
@@ -1577,20 +1553,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40" dir="${isAr ? 'rtl' : 'ltr'}">
         <head>
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-          <!--[if gte mso 9]>
-          <xml>
-            <x:ExcelWorkbook>
-              <x:ExcelWorksheets>
-                <x:ExcelWorksheet>
-                  <x:Name>${isAr ? 'رسائل عملاء كيانكو' : 'Kianko Messages'}</x:Name>
-                  <x:WorksheetOptions>
-                    ${isAr ? '<x:DisplayRightToLeft/>' : ''}
-                  </x:WorksheetOptions>
-                </x:ExcelWorksheet>
-              </x:ExcelWorksheets>
-            </x:ExcelWorkbook>
-          </xml>
-          <![endif]-->
         </head>
         <body style="font-family: Tahoma, Arial, sans-serif;">
           <table border="1" style="border-collapse: collapse; width: 100%;">
@@ -1601,12 +1563,12 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 </th>
               </tr>
               <tr style="background-color: #C9252C; color: #ffffff; font-weight: bold;">
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 50px;">#</th>
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 180px;">${isAr ? 'اسم العميل' : 'Name'}</th>
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 220px;">${isAr ? 'البريد الإلكتروني' : 'Email'}</th>
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 150px;">${isAr ? 'رقم الجوال' : 'Phone'}</th>
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 350px;">${isAr ? 'الرسالة' : 'Message'}</th>
-                <th style="padding: 10px; border: 1px solid #0A1832; width: 160px;">${isAr ? 'التاريخ' : 'Date'}</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">#</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">${isAr ? 'اسم العميل' : 'Name'}</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">${isAr ? 'البريد الإلكتروني' : 'Email'}</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">${isAr ? 'رقم الجوال' : 'Phone'}</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">${isAr ? 'الرسالة' : 'Message'}</th>
+                <th style="padding: 10px; border: 1px solid #0A1832;">${isAr ? 'التاريخ' : 'Date'}</th>
               </tr>
             </thead>
             <tbody>
@@ -1652,7 +1614,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
   const isoList = certifications.filter(c => String(c.category || '').toLowerCase() === 'iso');
   const approvalList = certifications.filter(c => String(c.category || '').toLowerCase() !== 'iso');
 
-  // ==================== محرك البحث الشامل (يبحث في النصوص العربية والإنجليزية معاً) ====================
   const qNorm = normalizeSearchText(searchQuery);
   const isSearching = qNorm.length > 0;
 
@@ -1741,7 +1702,6 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
     }
   };
 
-  // حسابات تقسيم صفحات الرسائل
   const totalMsgPages = Math.max(1, Math.ceil(filteredMessages.length / msgsPerPage));
   const safeMsgPage = Math.min(currentMsgPage, totalMsgPages);
   const msgStartIndex = (safeMsgPage - 1) * msgsPerPage;
@@ -1750,16 +1710,16 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
   if (!isAuthenticated) {
     return (
       <div
-        className="min-h-[80vh] flex items-center justify-center px-4 transition-colors duration-300"
+        className="min-h-[80vh] w-full flex items-center justify-center px-4 py-8 overflow-x-hidden transition-colors duration-300"
         dir={isAr ? 'rtl' : 'ltr'}
         style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : undefined }}
       >
-        <form onSubmit={handleLogin} className={`w-full max-w-md p-8 rounded-2xl border transition-all duration-300 space-y-6 ${cardBg} ${isAr ? 'text-right' : 'text-left'}`}>
+        <form onSubmit={handleLogin} className={`w-full max-w-md p-6 sm:p-8 rounded-2xl border transition-all duration-300 space-y-6 ${cardBg} ${isAr ? 'text-right' : 'text-left'}`}>
           <div className="text-center space-y-2">
             <div className={`inline-flex p-3 rounded-full border ${darkMode ? 'bg-blue-950 text-red-500 border-blue-900' : 'bg-red-50 text-red-600 border-red-200'}`}>
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <h2 className={`text-2xl font-bold ${textMain}`}>{isAr ? 'بوابة الإدارة الآمنة' : 'Secure Admin Portal'}</h2>
+            <h2 className={`text-xl sm:text-2xl font-bold ${textMain}`}>{isAr ? 'بوابة الإدارة الآمنة' : 'Secure Admin Portal'}</h2>
             <p className={`text-xs ${textMuted}`}>{isAr ? 'أدخل كلمة المرور للوصول إلى لوحة تحكم كيانكو' : 'Enter password to access KIANKO dashboard'}</p>
           </div>
 
@@ -1797,34 +1757,34 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
   return (
     <div
-      className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 transition-colors duration-300 ${isAr ? 'text-right' : 'text-left'}`}
+      className={`w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8 overflow-x-hidden box-border transition-colors duration-300 ${isAr ? 'text-right' : 'text-left'}`}
       dir={isAr ? 'rtl' : 'ltr'}
       style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : undefined }}
     >
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl shadow-2xl font-bold text-sm text-white transition-all ${
+        <div className={`fixed top-20 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm text-white transition-all ${
           toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'
         }`}>
-          <CheckCircle2 className="w-5 h-5" />
-          <span>{toast.msg}</span>
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <span className="truncate">{toast.msg}</span>
         </div>
       )}
 
       {/* نافذة تأكيد الحذف المخصصة */}
       {confirmDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4" onClick={() => setConfirmDialog(null)}>
-          <div className={`w-full max-w-md p-6 rounded-2xl border space-y-5 ${cardBg}`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-red-500/15 text-red-500 border border-red-500/30">
-                <Trash2 className="w-6 h-6" />
+          <div className={`w-full max-w-md p-5 sm:p-6 rounded-2xl border space-y-5 ${cardBg}`} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <div className="p-3 rounded-full bg-red-500/15 text-red-500 border border-red-500/30 shrink-0">
+                <Trash2 className="w-5 h-5" />
               </div>
-              <div>
-                <h3 className={`font-extrabold text-base ${textMain}`}>{confirmDialog.title}</h3>
-                <p className={`text-xs mt-1 ${textMuted}`}>{confirmDialog.message}</p>
+              <div className="min-w-0">
+                <h3 className={`font-extrabold text-sm sm:text-base ${textMain}`}>{confirmDialog.title}</h3>
+                <p className={`text-xs mt-1 leading-relaxed break-words ${textMuted}`}>{confirmDialog.message}</p>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setConfirmDialog(null)}
@@ -1850,30 +1810,30 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       {/* نافذة قراءة الرسالة كاملة */}
       {selectedMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4" onClick={() => setSelectedMessage(null)}>
-          <div className={`w-full max-w-lg p-6 rounded-2xl border space-y-4 ${cardBg}`} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-3 sm:p-4" onClick={() => setSelectedMessage(null)}>
+          <div className={`w-full max-w-lg p-4 sm:p-6 rounded-2xl border space-y-4 max-h-[88vh] overflow-y-auto ${cardBg}`} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b pb-3 border-blue-900/60">
-              <h3 className={`font-bold text-lg ${textMain}`}>{isAr ? 'تفاصيل رسالة العميل' : 'Client Message Details'}</h3>
+              <h3 className={`font-bold text-base sm:text-lg ${textMain}`}>{isAr ? 'تفاصيل رسالة العميل' : 'Client Message Details'}</h3>
               <button onClick={() => setSelectedMessage(null)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center">
+            <div className="space-y-3 text-xs sm:text-sm">
+              <div className="flex flex-wrap justify-between items-center gap-2">
                 <span className={textMuted}>{isAr ? 'الاسم:' : 'Name:'}</span>
-                <span className={`font-bold ${textMain}`}>{sanitizeText(selectedMessage.name)}</span>
+                <span className={`font-bold break-words ${textMain}`}>{sanitizeText(selectedMessage.name)}</span>
               </div>
 
-              <div className="flex justify-between items-center gap-2">
+              <div className="flex flex-wrap justify-between items-center gap-2">
                 <span className={textMuted}>{isAr ? 'البريد الإلكتروني:' : 'Email:'}</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-blue-400" dir="ltr">{sanitizeText(selectedMessage.email)}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-mono text-xs text-blue-400 break-all" dir="ltr">{sanitizeText(selectedMessage.email)}</span>
                   {selectedMessage.email && (
                     <button
                       type="button"
                       onClick={() => copyToClipboard(selectedMessage.email, isAr ? 'البريد الإلكتروني' : 'Email')}
-                      className="p-1 rounded bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white cursor-pointer"
+                      className="p-1 rounded bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white cursor-pointer shrink-0"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -1881,15 +1841,15 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 </div>
               </div>
 
-              <div className="flex justify-between items-center gap-2">
+              <div className="flex flex-wrap justify-between items-center gap-2">
                 <span className={textMuted}>{isAr ? 'رقم الجوال:' : 'Phone:'}</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className={`font-mono text-xs font-bold ${textMain}`} dir="ltr">{sanitizeText(selectedMessage.phone)}</span>
                   {selectedMessage.phone && (
                     <button
                       type="button"
                       onClick={() => copyToClipboard(selectedMessage.phone, isAr ? 'رقم الجوال' : 'Phone')}
-                      className="p-1 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-600 hover:text-white cursor-pointer"
+                      className="p-1 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-600 hover:text-white cursor-pointer shrink-0"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -1897,17 +1857,17 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 </div>
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex flex-wrap justify-between items-center gap-2">
                 <span className={textMuted}>{isAr ? 'التاريخ:' : 'Date:'}</span>
                 <span className="text-xs">{formatDate(selectedMessage.created_at)}</span>
               </div>
 
-              <div className={`p-4 rounded-xl border ${subBg} whitespace-pre-wrap leading-relaxed text-sm`}>
+              <div className={`p-3.5 sm:p-4 rounded-xl border ${subBg} whitespace-pre-wrap break-words leading-relaxed text-xs sm:text-sm`}>
                 {sanitizeText(selectedMessage.message)}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
               {selectedMessage.phone && (
                 <a
                   href={getWhatsAppUrl(selectedMessage)}
@@ -1915,8 +1875,8 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                   rel="noreferrer"
                   className="py-3 px-4 text-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  {isAr ? 'رد عبر واتساب' : 'Reply via WhatsApp'}
+                  <ExternalLink className="w-4 h-4 shrink-0" />
+                  <span>{isAr ? 'رد عبر واتساب' : 'Reply via WhatsApp'}</span>
                 </a>
               )}
               {selectedMessage.email && (
@@ -1926,8 +1886,8 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                   rel="noreferrer"
                   className="py-3 px-4 text-center rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                 >
-                  <Mail className="w-4 h-4" />
-                  {isAr ? 'رد عبر الإيميل (Gmail)' : 'Reply via Email (Gmail)'}
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>{isAr ? 'رد عبر الإيميل (Gmail)' : 'Reply via Email'}</span>
                 </a>
               )}
             </div>
@@ -1935,29 +1895,29 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         </div>
       )}
 
-      {/* Header */}
-      <div className={`flex flex-col lg:flex-row justify-between items-center gap-4 p-6 rounded-2xl border ${cardBg}`}>
-        <div>
-          <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${textMain}`}>
-            <BarChart3 style={{ color: themeColor }} className="w-8 h-8" />
-            {isAr ? 'لوحة تحكم كيانكو المركزية' : 'KIANKO Central Dashboard'}
+      {/* Header متجاوب بالكامل */}
+      <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 lg:space-y-0 lg:flex lg:justify-between lg:items-center gap-4 ${cardBg}`}>
+        <div className="min-w-0">
+          <h1 className={`text-lg sm:text-2xl font-extrabold flex items-center gap-2.5 ${textMain}`}>
+            <BarChart3 style={{ color: themeColor }} className="w-6 h-6 sm:w-8 sm:h-8 shrink-0" />
+            <span className="truncate">{isAr ? 'لوحة تحكم كيانكو المركزية' : 'KIANKO Central Dashboard'}</span>
           </h1>
-          <p className={`text-sm mt-1 ${textMuted}`}>
+          <p className={`text-xs sm:text-sm mt-1 leading-relaxed break-words ${textMuted}`}>
             {isAr
               ? `إدارة المنتجات (${products.length})، الكتالوجات (${catalogs.length})، الأيزو (${isoList.length})، الاعتمادات (${approvalList.length})، والوظائف (${jobs.length}) - السعودية`
               : `Manage Products (${products.length}), Catalogs (${catalogs.length}), ISO (${isoList.length}), Approvals (${approvalList.length}), & Careers (${jobs.length})`}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap w-full lg:w-auto justify-end">
-          <div className="relative flex-1 sm:w-72">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
+          <div className="relative w-full sm:w-64">
             <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 ${isSearching ? 'text-red-500' : textMuted}`} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder={isAr ? 'ابحث عن منتج، شهادة، اعتماد، تحليلات، حالة...' : 'Search products, certs, analytics...'}
+              placeholder={isAr ? 'ابحث عن منتج، شهادة، اعتماد...' : 'Search products, certs...'}
               className={`w-full ${isAr ? 'pr-9 pl-8' : 'pl-9 pr-8'} py-2.5 border rounded-xl text-xs focus:outline-none focus:border-red-500 transition-all ${
                 isSearching ? 'border-red-500 ring-2 ring-red-500/20' : ''
               } ${subBg}`}
@@ -1973,116 +1933,75 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             )}
           </div>
 
-          <button
-            onClick={fetchData}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95 cursor-pointer ${
-              darkMode ? 'bg-blue-950/80 hover:bg-blue-900 text-white border-blue-800/50' : 'bg-slate-200 hover:bg-slate-300 text-slate-900 border-slate-300'
-            }`}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {isAr ? 'تحديث البيانات' : 'Refresh'}
-          </button>
-          <button
-            onClick={handleLogout}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95 cursor-pointer ${
-              darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border-red-800/50' : 'bg-red-100 hover:bg-red-200 text-red-700 border-red-300'
-            }`}
-          >
-            <LogOut className="w-4 h-4" />
-            {isAr ? 'خروج آمن' : 'Logout'}
-          </button>
+          <div className="grid grid-cols-2 sm:flex items-center gap-2">
+            <button
+              onClick={fetchData}
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95 cursor-pointer ${
+                darkMode ? 'bg-blue-950/80 hover:bg-blue-900 text-white border-blue-800/50' : 'bg-slate-200 hover:bg-slate-300 text-slate-900 border-slate-300'
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 shrink-0 ${loading ? 'animate-spin' : ''}`} />
+              <span className="truncate">{isAr ? 'تحديث البيانات' : 'Refresh'}</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95 cursor-pointer ${
+                darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border-red-800/50' : 'bg-red-100 hover:bg-red-200 text-red-700 border-red-300'
+              }`}
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="truncate">{isAr ? 'خروج آمن' : 'Logout'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* شريط إشعار البحث الذكي */}
       {isSearching && (
-        <div className={`p-4 rounded-2xl border border-red-500/40 flex flex-wrap items-center justify-between gap-3 ${cardBg}`}>
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
-            <Search className="w-4 h-4 text-red-500" />
-            <span>
+        <div className={`w-full p-4 rounded-2xl border border-red-500/40 flex flex-wrap items-center justify-between gap-3 ${cardBg}`}>
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold min-w-0">
+            <Search className="w-4 h-4 text-red-500 shrink-0" />
+            <span className="break-words">
               {isAr
-                ? `نتائج البحث الشامل عن "${searchQuery}" (${totalSearchMatches} نتيجة مطابقة):`
-                : `Search results for "${searchQuery}" (${totalSearchMatches} matches):`}
+                ? `نتائج البحث عن "${searchQuery}" (${totalSearchMatches} نتيجة):`
+                : `Search results for "${searchQuery}" (${totalSearchMatches}):`}
             </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {isSystemKeyword && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('system')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-purple-500/15 text-purple-400 hover:bg-purple-600 hover:text-white"
-              >
-                {isAr ? 'حالة النظام والزوار (4)' : 'System Status (4)'}
-              </button>
-            )}
-            {filteredAnalytics.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('analytics')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-emerald-500/15 text-emerald-400 hover:bg-emerald-600 hover:text-white"
-              >
-                {isAr ? `تحليلات الكتالوجات (${filteredAnalytics.length})` : `Analytics (${filteredAnalytics.length})`}
-              </button>
-            )}
             {filteredProducts.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('products')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-red-500/15 text-red-400 hover:bg-red-600 hover:text-white"
-              >
+              <button type="button" onClick={() => setActiveTab('products')} className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-red-500/15 text-red-400 hover:bg-red-600 hover:text-white">
                 {isAr ? `المنتجات (${filteredProducts.length})` : `Products (${filteredProducts.length})`}
               </button>
             )}
             {filteredCertifications.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('certifications')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-amber-500/15 text-amber-400 hover:bg-amber-600 hover:text-white"
-              >
-                {isAr ? `الشهادات والاعتمادات (${filteredCertifications.length})` : `Certs (${filteredCertifications.length})`}
+              <button type="button" onClick={() => setActiveTab('certifications')} className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-amber-500/15 text-amber-400 hover:bg-amber-600 hover:text-white">
+                {isAr ? `الأيزو والاعتمادات (${filteredCertifications.length})` : `Certs (${filteredCertifications.length})`}
               </button>
             )}
             {filteredMessages.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('messages')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white"
-              >
+              <button type="button" onClick={() => setActiveTab('messages')} className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-blue-500/15 text-blue-400 hover:bg-blue-600 hover:text-white">
                 {isAr ? `الرسائل (${filteredMessages.length})` : `Messages (${filteredMessages.length})`}
               </button>
             )}
-            {filteredJobs.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('jobs')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer bg-indigo-500/15 text-indigo-400 hover:bg-indigo-600 hover:text-white"
-              >
-                {isAr ? `الوظائف (${filteredJobs.length})` : `Jobs (${filteredJobs.length})`}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/15 text-red-400 hover:bg-red-600 hover:text-white cursor-pointer"
-            >
-              {isAr ? 'إلغاء البحث ✕' : 'Clear ✕'}
+            <button type="button" onClick={() => setSearchQuery('')} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/15 text-red-400 hover:bg-red-600 hover:text-white cursor-pointer">
+              {isAr ? 'إلغاء ✕' : 'Clear ✕'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div onClick={() => setActiveTab('system')} className={`p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
+      {/* Summary Cards - متجاوبة على جميع الشاشات */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
+        <div onClick={() => setActiveTab('system')} className={`min-w-0 p-4 sm:p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
-            <span className="text-xs font-bold uppercase">{isAr ? 'زيارات وتفاعل الموقع' : 'Real Site Activity'}</span>
-            <Eye className="w-5 h-5 text-purple-500" />
+            <span className="text-xs font-bold uppercase truncate">{isAr ? 'زيارات وتفاعل الموقع' : 'Real Site Activity'}</span>
+            <Eye className="w-5 h-5 text-purple-500 shrink-0" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{realVisitsCount}</div>
+          <div className={`text-2xl sm:text-3xl font-black ${textMain}`}>{realVisitsCount}</div>
           <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <Users className="w-3.5 h-3.5" />
-            <span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
               {isAr
                 ? `متواجد الآن: ${liveOnlineUsers} ${liveOnlineUsers === 1 ? 'زائر' : 'زوار'} (مباشر)`
                 : `${liveOnlineUsers} Online now (Live)`}
@@ -2090,95 +2009,102 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
           </div>
         </div>
 
-        <div onClick={() => setActiveTab('analytics')} className={`p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
+        <div onClick={() => setActiveTab('analytics')} className={`min-w-0 p-4 sm:p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
-            <span className="text-xs font-bold uppercase">{isAr ? 'إجمالي التحميلات' : 'Total Downloads'}</span>
-            <Download className="w-5 h-5 text-emerald-500" />
+            <span className="text-xs font-bold uppercase truncate">{isAr ? 'إجمالي التحميلات' : 'Total Downloads'}</span>
+            <Download className="w-5 h-5 text-emerald-500 shrink-0" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{totalDownloads}</div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? `من إجمالي ${catalogs.length} كتالوجات فنية` : `Across ${catalogs.length} catalogs`}</p>
+          <div className={`text-2xl sm:text-3xl font-black ${textMain}`}>{totalDownloads}</div>
+          <p className={`text-xs truncate ${textMuted}`}>{isAr ? `من إجمالي ${catalogs.length} كتالوجات فنية` : `Across ${catalogs.length} catalogs`}</p>
         </div>
 
-        <div onClick={() => setActiveTab('messages')} className={`p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
+        <div onClick={() => setActiveTab('messages')} className={`min-w-0 p-4 sm:p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
-            <span className="text-xs font-bold uppercase">{isAr ? 'الرسائل الواردة' : 'Incoming Messages'}</span>
-            <MessageSquare className="w-5 h-5 text-blue-500" />
+            <span className="text-xs font-bold uppercase truncate">{isAr ? 'الرسائل الواردة' : 'Incoming Messages'}</span>
+            <MessageSquare className="w-5 h-5 text-blue-500 shrink-0" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{messages.length}</div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? 'رسائل العملاء وطلبات التوظيف' : 'Contact & CV submissions'}</p>
+          <div className={`text-2xl sm:text-3xl font-black ${textMain}`}>{messages.length}</div>
+          <p className={`text-xs truncate ${textMuted}`}>{isAr ? 'رسائل العملاء وطلبات التوظيف' : 'Contact & CV submissions'}</p>
         </div>
 
-        <div onClick={() => setActiveTab('certifications')} className={`p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
+        <div onClick={() => setActiveTab('certifications')} className={`min-w-0 p-4 sm:p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
-            <span className="text-xs font-bold uppercase">{isAr ? 'الشهادات والاعتمادات' : 'Certs & Approvals'}</span>
-            <Award className="w-5 h-5 text-amber-500" />
+            <span className="text-xs font-bold uppercase truncate">{isAr ? 'الشهادات والاعتمادات' : 'Certs & Approvals'}</span>
+            <Award className="w-5 h-5 text-amber-500 shrink-0" />
           </div>
-          <div className={`text-3xl font-black ${textMain}`}>{certifications.length}</div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? `${isoList.length} شهادة أيزو | ${approvalList.length} اعتماد` : `${isoList.length} ISO | ${approvalList.length} Approvals`}</p>
+          <div className={`text-2xl sm:text-3xl font-black ${textMain}`}>{certifications.length}</div>
+          <p className={`text-xs truncate ${textMuted}`}>{isAr ? `${isoList.length} شهادة أيزو | ${approvalList.length} اعتماد` : `${isoList.length} ISO | ${approvalList.length} Approvals`}</p>
         </div>
 
-        <div onClick={() => setActiveTab('products')} className={`p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
+        <div onClick={() => setActiveTab('products')} className={`min-w-0 sm:col-span-2 lg:col-span-1 p-4 sm:p-5 rounded-2xl border space-y-2 cursor-pointer transition-transform hover:scale-[1.01] ${cardBg}`}>
           <div className={`flex justify-between items-center ${textMuted}`}>
-            <span className="text-xs font-bold uppercase">{isAr ? 'المنتجات والوظائف' : 'Products & Jobs'}</span>
-            <Package className="w-5 h-5 text-red-500" />
+            <span className="text-xs font-bold uppercase truncate">{isAr ? 'المنتجات والوظائف' : 'Products & Jobs'}</span>
+            <Package className="w-5 h-5 text-red-500 shrink-0" />
           </div>
-          <div className={`text-2xl font-black ${textMain}`}>
+          <div className={`text-xl sm:text-2xl font-black ${textMain}`}>
             {isAr ? `${products.length} منتج | ${jobs.length} وظيفة` : `${products.length} Prod | ${jobs.length} Jobs`}
           </div>
-          <p className={`text-xs ${textMuted}`}>{isAr ? `${products.length} منتج معروض + ${catalogs.length} كتالوج` : 'Active products & careers'}</p>
+          <p className={`text-xs truncate ${textMuted}`}>{isAr ? `${products.length} منتج معروض + ${catalogs.length} كتالوج` : 'Active products & careers'}</p>
         </div>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className={`flex flex-wrap border-b gap-2 sm:gap-3 ${borderCol}`}>
+      {/* Tabs Switcher - شبكة من عمودين على الموبايل وشريط مرن على الشاشات الأكبر لمنع أي خروج أفقي */}
+      <div className={`grid grid-cols-2 sm:flex sm:flex-wrap border-b gap-1.5 sm:gap-3 pb-2 sm:pb-0 w-full ${borderCol}`}>
         {[
-          { id: 'overview_content', label: isAr ? `كل المعروض (${products.length + certifications.length + catalogs.length})` : `All Content (${products.length + certifications.length + catalogs.length})`, icon: FolderOpen },
-          { id: 'products', label: isAr ? `إدارة المنتجات (${isSearching ? filteredProducts.length : products.length})` : `Products (${products.length})`, icon: Package },
-          { id: 'certifications', label: isAr ? `الأيزو والاعتمادات (${isSearching ? filteredCertifications.length : certifications.length})` : `ISO & Approvals (${certifications.length})`, icon: Award },
+          { id: 'overview_content', label: isAr ? `كل المعروض (${products.length + certifications.length + catalogs.length})` : `All (${products.length + certifications.length + catalogs.length})`, icon: FolderOpen },
+          { id: 'products', label: isAr ? `المنتجات (${isSearching ? filteredProducts.length : products.length})` : `Products (${products.length})`, icon: Package },
+          { id: 'certifications', label: isAr ? `الأيزو والاعتمادات (${isSearching ? filteredCertifications.length : certifications.length})` : `Certs (${certifications.length})`, icon: Award },
           { id: 'jobs', label: isAr ? `الوظائف (${isSearching ? filteredJobs.length : jobs.length})` : `Careers (${jobs.length})`, icon: Briefcase },
-          { id: 'messages', label: isAr ? `رسائل التواصل (${isSearching ? filteredMessages.length : messages.length})` : `Messages (${messages.length})`, icon: Mail },
-          { id: 'analytics', label: isAr ? `تحليلات الكتالوجات (${isSearching ? filteredAnalytics.length : analytics.length})` : `Analytics (${analytics.length})`, icon: BarChart3 },
-          { id: 'system', label: isAr ? 'حالة النظام والزوار' : 'System Status', icon: Eye },
-        ].map((tab) => {
+          { id: 'messages', label: isAr ? `الرسائل (${isSearching ? filteredMessages.length : messages.length})` : `Messages (${messages.length})`, icon: Mail },
+          { id: 'analytics', label: isAr ? `التحليلات (${isSearching ? filteredAnalytics.length : analytics.length})` : `Analytics (${analytics.length})`, icon: BarChart3 },
+          { id: 'system', label: isAr ? 'حالة النظام' : 'System Status', icon: Eye },
+        ].map((tab, idx) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const isLastOddOnMobile = idx === 6;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-3.5 px-3 font-bold text-xs sm:text-sm transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              className={`${isLastOddOnMobile ? 'col-span-2 sm:col-span-1' : ''} min-w-0 py-2.5 sm:pb-3.5 px-2.5 sm:px-3 rounded-xl sm:rounded-none font-bold text-xs sm:text-sm transition-all sm:border-b-2 flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer ${
                 isActive
-                  ? `border-[#C9252C] ${darkMode ? 'text-white' : 'text-slate-950 font-black'}`
-                  : `border-transparent ${darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-700 hover:text-slate-950'}`
+                  ? `bg-[#C9252C] sm:bg-transparent text-white sm:border-[#C9252C] ${darkMode ? 'sm:text-white' : 'sm:text-slate-950 font-black'}`
+                  : `border border-blue-900/40 sm:border-transparent ${darkMode ? 'bg-[#0A1832] sm:bg-transparent text-slate-300 hover:text-white' : 'bg-white sm:bg-transparent text-slate-700 hover:text-slate-950'}`
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span>{tab.label}</span>
+              <span className="truncate">{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ==================== TAB 0: كل المعروض بالموقع حالياً (مترجم بالكامل عربي/إنجليزي) ==================== */}
+      {/* ==================== TAB 0: كل المعروض بالموقع حالياً ==================== */}
       {activeTab === 'overview_content' && (
-        <div className="space-y-6">
-          <div className={`p-5 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${cardBg}`}>
-            <div>
-              <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? 'مركز التحكم الشامل في كل ما هو معروض بالموقع حالياً' : 'All Currently Displayed Website Items'}</h2>
-              <p className={`text-xs mt-0.5 ${textMuted}`}>{isAr ? `يعرض المنتجات (${products.length})، الكتالوجات (${catalogs.length})، شهادات الأيزو (${isoList.length})، والاعتمادات (${approvalList.length})` : 'View, add, edit, or delete any displayed item'}</p>
+        <div className="space-y-6 w-full min-w-0">
+          <div className={`w-full p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardBg}`}>
+            <div className="min-w-0">
+              <h2 className={`text-base sm:text-lg font-bold break-words ${textMain}`}>
+                {isAr ? 'مركز التحكم الشامل في كل ما هو معروض بالموقع حالياً' : 'All Currently Displayed Website Items'}
+              </h2>
+              <p className={`text-xs mt-1 leading-relaxed break-words ${textMuted}`}>
+                {isAr
+                  ? `يعرض المنتجات (${products.length})، الكتالوجات (${catalogs.length})، شهادات الأيزو (${isoList.length})، والاعتمادات (${approvalList.length})`
+                  : 'View, add, edit, or delete any displayed item'}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               {[
                 { id: 'all', label: isAr ? 'عرض الكل' : 'All' },
                 { id: 'product', label: isAr ? `المنتجات (${products.length})` : `Products (${products.length})` },
                 { id: 'catalog', label: isAr ? `الكتالوجات (${catalogs.length})` : `Catalogs (${catalogs.length})` },
-                { id: 'iso', label: isAr ? `شهادات الأيزو (${isoList.length})` : `ISO Certs (${isoList.length})` },
+                { id: 'iso', label: isAr ? `شهادات الأيزو (${isoList.length})` : `ISO (${isoList.length})` },
                 { id: 'approval', label: isAr ? `الاعتمادات (${approvalList.length})` : `Approvals (${approvalList.length})` },
               ].map(btn => (
                 <button
                   key={btn.id}
                   onClick={() => { setContentFilter(btn.id); setSearchQuery(''); }}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     !isSearching && contentFilter === btn.id ? 'bg-red-600 text-white shadow-md' : `${subBg} hover:opacity-80`
                   }`}
                 >
@@ -2188,153 +2114,55 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             </div>
           </div>
 
-          {isSearching && isSystemKeyword && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <Eye className="w-5 h-5 text-purple-400" />
-                  {isAr ? 'حالة نظام موقع كيانكو وإحصائيات الزوار (نتائج البحث)' : 'System Status & Visitors'}
-                </h3>
-                <button
-                  onClick={() => setActiveTab('system')}
-                  className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold cursor-pointer"
-                >
-                  {isAr ? 'فتح تبويب حالة النظام ←' : 'Open System Tab'}
-                </button>
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
-                  <span className={`text-xs ${textMuted}`}>{isAr ? 'إجمالي زيارات وتفاعل الموقع' : 'Total Site Visits'}</span>
-                  <p className="text-2xl font-black text-purple-400">{realVisitsCount}</p>
-                </div>
-                <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
-                  <span className={`text-xs ${textMuted}`}>{isAr ? 'الزوار المتواجدون الآن (مباشر)' : 'Live Online Users'}</span>
-                  <p className="text-2xl font-black text-emerald-400">{liveOnlineUsers}</p>
-                </div>
-                <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
-                  <span className={`text-xs ${textMuted}`}>{isAr ? 'حالة قاعدة البيانات (Supabase)' : 'Database Status'}</span>
-                  <p className="text-emerald-500 font-bold">{isAr ? 'متصلة وتعمل بكفاءة (Active)' : 'Connected & Active'}</p>
-                </div>
-                <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
-                  <span className={`text-xs ${textMuted}`}>{isAr ? 'الجلسة الحالية للأدمن' : 'Admin Session'}</span>
-                  <p className={`font-bold ${textMain}`}>{isAr ? 'آمنة ومؤمنة عبر Supabase' : 'Secured via Supabase'}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isSearching && (isAnalyticsKeyword || filteredAnalytics.length > 0) && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <BarChart3 className="w-5 h-5 text-emerald-400" />
-                  {isAr ? `تحليلات الكتالوجات والتحميلات المطابقة (${filteredAnalytics.length})` : `Matching Catalog Analytics (${filteredAnalytics.length})`}
-                </h3>
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
-                >
-                  {isAr ? 'فتح تبويب التحليلات بالكامل ←' : 'Open Full Analytics Tab'}
-                </button>
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredAnalytics.map((item) => {
-                  const matchedDefault = DEFAULT_KIANKO_CATALOGS.find(
-                    d => d.product_id.toLowerCase() === String(item.product_id || '').toLowerCase()
-                  );
-                  return (
-                    <div key={item.id} className={`p-4 rounded-xl border flex justify-between items-center ${subBg}`}>
-                      <div>
-                        <p className={`font-bold text-sm ${textMain}`}>{matchedDefault ? (isAr ? matchedDefault.name_ar : matchedDefault.name_en) : item.product_id}</p>
-                        <p className="text-xs font-mono text-blue-400">{item.file_name || `${item.product_id}.pdf`}</p>
-                      </div>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        <Download className="w-3.5 h-3.5" /> {item.downloads_count || 0}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {isSearching && filteredMessages.length > 0 && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <Mail className="w-5 h-5 text-blue-400" />
-                  {isAr ? `رسائل التواصل المطابقة للبحث (${filteredMessages.length})` : `Matching Messages (${filteredMessages.length})`}
-                </h3>
-                <button
-                  onClick={() => setActiveTab('messages')}
-                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
-                >
-                  {isAr ? 'فتح جدول الرسائل بالكامل ←' : 'Open Full Messages Tab'}
-                </button>
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredMessages.slice(0, 6).map((msg, i) => (
-                  <div
-                    key={msg.id || i}
-                    onClick={() => setSelectedMessage(msg)}
-                    className={`p-4 rounded-xl border space-y-1.5 cursor-pointer transition-all hover:border-blue-500 ${subBg}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className={`font-bold text-sm ${textMain}`}>{sanitizeText(msg.name)}</span>
-                      <span className={`text-[11px] ${textMuted}`}>{formatDate(msg.created_at)}</span>
-                    </div>
-                    <p className="text-xs text-blue-400 font-mono truncate">{sanitizeText(msg.email)}</p>
-                    <p className={`text-xs truncate ${textSub}`}>{sanitizeText(msg.message)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 1. قسم المنتجات المعروضة بالموقع (يتحول فوراً بين العربية والإنجليزية) */}
+          {/* 1. قسم المنتجات المعروضة بالموقع (محمي بـ min-w-0 ولا يخرج عن الإطار أبداً) */}
           {((!isSearching && (contentFilter === 'all' || contentFilter === 'product')) || (isSearching && filteredProducts.length > 0)) && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <Package className="w-5 h-5 text-red-500" />
-                  {isAr ? `المنتجات المعروضة في صفحة المنتجات (${filteredProducts.length} منتج)` : `Displayed Products (${filteredProducts.length})`}
+            <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 overflow-hidden ${cardBg}`}>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${textMain}`}>
+                  <Package className="w-5 h-5 text-red-500 shrink-0" />
+                  <span>{isAr ? `المنتجات المعروضة في صفحة المنتجات (${filteredProducts.length} منتج)` : `Displayed Products (${filteredProducts.length})`}</span>
                 </h3>
                 <button
                   onClick={() => setActiveTab('products')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold cursor-pointer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" /> {isAr ? 'إضافة منتج جديد للمنتجات' : 'Add New Product'}
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span>{isAr ? 'إضافة منتج جديد للمنتجات' : 'Add New Product'}</span>
                 </button>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
                 {filteredProducts.map((prod, idx) => {
                   const localizedProd = resolveProductText(prod, isAr);
                   return (
-                    <div key={`${prod._source}_${prod.id || idx}`} className={`flex justify-between items-start p-4 rounded-xl border gap-3 ${subBg}`}>
-                      <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      key={`${prod._source}_${prod.id || idx}`}
+                      className={`min-w-0 w-full flex items-center justify-between p-3.5 sm:p-4 rounded-xl border gap-3 overflow-hidden ${subBg}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         {prod.image_url && (
                           <img
                             src={prod.image_url}
                             alt={localizedProd.name}
-                            className="w-14 h-14 rounded-lg object-cover border border-slate-700 shrink-0 bg-slate-900"
+                            className="w-13 h-13 sm:w-14 sm:h-14 rounded-lg object-cover border border-slate-700 shrink-0 bg-slate-900"
                           />
                         )}
-                        <div className="space-y-1 min-w-0">
+                        <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white">
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white max-w-full truncate">
                               {localizedProd.category}
                             </span>
-                            { prod.code && (
+                            {prod.code && (
                               <span className="font-mono text-[10px] text-blue-400 font-bold">{prod.code}</span>
                             )}
                           </div>
-                          <h4 className={`font-bold text-sm truncate ${textMain}`} title={localizedProd.name}>
+                          <h4 className={`font-bold text-xs sm:text-sm break-words line-clamp-1 ${textMain}`} title={localizedProd.name}>
                             {localizedProd.name}
                           </h4>
                           {prod.file_url && (
-                            <a href={prod.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-400 hover:underline mt-0.5 font-bold">
-                              <BookOpen className="w-3.5 h-3.5" /> {isAr ? 'معاينة الداتا شيت' : 'Preview Datasheet'}
+                            <a href={prod.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-400 hover:underline font-bold">
+                              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                              <span>{isAr ? 'معاينة الداتا شيت' : 'Preview Datasheet'}</span>
                             </a>
                           )}
                         </div>
@@ -2353,38 +2181,39 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             </div>
           )}
 
-          {/* 2. قسم الكتالوجات الـ 6 الفنية (يتحول فوراً بين العربية والإنجليزية) */}
+          {/* 2. قسم الكتالوجات الـ 6 الفنية */}
           {((!isSearching && (contentFilter === 'all' || contentFilter === 'catalog')) || (isSearching && filteredCatalogs.length > 0)) && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <BookOpen className="w-5 h-5 text-emerald-500" />
-                  {isAr ? `الكتالوجات الفنية المرفوعة على السيرفر (${filteredCatalogs.length} كتالوجات)` : `Technical Catalogs (${filteredCatalogs.length})`}
+            <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 overflow-hidden ${cardBg}`}>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${textMain}`}>
+                  <BookOpen className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span>{isAr ? `الكتالوجات الفنية المرفوعة على السيرفر (${filteredCatalogs.length} كتالوجات)` : `Technical Catalogs (${filteredCatalogs.length})`}</span>
                 </h3>
                 <button
                   onClick={() => setActiveTab('analytics')}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer shrink-0"
                 >
                   {isAr ? 'عرض إحصائيات التحميل' : 'View Analytics'}
                 </button>
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
                 {filteredCatalogs.map((cat) => (
-                  <div key={cat.id} className={`p-4 rounded-xl border space-y-2 ${subBg}`}>
-                    <div className="flex justify-between items-center">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-600 text-white">
+                  <div key={cat.id} className={`min-w-0 w-full p-4 rounded-xl border space-y-2 overflow-hidden ${subBg}`}>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-600 text-white truncate">
                         {cat.file_name}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/15 text-blue-400 border border-blue-500/30 shrink-0">
                         <Download className="w-3 h-3" /> {cat.downloads_count}
                       </span>
                     </div>
-                    <h4 className={`font-bold text-sm ${textMain}`}>
+                    <h4 className={`font-bold text-xs sm:text-sm break-words ${textMain}`}>
                       {isAr ? cat.name_ar : cat.name_en}
                     </h4>
                     {cat.file_url && (
                       <a href={cat.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-400 hover:underline font-bold">
-                        <ExternalLink className="w-3.5 h-3.5" /> {isAr ? `معاينة الكتالوج (${cat.file_name})` : 'Preview Catalog'}
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{isAr ? 'معاينة الكتالوج' : 'Preview Catalog'}</span>
                       </a>
                     )}
                   </div>
@@ -2393,23 +2222,24 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             </div>
           )}
 
-          {/* 3. قسم الشهادات (ISO) والاعتمادات (Approvals) (يتحول فوراً بين العربية والإنجليزية) */}
+          {/* 3. قسم الشهادات (ISO) والاعتمادات (Approvals) */}
           {((!isSearching && (contentFilter === 'all' || contentFilter === 'approval' || contentFilter === 'iso')) || (isSearching && filteredCertifications.length > 0)) && (
-            <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${textMain}`}>
-                  <Award className="w-5 h-5 text-amber-500" />
-                  {isAr ? `شهادات الأيزو والاعتمادات المعروضة (${filteredCertifications.length})` : `Displayed Certifications & Approvals (${filteredCertifications.length})`}
+            <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 overflow-hidden ${cardBg}`}>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${textMain}`}>
+                  <Award className="w-5 h-5 text-amber-500 shrink-0" />
+                  <span>{isAr ? `شهادات الأيزو والاعتمادات المعروضة (${filteredCertifications.length})` : `Displayed Certifications & Approvals (${filteredCertifications.length})`}</span>
                 </h3>
                 <button
                   onClick={() => setActiveTab('certifications')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold cursor-pointer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" /> {isAr ? 'إضافة شهادة أيزو أو اعتماد جديد' : 'Add ISO or Approval'}
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span>{isAr ? 'إضافة شهادة أيزو أو اعتماد جديد' : 'Add ISO or Approval'}</span>
                 </button>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
                 {filteredCertifications
                   .filter(c => {
                     if (!isSearching && contentFilter === 'iso') return String(c.category || '').toLowerCase() === 'iso';
@@ -2419,26 +2249,32 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                   .map(cert => {
                     const localizedCert = resolveCertText(cert, isAr);
                     return (
-                      <div key={cert.id} className={`flex justify-between items-start p-4 rounded-xl border gap-3 ${subBg}`}>
-                        <div className="space-y-1 min-w-0">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black text-white ${
-                            cert.category === 'iso' ? 'bg-amber-600' : 'bg-red-600'
-                          }`}>
-                            {cert.category === 'iso' ? (isAr ? 'شهادة أيزو ISO' : 'ISO Certificate') : (isAr ? 'اعتماد رسمي' : 'Official Approval')}
-                          </span>
-                          <h4 className={`font-bold text-sm truncate ${textMain}`} title={localizedCert.title}>
+                      <div key={cert.id} className={`min-w-0 w-full flex justify-between items-start p-3.5 sm:p-4 rounded-xl border gap-3 overflow-hidden ${subBg}`}>
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black text-white ${
+                              cert.category === 'iso' ? 'bg-amber-600' : 'bg-red-600'
+                            }`}>
+                              {cert.category === 'iso' ? (isAr ? 'شهادة أيزو ISO' : 'ISO Certificate') : (isAr ? 'اعتماد رسمي' : 'Official Approval')}
+                            </span>
+                            {cert.code && (
+                              <span className="font-mono text-[10px] text-blue-400 font-bold">{cert.code}</span>
+                            )}
+                          </div>
+                          <h4 className={`font-bold text-xs sm:text-sm break-words line-clamp-2 ${textMain}`} title={localizedCert.title}>
                             {localizedCert.title}
                           </h4>
-                          <p className={`text-xs line-clamp-1 ${textMuted}`} title={localizedCert.issuer}>
-                            <span className="text-amber-500 font-bold">{localizedCert.issuer}</span> | {cert.code || '—'}
+                          <p className={`text-xs line-clamp-2 break-words ${textMuted}`}>
+                            <span className="text-amber-500 font-bold">{localizedCert.issuer}</span>
                           </p>
                           {cert.file_url && (
-                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline mt-1 font-bold">
-                              <ExternalLink className="w-3.5 h-3.5" /> {isAr ? 'معاينة المستند المرفق' : 'View Attached File'}
+                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline pt-0.5 font-bold">
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                              <span>{isAr ? 'معاينة المستند المرفق' : 'View Attached File'}</span>
                             </a>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex flex-col sm:flex-row items-center gap-1.5 shrink-0">
                           {cert._source === 'certifications' && (
                             <button
                               onClick={() => startEditCert(cert)}
@@ -2462,130 +2298,148 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               </div>
             </div>
           )}
-
-          {isSearching && totalSearchMatches === 0 && (
-            <div className={`p-12 rounded-2xl border text-center space-y-3 ${cardBg}`}>
-              <Search className="w-10 h-10 text-red-500 mx-auto opacity-80" />
-              <h3 className={`text-base font-bold ${textMain}`}>
-                {isAr ? `لا توجد أي نتائج مطابقة لـ "${searchQuery}" في جميع أقسام اللوحة` : `No results found for "${searchQuery}"`}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold cursor-pointer"
-              >
-                {isAr ? 'مسح البحث وعرض الكل' : 'Clear Search'}
-              </button>
-            </div>
-          )}
         </div>
       )}
 
-      {/* ==================== TAB 1: Analytics ==================== */}
+      {/* ==================== TAB 1: Analytics (كروت متجاوبة على الموبايل وجدول على اللابتوب) ==================== */}
       {activeTab === 'analytics' && (
-        <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
-          <div className={`p-6 border-b flex justify-between items-center flex-wrap gap-4 ${borderCol}`}>
-            <div>
-              <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? `تفاصيل التحميلات حسب الكتالوج (${filteredAnalytics.length} كتالوجات)` : 'Downloads Breakdown by Catalog'}</h2>
-              <p className={`text-xs mt-0.5 ${textMuted}`}>
-                {isAr ? 'يعرض جميع الكتالوجات الـ 6 المرفوعة في السيرفر وعدد مرات تحميل كل كتالوج' : 'Shows all 6 uploaded catalogs and download counts'}
-              </p>
-            </div>
+        <div className={`w-full rounded-2xl border overflow-hidden ${cardBg}`}>
+          <div className={`p-4 sm:p-6 border-b ${borderCol}`}>
+            <h2 className={`text-base sm:text-lg font-bold ${textMain}`}>
+              {isAr ? `تفاصيل التحميلات حسب الكتالوج (${filteredAnalytics.length} كتالوجات)` : 'Downloads Breakdown by Catalog'}
+            </h2>
+            <p className={`text-xs mt-1 ${textMuted}`}>
+              {isAr ? 'يعرض جميع الكتالوجات الـ 6 المرفوعة في السيرفر وعدد مرات تحميل كل كتالوج' : 'Shows all 6 uploaded catalogs and download counts'}
+            </p>
           </div>
+
           {loading ? (
             <div className={`p-12 text-center ${textMuted}`}>{isAr ? 'جاري تحميل البيانات...' : 'Loading data...'}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className={`w-full text-sm ${isAr ? 'text-right' : 'text-left'} ${textSub}`}>
-                <thead className={`text-xs font-bold uppercase border-b ${tableHeadBg} ${borderCol}`}>
-                  <tr>
-                    <th className="px-6 py-4">{isAr ? 'معرّف الكتالوج (ID)' : 'Catalog ID'}</th>
-                    <th className="px-6 py-4">{isAr ? 'اسم ملف الكتالوج في السيرفر' : 'Datasheet File'}</th>
-                    <th className="px-6 py-4 text-center">{isAr ? 'عدد التحميلات' : 'Downloads Count'}</th>
-                    <th className={`px-6 py-4 ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'آخر تحميل' : 'Last Download'}</th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${divideCol}`}>
-                  {filteredAnalytics.map((item) => {
-                    const matchedDefault = DEFAULT_KIANKO_CATALOGS.find(
-                      d => d.product_id.toLowerCase() === String(item.product_id || '').toLowerCase()
-                    );
-                    const fileName = item.file_name || matchedDefault?.file_name || `${item.product_id}.pdf`;
+            <>
+              {/* عرض كروت للموبايل والتابلت */}
+              <div className="md:hidden p-4 space-y-3">
+                {filteredAnalytics.map((item) => {
+                  const matchedDefault = DEFAULT_KIANKO_CATALOGS.find(
+                    d => d.product_id.toLowerCase() === String(item.product_id || '').toLowerCase()
+                  );
+                  const fileName = item.file_name || matchedDefault?.file_name || `${item.product_id}.pdf`;
+                  return (
+                    <div key={item.id} className={`p-4 rounded-xl border space-y-2 ${subBg}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs text-blue-400 font-bold truncate">{fileName}</span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                          <Download className="w-3.5 h-3.5" /> {item.downloads_count || 0}
+                        </span>
+                      </div>
+                      <p className={`font-bold text-sm ${textMain}`}>
+                        {matchedDefault ? (isAr ? matchedDefault.name_ar : matchedDefault.name_en) : item.product_id}
+                      </p>
+                      <p className={`text-[11px] ${textMuted}`}>
+                        {isAr ? 'آخر تحميل: ' : 'Last Download: '} {formatDate(item.updated_at)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
 
-                    return (
-                      <tr key={item.id} className={`transition-colors ${rowHover}`}>
-                        <td className={`px-6 py-4 font-bold ${textMain}`}>
-                          <div>{item.product_id}</div>
-                          {matchedDefault && (
-                            <div className={`text-xs font-normal ${textMuted}`}>
-                              {isAr ? matchedDefault.name_ar : matchedDefault.name_en}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-xs text-blue-400">{fileName}</td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${
-                            (item.downloads_count || 0) > 0
-                              ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
-                              : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
-                          }`}>
-                            <Download className="w-3.5 h-3.5" />
-                            {item.downloads_count || 0}
-                          </span>
-                        </td>
-                        <td className={`px-6 py-4 ${isAr ? 'text-left' : 'text-right'} text-xs ${textMuted}`}>
-                          {formatDate(item.updated_at)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+              {/* عرض الجدول للشاشات المتوسطة والكبيرة */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className={`w-full text-sm ${isAr ? 'text-right' : 'text-left'} ${textSub}`}>
+                  <thead className={`text-xs font-bold uppercase border-b ${tableHeadBg} ${borderCol}`}>
+                    <tr>
+                      <th className="px-6 py-4">{isAr ? 'معرّف الكتالوج (ID)' : 'Catalog ID'}</th>
+                      <th className="px-6 py-4">{isAr ? 'اسم ملف الكتالوج في السيرفر' : 'Datasheet File'}</th>
+                      <th className="px-6 py-4 text-center">{isAr ? 'عدد التحميلات' : 'Downloads Count'}</th>
+                      <th className={`px-6 py-4 ${isAr ? 'text-left' : 'text-right'}`}>{isAr ? 'آخر تحميل' : 'Last Download'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${divideCol}`}>
+                    {filteredAnalytics.map((item) => {
+                      const matchedDefault = DEFAULT_KIANKO_CATALOGS.find(
+                        d => d.product_id.toLowerCase() === String(item.product_id || '').toLowerCase()
+                      );
+                      const fileName = item.file_name || matchedDefault?.file_name || `${item.product_id}.pdf`;
+
+                      return (
+                        <tr key={item.id} className={`transition-colors ${rowHover}`}>
+                          <td className={`px-6 py-4 font-bold ${textMain}`}>
+                            <div>{item.product_id}</div>
+                            {matchedDefault && (
+                              <div className={`text-xs font-normal ${textMuted}`}>
+                                {isAr ? matchedDefault.name_ar : matchedDefault.name_en}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-xs text-blue-400">{fileName}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${
+                              (item.downloads_count || 0) > 0
+                                ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
+                                : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+                            }`}>
+                              <Download className="w-3.5 h-3.5" />
+                              {item.downloads_count || 0}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-4 ${isAr ? 'text-left' : 'text-right'} text-xs ${textMuted}`}>
+                            {formatDate(item.updated_at)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
 
-      {/* ==================== TAB 2: Messages ==================== */}
+      {/* ==================== TAB 2: Messages (كروت كاملة واضحة على الموبايل والتابلت وجدول على اللابتوب) ==================== */}
       {activeTab === 'messages' && (
-        <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
-          <div className={`p-6 border-b flex justify-between items-center flex-wrap gap-4 ${borderCol}`}>
+        <div className={`w-full rounded-2xl border overflow-hidden ${cardBg}`}>
+          <div className={`p-4 sm:p-6 border-b space-y-4 lg:space-y-0 lg:flex lg:justify-between lg:items-center gap-4 ${borderCol}`}>
             <div>
-              <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? 'رسائل التواصل الواردة - شركة كيانكو' : 'Incoming Contact Messages'}</h2>
-              <p className={`text-xs mt-0.5 ${textMuted}`}>
+              <h2 className={`text-base sm:text-lg font-bold ${textMain}`}>{isAr ? 'رسائل التواصل الواردة - شركة كيانكو' : 'Incoming Contact Messages'}</h2>
+              <p className={`text-xs mt-1 ${textMuted}`}>
                 {isAr
                   ? `إجمالي الرسائل المعروضة (${filteredMessages.length}) - مقسمة على (${totalMsgPages}) صفحات لسهولة التصفح`
                   : `Total (${filteredMessages.length}) messages across (${totalMsgPages}) pages`}
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="grid grid-cols-2 sm:flex items-center gap-2">
               <button
                 onClick={handleCleanTestMessages}
                 disabled={messages.length === 0}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
               >
-                <Trash2 className="w-4 h-4" /> {isAr ? 'تنظيف الرسائل التجريبية' : 'Clean Test Messages'}
+                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{isAr ? 'تنظيف التجريبية' : 'Clean Test'}</span>
               </button>
               <button
                 onClick={() => exportReport('pdf')}
                 disabled={messages.length === 0}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
               >
-                <FileDown className="w-4 h-4" /> {isAr ? 'طباعة / PDF رسمي' : 'Print / PDF'}
+                <FileDown className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{isAr ? 'طباعة / PDF' : 'Print / PDF'}</span>
               </button>
               <button
                 onClick={() => exportReport('word')}
                 disabled={messages.length === 0}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
               >
-                <FileText className="w-4 h-4" /> {isAr ? 'تصدير Word منسق' : 'Export Word'}
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{isAr ? 'تصدير Word' : 'Export Word'}</span>
               </button>
               <button
                 onClick={() => exportReport('excel')}
                 disabled={messages.length === 0}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow cursor-pointer"
               >
-                <Download className="w-4 h-4" /> {isAr ? 'تصدير Excel جدول' : 'Export Excel'}
+                <Download className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{isAr ? 'تصدير Excel' : 'Export Excel'}</span>
               </button>
             </div>
           </div>
@@ -2596,7 +2450,76 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             <div className={`p-12 text-center ${textMuted}`}>{isAr ? 'لا توجد رسائل مطابقة للبحث حالياً.' : 'No contact messages found.'}</div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* 1. عرض كروت متجاوبة على شاشات الموبايل والتابلت بدون قص الإيميل أو الحاجة للتمرير الأفقي */}
+              <div className="lg:hidden p-4 space-y-3">
+                {paginatedMessages.map((msg, idx) => {
+                  const serialNumber = msgStartIndex + idx + 1;
+                  return (
+                    <div
+                      key={msg.id || serialNumber}
+                      className={`p-4 rounded-xl border space-y-2.5 ${subBg}`}
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b pb-2 border-blue-900/40">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-black bg-red-600 text-white shrink-0">
+                            #{serialNumber}
+                          </span>
+                          <span className={`font-extrabold text-sm truncate ${textMain}`}>
+                            {sanitizeText(msg.name)}
+                          </span>
+                        </div>
+                        <span className={`text-[11px] shrink-0 ${textMuted}`}>
+                          {formatDate(msg.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={textMuted}>{isAr ? 'الإيميل:' : 'Email:'}</span>
+                          <span className="font-mono text-blue-400 break-all" dir="ltr">
+                            {sanitizeText(msg.email)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={textMuted}>{isAr ? 'الجوال:' : 'Phone:'}</span>
+                          <span className={`font-mono font-bold ${textMain}`} dir="ltr">
+                            {sanitizeText(msg.phone)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p
+                        onClick={() => setSelectedMessage(msg)}
+                        className={`text-xs p-2.5 rounded-lg bg-black/20 line-clamp-2 break-words cursor-pointer ${textSub}`}
+                      >
+                        {sanitizeText(msg.message)}
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMessage(msg)}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'عرض والرد' : 'View & Reply'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'حذف الرسالة' : 'Delete'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 2. عرض الجدول الكامل لشاشات اللابتوب */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className={`w-full text-sm ${isAr ? 'text-right' : 'text-left'} ${textSub}`}>
                   <thead className={`text-xs font-bold uppercase border-b ${tableHeadBg} ${borderCol}`}>
                     <tr>
@@ -2650,25 +2573,23 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 </table>
               </div>
 
-              <div className={`px-6 py-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 ${borderCol} ${tableHeadBg}`}>
-                <div className="flex items-center gap-3 flex-wrap text-xs">
+              {/* شريط الترقيم (Pagination) متجاوب */}
+              <div className={`px-4 sm:px-6 py-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 ${borderCol} ${tableHeadBg}`}>
+                <div className="flex items-center justify-center gap-2 flex-wrap text-xs">
                   <span className={textMuted}>
                     {isAr
-                      ? `عرض ${msgStartIndex + 1} إلى ${Math.min(msgStartIndex + msgsPerPage, filteredMessages.length)} من أصل ${filteredMessages.length} رسالة`
-                      : `Showing ${msgStartIndex + 1} to ${Math.min(msgStartIndex + msgsPerPage, filteredMessages.length)} of ${filteredMessages.length} messages`}
+                      ? `عرض ${msgStartIndex + 1} - ${Math.min(msgStartIndex + msgsPerPage, filteredMessages.length)} من ${filteredMessages.length}`
+                      : `Showing ${msgStartIndex + 1} - ${Math.min(msgStartIndex + msgsPerPage, filteredMessages.length)} of ${filteredMessages.length}`}
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={textMuted}>{isAr ? '| عدد الصفوف:' : '| Rows:'}</span>
-                    <select
-                      value={msgsPerPage}
-                      onChange={(e) => setMsgsPerPage(Number(e.target.value))}
-                      className={`px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer ${subBg}`}
-                    >
-                      <option value={8}>{isAr ? '8 رسائل / صفحة' : '8 / page'}</option>
-                      <option value={15}>{isAr ? '15 رسالة / صفحة' : '15 / page'}</option>
-                      <option value={30}>{isAr ? '30 رسالة / صفحة' : '30 / page'}</option>
-                    </select>
-                  </div>
+                  <select
+                    value={msgsPerPage}
+                    onChange={(e) => setMsgsPerPage(Number(e.target.value))}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer ${subBg}`}
+                  >
+                    <option value={8}>{isAr ? '8 / صفحة' : '8 / page'}</option>
+                    <option value={15}>{isAr ? '15 / صفحة' : '15 / page'}</option>
+                    <option value={30}>{isAr ? '30 / صفحة' : '30 / page'}</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap justify-center">
@@ -2715,12 +2636,12 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       {/* ==================== TAB 3: Jobs Management ==================== */}
       {activeTab === 'jobs' && (
-        <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-            <div className="flex justify-between items-center">
-              <h2 className={`text-lg font-bold flex items-center gap-2 ${textMain}`}>
-                <Plus className="w-5 h-5 text-red-500" />
-                {editingJobId ? (isAr ? 'تعديل الوظيفة المختارة' : 'Edit Career Opening') : (isAr ? 'إضافة وظيفة جديدة (تظهر في صفحة الوظائف)' : 'Add New Career Opening')}
+        <div className="space-y-6 w-full min-w-0">
+          <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 ${cardBg}`}>
+            <div className="flex justify-between items-center gap-2 flex-wrap">
+              <h2 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${textMain}`}>
+                <Plus className="w-5 h-5 text-red-500 shrink-0" />
+                <span>{editingJobId ? (isAr ? 'تعديل الوظيفة المختارة' : 'Edit Career Opening') : (isAr ? 'إضافة وظيفة جديدة (تظهر في صفحة الوظائف)' : 'Add New Career Opening')}</span>
               </h2>
               {editingJobId && (
                 <button
@@ -2740,13 +2661,13 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               </div>
             )}
 
-            <form onSubmit={handleAddOrUpdateJob} className="grid sm:grid-cols-2 gap-4">
+            <form onSubmit={handleAddOrUpdateJob} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <input
                 type="text"
                 placeholder={isAr ? 'المسمى الوظيفي (مثال: مهندس مبيعات)' : 'Job Title (e.g. Sales Engineer)'}
                 value={newJob.title}
                 onChange={(e) => { setNewJob({ ...newJob, title: e.target.value }); setJobFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={3}
                 required
               />
@@ -2755,7 +2676,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'القسم (مثال: المبيعات / الهندسة)' : 'Department (e.g. Sales)'}
                 value={newJob.department}
                 onChange={(e) => { setNewJob({ ...newJob, department: e.target.value }); setJobFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={2}
                 required
               />
@@ -2764,7 +2685,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'المكان (مثال: الرياض / جدة)' : 'Location (e.g. Riyadh / Jeddah)'}
                 value={newJob.location}
                 onChange={(e) => { setNewJob({ ...newJob, location: e.target.value }); setJobFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={2}
                 required
               />
@@ -2773,18 +2694,18 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'وصف مختصر (10 أحرف على الأقل)' : 'Brief Description (min 10 chars)'}
                 value={newJob.description}
                 onChange={(e) => { setNewJob({ ...newJob, description: e.target.value }); setJobFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={10}
                 required
               />
-              <button type="submit" className="sm:col-span-2 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-all cursor-pointer shadow-lg active:scale-95">
+              <button type="submit" className="sm:col-span-2 w-full py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-all cursor-pointer shadow-lg active:scale-95">
                 {editingJobId ? (isAr ? 'حفظ التعديلات على الوظيفة' : 'Save Changes') : (isAr ? 'نشر الوظيفة في صفحة الوظائف' : 'Publish Job')}
               </button>
             </form>
           </div>
 
-          <div className={`rounded-2xl border overflow-hidden p-6 ${cardBg}`}>
-            <h2 className={`text-lg font-bold mb-4 ${textMain}`}>{isAr ? `الوظائف الحالية (${filteredJobs.length})` : `Current Careers (${filteredJobs.length})`}</h2>
+          <div className={`w-full rounded-2xl border overflow-hidden p-4 sm:p-6 ${cardBg}`}>
+            <h2 className={`text-base sm:text-lg font-bold mb-4 ${textMain}`}>{isAr ? `الوظائف الحالية (${filteredJobs.length})` : `Current Careers (${filteredJobs.length})`}</h2>
             {filteredJobs.length === 0 ? (
               <p className={`text-sm ${textMuted}`}>{isAr ? 'لا توجد وظائف مضافة حالياً.' : 'No careers added.'}</p>
             ) : (
@@ -2796,32 +2717,32 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                   const isBlankJob = !jobTitle || !String(jobTitle).trim();
 
                   return (
-                    <div key={job.id} className={`flex justify-between items-center p-4 border rounded-xl gap-4 ${subBg}`}>
-                      <div className="space-y-1">
-                        <h4 className={`font-bold text-sm ${isBlankJob ? 'text-red-400 italic' : textMain}`}>
+                    <div key={job.id} className={`flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 border rounded-xl gap-3 ${subBg}`}>
+                      <div className="space-y-1 min-w-0">
+                        <h4 className={`font-bold text-sm break-words ${isBlankJob ? 'text-red-400 italic' : textMain}`}>
                           {isBlankJob ? (isAr ? '(وظيفة فارغة بدون عنوان - يُرجى حذفها)' : '(Empty Job Entry - Please Delete)') : jobTitle}
                         </h4>
                         <p className={`text-xs ${textMuted}`}>
                           {sanitizeText(jobDept)} | {sanitizeText(jobLoc)}
                         </p>
                         {job.description && String(job.description).trim() && (
-                          <p className={`text-xs ${textSub} opacity-80`}>{job.description}</p>
+                          <p className={`text-xs break-words ${textSub} opacity-80`}>{job.description}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                         {job._source === 'db' && (
                           <button
                             onClick={() => startEditJob(job)}
                             className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow"
                           >
-                            <Edit3 className="w-4 h-4" /> {isAr ? 'تعديل' : 'Edit'}
+                            <Edit3 className="w-3.5 h-3.5" /> {isAr ? 'تعديل' : 'Edit'}
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteJob(job.id)}
                           className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow"
                         >
-                          <Trash2 className="w-4 h-4" /> {isAr ? 'حذف' : 'Delete'}
+                          <Trash2 className="w-3.5 h-3.5" /> {isAr ? 'حذف' : 'Delete'}
                         </button>
                       </div>
                     </div>
@@ -2833,14 +2754,14 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         </div>
       )}
 
-      {/* ==================== TAB 4: Certifications (ISO) & Approvals (مترجم بالكامل عربي/إنجليزي) ==================== */}
+      {/* ==================== TAB 4: Certifications (ISO) & Approvals ==================== */}
       {activeTab === 'certifications' && (
-        <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-            <div className="flex justify-between items-center">
-              <h2 className={`text-lg font-bold flex items-center gap-2 ${textMain}`}>
-                <Award className="w-5 h-5 text-amber-500" />
-                {editingCertId ? (isAr ? 'تعديل بيانات الشهادة / الاعتماد' : 'Edit Document') : (isAr ? 'إضافة شهادة أيزو (ISO) أو اعتماد مشاريع جديد' : 'Add ISO or Approval Document')}
+        <div className="space-y-6 w-full min-w-0">
+          <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 ${cardBg}`}>
+            <div className="flex justify-between items-center gap-2 flex-wrap">
+              <h2 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${textMain}`}>
+                <Award className="w-5 h-5 text-amber-500 shrink-0" />
+                <span>{editingCertId ? (isAr ? 'تعديل بيانات الشهادة / الاعتماد' : 'Edit Document') : (isAr ? 'إضافة شهادة أيزو (ISO) أو اعتماد مشاريع جديد' : 'Add ISO or Approval Document')}</span>
               </h2>
               {editingCertId && (
                 <button
@@ -2860,34 +2781,34 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               </div>
             )}
 
-            <form onSubmit={handleAddOrUpdateCert} className="grid sm:grid-cols-2 gap-4">
+            <form onSubmit={handleAddOrUpdateCert} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <div className="sm:col-span-2 space-y-1">
                 <label className={`text-xs font-bold block ${textSub}`}>{isAr ? 'اختر القسم الذي سيظهر فيه المستند:' : 'Target Section:'}</label>
                 <select
                   value={newCert.category}
                   onChange={(e) => setNewCert({ ...newCert, category: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-xl text-sm font-bold ${subBg} cursor-pointer`}
+                  className={`w-full px-3.5 py-3 border rounded-xl text-xs sm:text-sm font-bold ${subBg} cursor-pointer`}
                 >
-                  <option value="approval">{isAr ? 'قسم اعتمادات المشاريع (يظهر في صفحة الاعتمادات + سليدر الصفحة الرئيسية)' : 'Official Approvals Section & Home Slider'}</option>
-                  <option value="iso">{isAr ? 'قسم شهادات الأيزو ISO (يظهر في صفحة الأيزو + سليدر الصفحة الرئيسية)' : 'ISO Certifications Section & Home Slider'}</option>
+                  <option value="approval">{isAr ? 'قسم اعتمادات المشاريع (صفحة الاعتمادات + سليدر الرئيسية)' : 'Official Approvals & Home Slider'}</option>
+                  <option value="iso">{isAr ? 'قسم شهادات الأيزو ISO (صفحة الأيزو + سليدر الرئيسية)' : 'ISO Certifications & Home Slider'}</option>
                 </select>
               </div>
 
               <input
                 type="text"
-                placeholder={isAr ? 'عنوان الشهادة أو الاعتماد (مثال: شهادة ISO 9001 أو اعتماد أرامكو)' : 'Document Title'}
+                placeholder={isAr ? 'عنوان الشهادة أو الاعتماد (مثال: اعتماد أرامكو)' : 'Document Title'}
                 value={newCert.title}
                 onChange={(e) => { setNewCert({ ...newCert, title: e.target.value }); setCertFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={3}
                 required
               />
               <input
                 type="text"
-                placeholder={isAr ? 'الجهة المانحة / المشروع (مثال: أرامكو / سابك / نيوم)' : 'Issuer / Project'}
+                placeholder={isAr ? 'الجهة المانحة / المشروع (مثال: أرامكو / نيوم)' : 'Issuer / Project'}
                 value={newCert.issuer}
                 onChange={(e) => { setNewCert({ ...newCert, issuer: e.target.value }); setCertFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={2}
                 required
               />
@@ -2896,7 +2817,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'الكود (مثال: ISO-9001 أو APP-01)' : 'Code'}
                 value={newCert.code}
                 onChange={(e) => { setNewCert({ ...newCert, code: e.target.value }); setCertFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={2}
                 required
               />
@@ -2905,15 +2826,15 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'السنة (مثال: 2026)' : 'Year'}
                 value={newCert.year}
                 onChange={(e) => { setNewCert({ ...newCert, year: e.target.value }); setCertFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 maxLength={4}
                 required
               />
               
               <div className="sm:col-span-2 space-y-2">
                 <label className={`text-xs font-bold block ${textSub}`}>{isAr ? 'ملف الـ PDF أو صورة الشهادة / الاعتماد' : 'File'}</label>
-                <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 text-center space-y-2 cursor-pointer transition-all hover:border-red-500 ${subBg}`}>
-                  <Upload className="w-8 h-8 text-red-500 animate-bounce" />
+                <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-5 text-center space-y-2 cursor-pointer transition-all hover:border-red-500 ${subBg}`}>
+                  <Upload className="w-7 h-7 text-red-500" />
                   <span className="text-xs font-bold">
                     {newCert.file_url ? (isAr ? '✓ تم تجهيز وربط الملف بنجاح' : '✓ File uploaded successfully') : (isAr ? 'اضغط هنا لرفع ملف PDF أو صورة الشهادة / الاعتماد' : 'Click to upload PDF or image')}
                   </span>
@@ -2943,7 +2864,7 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 {uploadingFile && <p className="text-xs text-amber-500 mt-1 font-bold">{isAr ? 'جاري رفع الملف للسيرفر...' : 'Uploading...'}</p>}
               </div>
 
-              <button type="submit" className="sm:col-span-2 py-3 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all cursor-pointer shadow-lg active:scale-95">
+              <button type="submit" className="sm:col-span-2 w-full py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all cursor-pointer shadow-lg active:scale-95">
                 {editingCertId
                   ? (isAr ? 'حفظ التعديلات' : 'Update Document')
                   : newCert.category === 'iso'
@@ -2953,14 +2874,14 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
             </form>
           </div>
 
-          <div className={`rounded-2xl border overflow-hidden p-6 ${cardBg}`}>
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-              <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? `الشهادات والاعتمادات المعروضة حالياً (${filteredCertifications.length})` : `Current Documents (${filteredCertifications.length})`}</h2>
-              <div className="flex gap-2">
+          <div className={`w-full rounded-2xl border overflow-hidden p-4 sm:p-6 ${cardBg}`}>
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+              <h2 className={`text-base sm:text-lg font-bold ${textMain}`}>{isAr ? `الشهادات والاعتمادات المعروضة (${filteredCertifications.length})` : `Current Documents (${filteredCertifications.length})`}</h2>
+              <div className="flex flex-wrap gap-1.5">
                 {[
                   { id: 'all', label: isAr ? `الكل (${filteredCertifications.length})` : `All (${filteredCertifications.length})` },
-                  { id: 'iso', label: isAr ? `شهادات الأيزو (${isoList.length})` : `ISO Only (${isoList.length})` },
-                  { id: 'approval', label: isAr ? `الاعتمادات (${approvalList.length})` : `Approvals Only (${approvalList.length})` }
+                  { id: 'iso', label: isAr ? `الأيزو (${isoList.length})` : `ISO (${isoList.length})` },
+                  { id: 'approval', label: isAr ? `الاعتمادات (${approvalList.length})` : `Approvals (${approvalList.length})` }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -2995,37 +2916,38 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                     const localizedCert = resolveCertText(cert, isAr);
 
                     return (
-                      <div key={cert.id} className={`flex justify-between items-center p-4 border rounded-xl gap-4 ${subBg}`}>
-                        <div className="space-y-1 text-start min-w-0">
+                      <div key={cert.id} className={`flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 border rounded-xl gap-3 ${subBg}`}>
+                        <div className="space-y-1.5 text-start min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`px-2.5 py-0.5 rounded text-[11px] font-black text-white shadow-xs ${badgeColor}`}>
                               {badgeLabel}
                             </span>
-                            <h4 className={`font-bold text-base truncate ${textMain}`}>{localizedCert.title}</h4>
+                            <span className="font-mono text-xs text-blue-400 font-bold">{cert.code || '—'}</span>
                           </div>
-                          <p className={`text-xs font-semibold ${textMuted}`}>
-                            {isAr ? 'الجهة / الوصف: ' : 'Issuer / Details: '}<span className="text-amber-500 font-bold">{localizedCert.issuer}</span> | {isAr ? 'الكود: ' : 'Code: '}<span className="font-mono font-bold">{cert.code || '—'}</span>
+                          <h4 className={`font-bold text-sm sm:text-base break-words ${textMain}`}>{localizedCert.title}</h4>
+                          <p className={`text-xs font-semibold break-words ${textMuted}`}>
+                            {isAr ? 'الجهة / الوصف: ' : 'Issuer / Details: '}<span className="text-amber-500 font-bold">{localizedCert.issuer}</span>
                           </p>
                           {cert.file_url && (
-                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline inline-block mt-1 font-bold">
+                            <a href={cert.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline inline-block pt-0.5 font-bold">
                               {isAr ? '🔗 معاينة أو تحميل الملف المرفق' : '🔗 View Attached File'}
                             </a>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                           {cert._source === 'certifications' && (
                             <button
                               onClick={() => startEditCert(cert)}
                               className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow"
                             >
-                              <Edit3 className="w-4 h-4" /> {isAr ? 'تعديل' : 'Edit'}
+                              <Edit3 className="w-3.5 h-3.5" /> {isAr ? 'تعديل' : 'Edit'}
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteCert(cert)}
                             className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow"
                           >
-                            <Trash2 className="w-4 h-4" /> {isAr ? 'حذف' : 'Delete'}
+                            <Trash2 className="w-3.5 h-3.5" /> {isAr ? 'حذف' : 'Delete'}
                           </button>
                         </div>
                       </div>
@@ -3037,12 +2959,13 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
         </div>
       )}
 
-      {/* ==================== TAB 5: Products Management (مترجم بالكامل عربي/إنجليزي) ==================== */}
+      {/* ==================== TAB 5: Products Management (كروت مريحة للموبايل بدون ضغط النصوص) ==================== */}
       {activeTab === 'products' && (
-        <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${cardBg}`}>
-            <h2 className={`text-lg font-bold flex items-center gap-2 ${textMain}`}>
-              <Package className="w-5 h-5 text-red-500" /> {isAr ? 'إضافة منتج جديد (يُضاف في صفحة المنتجات فقط)' : 'Add New Product (Products Page Only)'}
+        <div className="space-y-6 w-full min-w-0">
+          <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-4 ${cardBg}`}>
+            <h2 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${textMain}`}>
+              <Package className="w-5 h-5 text-red-500 shrink-0" />
+              <span>{isAr ? 'إضافة منتج جديد (يُضاف في صفحة المنتجات فقط)' : 'Add New Product (Products Page Only)'}</span>
             </h2>
 
             {productFormError && (
@@ -3052,20 +2975,20 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
               </div>
             )}
 
-            <form onSubmit={handleAddOrUpdateProduct} className="grid sm:grid-cols-2 gap-4">
+            <form onSubmit={handleAddOrUpdateProduct} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <input
                 type="text"
                 placeholder={isAr ? 'اسم المنتج (مثال: حوامل الكابلات الشبكية)' : 'Product Name'}
                 value={newProduct.name}
                 onChange={(e) => { setNewProduct({ ...newProduct, name: e.target.value }); setProductFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={3}
                 required
               />
               <select
                 value={newProduct.category}
                 onChange={(e) => { setNewProduct({ ...newProduct, category: e.target.value }); setProductFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm font-bold cursor-pointer ${subBg}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm font-bold cursor-pointer ${subBg}`}
               >
                 <option value="أنظمة إدارة الكابلات">{isAr ? 'أنظمة إدارة الكابلات (Cable Management)' : 'Cable Management Systems'}</option>
                 <option value="مقاطع المباني والمحارة">{isAr ? 'مقاطع المباني والمحارة (Plastering & Profiles)' : 'Building & Plastering Profiles'}</option>
@@ -3075,14 +2998,14 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 placeholder={isAr ? 'كود المنتج أو المواصفة (مثال: ASTM A53 / A20)' : 'Product Code / Standard'}
                 value={newProduct.code}
                 onChange={(e) => { setNewProduct({ ...newProduct, code: e.target.value }); setProductFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
               />
               <input
                 type="text"
                 placeholder={isAr ? 'وصف المنتج ومواصفاته الفنية (5 أحرف على الأقل)' : 'Product Description'}
                 value={newProduct.description}
                 onChange={(e) => { setNewProduct({ ...newProduct, description: e.target.value }); setProductFormError(''); }}
-                className={`px-4 py-3 border rounded-xl text-sm ${subBg} ${isAr ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-3 border rounded-xl text-xs sm:text-sm ${subBg}`}
                 minLength={5}
                 required
               />
@@ -3153,66 +3076,88 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
                 {uploadingProductPdf && <p className="text-xs text-amber-500 font-bold">{isAr ? 'جاري رفع الملف...' : 'Uploading...'}</p>}
               </div>
 
-              <button type="submit" className="sm:col-span-2 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-all cursor-pointer shadow-lg active:scale-95">
+              <button type="submit" className="sm:col-span-2 w-full py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-all cursor-pointer shadow-lg active:scale-95">
                 {isAr ? 'إضافة ونشر المنتج في صفحة المنتجات' : 'Publish Product to Products Page'}
               </button>
             </form>
           </div>
 
-          <div className={`rounded-2xl border overflow-hidden p-6 ${cardBg}`}>
-            <h2 className={`text-lg font-bold mb-4 ${textMain}`}>
+          <div className={`w-full rounded-2xl border overflow-hidden p-4 sm:p-6 ${cardBg}`}>
+            <h2 className={`text-base sm:text-lg font-bold mb-4 ${textMain}`}>
               {isAr ? `جميع المنتجات المعروضة في الموقع (${filteredProducts.length} منتج)` : `Current Displayed Products (${filteredProducts.length})`}
             </h2>
 
             {filteredProducts.length === 0 ? (
               <p className={`text-sm ${textMuted}`}>{isAr ? 'لا توجد منتجات مطابقة للبحث حالياً.' : 'No products found.'}</p>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {filteredProducts.map((prod, idx) => {
                   const localizedProd = resolveProductText(prod, isAr);
                   const prodImg = prod.image_url || prod.image || '';
                   const prodPdf = prod.file_url || prod.pdf_url || '';
 
                   return (
-                    <div key={`${prod._source}_${prod.id || idx}`} className={`flex justify-between items-start p-4 border rounded-xl gap-3 ${subBg}`}>
-                      <div className="flex items-start gap-3 min-w-0">
-                        {prodImg && (
-                          <img
-                            src={prodImg}
-                            alt={localizedProd.name}
-                            className="w-16 h-16 rounded-lg object-cover border border-slate-700 shrink-0 bg-slate-900"
-                          />
-                        )}
-                        <div className="space-y-1.5 text-start min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white">
-                              {localizedProd.category}
-                            </span>
-                            {localizedProd.badge && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">
-                                {localizedProd.badge}
-                              </span>
-                            )}
-                            {prod.code && (
-                              <span className="font-mono text-[10px] text-blue-400 font-bold">{prod.code}</span>
-                            )}
-                          </div>
-                          <h4 className={`font-bold text-sm ${textMain}`}>{localizedProd.name}</h4>
-                          {localizedProd.description && <p className={`text-xs ${textMuted}`}>{localizedProd.description}</p>}
-                          {prodPdf && (
-                            <a href={prodPdf} target="_blank" rel="noreferrer" className="text-xs text-amber-400 hover:underline inline-block mt-1 font-bold">
-                              {isAr ? '📄 تحميل الداتا شيت' : '📄 View Datasheet'}
-                            </a>
+                    <div
+                      key={`${prod._source}_${prod.id || idx}`}
+                      className={`min-w-0 w-full flex flex-col justify-between p-4 border rounded-2xl gap-4 overflow-hidden ${subBg}`}
+                    >
+                      <div className="space-y-3 min-w-0">
+                        <div className="flex items-start gap-3 min-w-0">
+                          {prodImg && (
+                            <img
+                              src={prodImg}
+                              alt={localizedProd.name}
+                              className="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0 bg-slate-900"
+                            />
                           )}
+                          <div className="space-y-1.5 min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white">
+                                {localizedProd.category}
+                              </span>
+                              {localizedProd.badge && (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">
+                                  {localizedProd.badge}
+                                </span>
+                              )}
+                            </div>
+                            {prod.code && (
+                              <span className="block font-mono text-[11px] text-blue-400 font-bold">{prod.code}</span>
+                            )}
+                            <h4 className={`font-extrabold text-sm sm:text-base break-words ${textMain}`}>
+                              {localizedProd.name}
+                            </h4>
+                          </div>
                         </div>
+
+                        {localizedProd.description && (
+                          <p className={`text-xs leading-relaxed break-words ${textMuted}`}>
+                            {localizedProd.description}
+                          </p>
+                        )}
                       </div>
 
-                      <button
-                        onClick={() => handleDeleteProduct(prod)}
-                        className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" /> {isAr ? 'حذف' : 'Delete'}
-                      </button>
+                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-blue-900/40">
+                        {prodPdf ? (
+                          <a
+                            href={prodPdf}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:underline font-bold"
+                          >
+                            <BookOpen className="w-4 h-4 shrink-0" />
+                            <span>{isAr ? 'تحميل الداتا شيت' : 'View Datasheet'}</span>
+                          </a>
+                        ) : <span />}
+
+                        <button
+                          onClick={() => handleDeleteProduct(prod)}
+                          className="flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{isAr ? 'حذف' : 'Delete'}</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -3224,24 +3169,24 @@ export default function AdminDashboard({ themeColor = '#C9252C', lang = 'ar', da
 
       {/* ==================== TAB 6: System Status & Real Visitor Stats ==================== */}
       {activeTab === 'system' && (
-        <div className={`p-6 rounded-2xl border space-y-6 ${cardBg}`}>
-          <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className={`w-full p-4 sm:p-6 rounded-2xl border space-y-6 ${cardBg}`}>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h2 className={`text-lg font-bold ${textMain}`}>{isAr ? 'حالة نظام موقع كيانكو وإحصائيات الزوار الفعلية (Live)' : 'KIANKO System Status & Real Visitors'}</h2>
+              <h2 className={`text-base sm:text-lg font-bold ${textMain}`}>{isAr ? 'حالة نظام موقع كيانكو وإحصائيات الزوار الفعلية (Live)' : 'KIANKO System Status & Real Visitors'}</h2>
               <p className={`text-xs mt-1 ${textMuted}`}>
-                {isAr ? 'أرقام حقيقية ومباشرة مربوطة بـ Supabase Realtime وقاعدة البيانات بدون أي أرقام ثابتة' : '100% Real-time stats via Supabase Presence & Database'}
+                {isAr ? 'أرقام حقيقية ومباشرة مربوطة بـ Supabase Realtime وقاعدة البيانات' : '100% Real-time stats via Supabase Presence & Database'}
               </p>
             </div>
             <button
               type="button"
               onClick={handleResetRealVisits}
-              className="px-4 py-2 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold transition-all cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold transition-all cursor-pointer shrink-0"
             >
               {isAr ? 'تصفير عداد الزيارات وبدء العد من (1)' : 'Reset Visits Counter to 1'}
             </button>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div className={`p-4 rounded-xl border space-y-1 ${subBg}`}>
               <span className={`text-xs ${textMuted}`}>{isAr ? 'إجمالي زيارات وتفاعل الموقع' : 'Total Real Website Activity'}</span>
               <p className="text-2xl font-black text-purple-400">{realVisitsCount}</p>
